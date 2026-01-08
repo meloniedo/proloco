@@ -117,11 +117,18 @@ async def crea_vendita(vendita_input: VenditaCreate):
     if not prodotto:
         raise HTTPException(status_code=404, detail="Prodotto non trovato")
     
+    # Usa prezzo personalizzato se fornito, altrimenti usa prezzo del prodotto
+    prezzo_finale = vendita_input.prezzo_personalizzato if vendita_input.prezzo_personalizzato is not None else prodotto['prezzo']
+    
+    # Validazione prezzo
+    if prezzo_finale < 0:
+        raise HTTPException(status_code=400, detail="Prezzo non valido")
+    
     # Crea la vendita
     vendita = Vendita(
         prodotto_id=prodotto['id'],
         nome_prodotto=prodotto['nome'],
-        prezzo=prodotto['prezzo'],
+        prezzo=prezzo_finale,
         categoria=prodotto['categoria'],
         timestamp=datetime.now(timezone.utc).isoformat()
     )
