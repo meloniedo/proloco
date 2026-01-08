@@ -27,9 +27,16 @@ const CONFIG = {
     // true = attivato, false = disattivato
     invio_resoconto_automatico: true,
     
-    // Giorno preferito per resoconto settimanale
+    // Giorni preferiti per resoconto settimanale (array)
     // 0=Domenica, 1=Lunedì, 2=Martedì, 3=Mercoledì, 4=Giovedì, 5=Venerdì, 6=Sabato
-    giorno_resoconto: 0, // Domenica
+    // Esempio: [1, 4] = Lunedì e Giovedì
+    giorni_resoconto: [1, 4], // Lunedì e Giovedì
+    
+    // Orario preferito per resoconto (formato 24h)
+    orario_resoconto: {
+        ore: 17,
+        minuti: 0
+    },
     
     // ==================== TIMER E REFRESH ====================
     
