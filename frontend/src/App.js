@@ -251,14 +251,16 @@ function App() {
                   {items.map((prodotto) => (
                     <button
                       key={prodotto.id}
-                      onClick={() => registraVendita(prodotto)}
+                      onClick={() => handleProductClick(prodotto)}
                       disabled={loading}
                       className={`bg-gradient-to-r ${getCategoriaColor(categoria)} text-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 active:scale-95 disabled:opacity-50`}
                       data-testid={`prodotto-${prodotto.nome.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                     >
                       <div className="text-4xl mb-3">{prodotto.icona}</div>
                       <div className="font-bold text-lg mb-2 leading-tight">{prodotto.nome}</div>
-                      <div className="text-2xl font-black">€{prodotto.prezzo.toFixed(2)}</div>
+                      <div className="text-2xl font-black">
+                        {prodotto.prezzo === 0 ? '💰 Inserisci' : `€${prodotto.prezzo.toFixed(2)}`}
+                      </div>
                     </button>
                   ))}
                 </div>
