@@ -720,7 +720,7 @@
     
     // ==================== EXPORT EXCEL ====================
     
-    function exportExcelCompleto() {
+    function exportExcelCompleto(autoExport = false) {
         const vendite = db.getVendite();
         const spese = db.getSpese();
         
@@ -802,17 +802,50 @@
             XLSX.utils.book_append_sheet(wb, ws, nomeMese.substring(0, 31));
         });
         
-        XLSX.writeFile(wb, 'storico_completo.xlsx');
+        // Nome file con data e ora
+        const now = new Date();
+        const fileName = `storico_${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}.xlsx`;
         
-        showFeedback('✅ Excel scaricato! Controlla i Download');
+        XLSX.writeFile(wb, fileName);
         
-        // Mostra istruzioni per email
-        setTimeout(() => {
-            if (confirm('Excel scaricato!\n\nVuoi aprire il client email per inviare il backup?\n\n(Dovrai allegare manualmente il file dalla cartella Download)')) {
-                window.location.href = `mailto:?subject=Backup Proloco Santa Bianca&body=In allegato il backup Excel dello storico completo.`;
-            }
-        }, 1000);
+        if (autoExport) {
+            showFeedback('✅ Backup automatico completato!');
+            console.log('Export automatico eseguito:', fileName);
+        } else {
+            showFeedback('✅ Excel scaricato! Controlla i Download');
+            
+            // Mostra istruzioni per email
+            setTimeout(() => {
+                if (confirm('Excel scaricato!\n\nVuoi aprire il client email per inviare il backup?\n\n(Dovrai allegare manualmente il file dalla cartella Download)')) {
+                    window.location.href = `mailto:?subject=Backup Proloco Santa Bianca - ${now.toLocaleDateString('it-IT')}&body=In allegato il backup Excel dello storico completo del ${now.toLocaleDateString('it-IT')} alle ${now.toLocaleTimeString('it-IT')}.`;
+                }
+            }, 1000);
+        }
     }
+    
+    // ==================== AUTO EXPORT ====================
+    
+    function checkAutoExport() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        
+        // Se sono le 23:59
+        if (hours === 23 && minutes === 59) {
+            // Controlla se l'export è già stato fatto oggi
+            const lastExport = localStorage.getItem('lastAutoExport');
+            const today = now.toDateString();
+            
+            if (lastExport !== today) {
+                // Esegui export automatico
+                exportExcelCompleto(true);
+                localStorage.setItem('lastAutoExport', today);
+            }
+        }
+    }
+    
+    // Controlla ogni minuto per l'export automatico
+    setInterval(checkAutoExport, 60000);
     
     // ==================== EVENT HANDLERS ====================
     
