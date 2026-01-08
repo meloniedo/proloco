@@ -475,7 +475,7 @@ function App() {
             </div>
 
             {/* Card Principali */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-8 rounded-3xl shadow-2xl text-white">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold">Incasso Totale</h3>
@@ -485,13 +485,22 @@ function App() {
                 <div className="text-green-100 mt-2">{statistiche.periodo}</div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-8 rounded-3xl shadow-2xl text-white">
+              <div className="bg-gradient-to-br from-red-500 to-red-600 p-8 rounded-3xl shadow-2xl text-white">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold">Vendite Totali</h3>
+                  <h3 className="text-xl font-semibold">Spese Totali</h3>
+                  <TrendingUp className="w-8 h-8 transform rotate-180" />
+                </div>
+                <div className="text-5xl font-black" data-testid="totale-spese">€{statistiche.totale_spese.toFixed(2)}</div>
+                <div className="text-red-100 mt-2">{statistiche.periodo}</div>
+              </div>
+
+              <div className={`bg-gradient-to-br ${statistiche.profitto_netto >= 0 ? 'from-blue-500 to-indigo-600' : 'from-orange-500 to-red-600'} p-8 rounded-3xl shadow-2xl text-white`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold">Profitto Netto</h3>
                   <Calendar className="w-8 h-8" />
                 </div>
-                <div className="text-5xl font-black" data-testid="totale-vendite">{statistiche.totale_vendite}</div>
-                <div className="text-blue-100 mt-2">{statistiche.periodo}</div>
+                <div className="text-5xl font-black" data-testid="profitto-netto">€{statistiche.profitto_netto.toFixed(2)}</div>
+                <div className="text-blue-100 mt-2">{statistiche.totale_vendite} vendite</div>
               </div>
             </div>
 
