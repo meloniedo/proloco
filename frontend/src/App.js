@@ -201,6 +201,35 @@ function App() {
     window.open(`${API}/export/csv`, '_blank');
   };
 
+  const esportaExcelCompleto = () => {
+    window.open(`${API}/export/excel-completo`, '_blank');
+  };
+
+  const handleResetPeriodo = async () => {
+    if (resetPassword !== '5054') {
+      setFeedback('❌ Password errata!');
+      setTimeout(() => setFeedback(''), 2000);
+      return;
+    }
+    
+    if (!window.confirm(`Sei sicuro di voler eliminare TUTTI i dati del periodo "${periodo}"? Questa azione è irreversibile!`)) {
+      return;
+    }
+    
+    try {
+      const response = await axios.post(`${API}/reset-periodo?password=${resetPassword}&periodo=${periodo}`);
+      setFeedback(`✅ Reset completato: ${response.data.vendite_eliminate} vendite e ${response.data.spese_eliminate} spese eliminate`);
+      setShowResetModal(false);
+      setResetPassword('');
+      setTimeout(() => setFeedback(''), 3000);
+      // Ricarica statistiche
+      caricaStatistiche(periodo);
+    } catch (error) {
+      setFeedback('❌ Errore durante il reset!');
+      console.error('Errore reset:', error);
+    }
+  };
+
   const raggruppaProdottiPerCategoria = () => {
     const grouped = {};
     prodotti.forEach(p => {
