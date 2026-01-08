@@ -9,8 +9,9 @@ const API = `${BACKEND_URL}/api`;
 function App() {
   const [prodotti, setProdotti] = useState([]);
   const [vendite, setVendite] = useState([]);
+  const [spese, setSpese] = useState([]);
   const [statistiche, setStatistiche] = useState(null);
-  const [view, setView] = useState('vendita'); // 'vendita', 'statistiche', 'storico'
+  const [view, setView] = useState('vendita'); // 'vendita', 'spese', 'statistiche', 'storico'
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [periodo, setPeriodo] = useState('oggi'); // 'oggi', 'settimana', 'mese'
@@ -19,6 +20,8 @@ function App() {
   const [showKeypad, setShowKeypad] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [customPrice, setCustomPrice] = useState('');
+  const [keypadMode, setKeypadMode] = useState('vendita'); // 'vendita' o 'spesa'
+  const [selectedSpesaCategoria, setSelectedSpesaCategoria] = useState('');
 
   useEffect(() => {
     caricaProdotti();
