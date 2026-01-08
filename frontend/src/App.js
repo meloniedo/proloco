@@ -158,15 +158,22 @@ function App() {
   const handleKeypadConfirm = () => {
     const prezzo = parseFloat(customPrice.replace(',', '.'));
     if (isNaN(prezzo) || prezzo <= 0) {
-      setFeedback('❌ Inserisci un prezzo valido!');
+      setFeedback('❌ Inserisci un importo valido!');
       setTimeout(() => setFeedback(''), 2000);
       return;
     }
     
     setShowKeypad(false);
-    registraVendita(selectedProduct, prezzo);
+    
+    if (keypadMode === 'vendita') {
+      registraVendita(selectedProduct, prezzo);
+    } else if (keypadMode === 'spesa') {
+      registraSpesa(selectedSpesaCategoria, prezzo);
+    }
+    
     setCustomPrice('');
     setSelectedProduct(null);
+    setSelectedSpesaCategoria('');
   };
 
   const handleKeypadCancel = () => {
