@@ -65,26 +65,11 @@
         
         init() {
             if (!localStorage.getItem('prodotti')) {
-                const prodottiIniziali = [
-                    // CAFFETTERIA
-                    {id: this.generateId(), nome: "Caffè", prezzo: 1.20, categoria: "CAFFETTERIA", icona: "☕"},
-                    {id: this.generateId(), nome: "Caffè Deca", prezzo: 1.20, categoria: "CAFFETTERIA", icona: "☕"},
-                    {id: this.generateId(), nome: "Caffè Corretto", prezzo: 2.00, categoria: "CAFFETTERIA", icona: "🥃"},
-                    // BEVANDE
-                    {id: this.generateId(), nome: "Caraffa di Vino 0,5L", prezzo: 6.00, categoria: "BEVANDE", icona: "🍷"},
-                    {id: this.generateId(), nome: "Caraffa di Vino 1LT", prezzo: 11.00, categoria: "BEVANDE", icona: "🍷"},
-                    {id: this.generateId(), nome: "Calice di Vino", prezzo: 1.50, categoria: "BEVANDE", icona: "🍷"},
-                    {id: this.generateId(), nome: "Liquori, Grappe, Vodka e Amari", prezzo: 2.50, categoria: "BEVANDE", icona: "🥃"},
-                    {id: this.generateId(), nome: "Bibite in Lattina", prezzo: 2.20, categoria: "BEVANDE", icona: "🥤"},
-                    {id: this.generateId(), nome: "Bottiglietta d'Acqua", prezzo: 1.00, categoria: "BEVANDE", icona: "💧"},
-                    // GELATI
-                    {id: this.generateId(), nome: "Cremino", prezzo: 1.20, categoria: "GELATI", icona: "🍦"},
-                    {id: this.generateId(), nome: "Cucciolone", prezzo: 1.50, categoria: "GELATI", icona: "🍦"},
-                    {id: this.generateId(), nome: "Magnum, Soia e altri Gelati", prezzo: 2.00, categoria: "GELATI", icona: "🍦"},
-                    // PERSONALIZZATE
-                    {id: this.generateId(), nome: "Bigliardo", prezzo: 0.00, categoria: "PERSONALIZZATE", icona: "🎱"},
-                    {id: this.generateId(), nome: "Extra", prezzo: 0.00, categoria: "PERSONALIZZATE", icona: "➕"}
-                ];
+                // Usa listino da config.js
+                const prodottiIniziali = CONFIG.listino.map(p => ({
+                    ...p,
+                    id: this.generateId()
+                }));
                 localStorage.setItem('prodotti', JSON.stringify(prodottiIniziali));
             }
             
@@ -94,6 +79,11 @@
             
             if (!localStorage.getItem('spese')) {
                 localStorage.setItem('spese', JSON.stringify([]));
+            }
+            
+            // Inizializza ultimo resoconto inviato
+            if (!localStorage.getItem('ultimoResocontoInviato')) {
+                localStorage.setItem('ultimoResocontoInviato', '');
             }
         }
         
