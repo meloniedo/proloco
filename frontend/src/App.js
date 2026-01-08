@@ -52,11 +52,17 @@ function App() {
     }
   };
 
-  const registraVendita = async (prodotto) => {
+  const registraVendita = async (prodotto, prezzoPersonalizzato = null) => {
     setLoading(true);
     try {
-      await axios.post(`${API}/vendite`, { prodotto_id: prodotto.id });
-      setFeedback(`✅ ${prodotto.nome} - €${prodotto.prezzo.toFixed(2)}`);
+      const payload = { prodotto_id: prodotto.id };
+      if (prezzoPersonalizzato !== null) {
+        payload.prezzo_personalizzato = prezzoPersonalizzato;
+      }
+      
+      await axios.post(`${API}/vendite`, payload);
+      const prezzoFinale = prezzoPersonalizzato !== null ? prezzoPersonalizzato : prodotto.prezzo;
+      setFeedback(`✅ ${prodotto.nome} - €${prezzoFinale.toFixed(2)}`);
       setTimeout(() => setFeedback(''), 2000);
       // Ricarica statistiche
       caricaStatistiche(periodo);
