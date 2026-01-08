@@ -178,15 +178,36 @@
     }
     
     function renderHeader() {
+        // Controlla se mostrare banner resoconto
+        const mostraBanner = doveMostrareBannerResoconto();
+        
         return `
             <div class="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-40">
                 <div class="max-w-7xl mx-auto px-4 py-4">
                     <h1 class="text-2xl md:text-3xl font-bold text-white text-center">
-                        ☕ Proloco Santa Bianca
+                        ☕ ${CONFIG.nome_bar}
                     </h1>
+                    ${mostraBanner ? `
+                        <div class="mt-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-lg text-center text-sm font-semibold animate-pulse">
+                            ⚠️ Connessione internet necessaria!
+                        </div>
+                    ` : ''}
                 </div>
             </div>
         `;
+    }
+    
+    function doveMostrareBannerResoconto() {
+        if (!CONFIG.invio_resoconto_automatico) return false;
+        
+        const ultimoResoconto = localStorage.getItem('ultimoResocontoInviato');
+        if (!ultimoResoconto) return true; // Mai inviato
+        
+        const dataUltimo = new Date(ultimoResoconto);
+        const now = new Date();
+        const giorniPassati = Math.floor((now - dataUltimo) / (1000 * 60 * 60 * 24));
+        
+        return giorniPassati >= 7;
     }
     
     function renderFeedback() {
