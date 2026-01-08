@@ -290,10 +290,17 @@ async def calcola_statistiche(data_inizio: str, data_fine: str, periodo: str) ->
         "timestamp": {"$gte": data_inizio, "$lte": data_fine}
     }, {"_id": 0}).to_list(10000)
     
+    spese = await db.spese.find({
+        "timestamp": {"$gte": data_inizio, "$lte": data_fine}
+    }, {"_id": 0}).to_list(10000)
+    
     if not vendite:
+        totale_spese = sum(s['importo'] for s in spese) if spese else 0.0
         return StatisticheResponse(
             totale_vendite=0,
             totale_incasso=0.0,
+            totale_spese=round(totale_spese, 2),
+            profitto_netto=round(-totale_spese, 2),
             per_categoria={},
             prodotti_piu_venduti=[],
             periodo=periodo
@@ -302,6 +309,8 @@ async def calcola_statistiche(data_inizio: str, data_fine: str, periodo: str) ->
     # Calcola totali
     totale_vendite = len(vendite)
     totale_incasso = sum(v['prezzo'] for v in vendite)
+    totale_spese = sum(s['importo'] for s in spese) if spese else 0.0
+    profitto_netto = totale_incasso - totale_spese
     
     # Raggruppa per categoria
     per_categoria = defaultdict(lambda: {"vendite": 0, "incasso": 0.0})
@@ -332,6 +341,8 @@ async def calcola_statistiche(data_inizio: str, data_fine: str, periodo: str) ->
     return StatisticheResponse(
         totale_vendite=totale_vendite,
         totale_incasso=round(totale_incasso, 2),
+        totale_spese=round(totale_spese, 2),
+        profitto_netto=round(profitto_netto, 2),
         per_categoria=dict(per_categoria),
         prodotti_piu_venduti=prodotti_piu_venduti,
         periodo=periodo
