@@ -403,6 +403,70 @@ function App() {
           </div>
         )}
       </div>
+
+      {/* Modal Tastierino Numerico */}
+      {showKeypad && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" data-testid="keypad-modal">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-6 border-2 border-white/20">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-3">{selectedProduct?.icona}</div>
+              <h3 className="text-2xl font-bold text-white mb-2">{selectedProduct?.nome}</h3>
+              <p className="text-gray-400">Inserisci l'importo</p>
+            </div>
+
+            {/* Display Prezzo */}
+            <div className="bg-white/10 rounded-2xl p-6 mb-6 border-2 border-white/30">
+              <div className="text-center">
+                <div className="text-5xl font-black text-white" data-testid="keypad-display">
+                  €{customPrice || '0'}
+                </div>
+              </div>
+            </div>
+
+            {/* Tastierino */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0', '←'].map((key) => (
+                <button
+                  key={key}
+                  onClick={() => handleKeypadPress(key)}
+                  className="bg-gradient-to-br from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white text-3xl font-bold p-6 rounded-2xl shadow-lg active:scale-95 transform transition-all border border-white/20"
+                  data-testid={`keypad-btn-${key}`}
+                >
+                  {key}
+                </button>
+              ))}
+            </div>
+
+            {/* Pulsanti Azione */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handleKeypadCancel}
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all text-lg"
+                data-testid="keypad-cancel"
+              >
+                ❌ Annulla
+              </button>
+              <button
+                onClick={handleKeypadConfirm}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all text-lg"
+                data-testid="keypad-confirm"
+              >
+                ✅ Conferma
+              </button>
+            </div>
+
+            {/* Pulsante Clear */}
+            <button
+              onClick={() => handleKeypadPress('C')}
+              className="w-full mt-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all"
+              data-testid="keypad-clear"
+            >
+              🗑️ Cancella Tutto
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
