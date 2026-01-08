@@ -577,6 +577,16 @@ function App() {
               <Download className="w-6 h-6" />
               Esporta CSV
             </button>
+
+            {/* Reset Button con Password */}
+            <button
+              onClick={() => setShowResetModal(true)}
+              className="w-full bg-gradient-to-r from-gray-700 to-gray-900 text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3 border-2 border-red-500"
+              data-testid="reset-periodo-btn"
+            >
+              <Trash2 className="w-6 h-6" />
+              🔒 Reset Periodo (Password Richiesta)
+            </button>
           </div>
         )}
 
