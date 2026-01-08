@@ -837,6 +837,142 @@
     // Controlla ogni minuto per l'export automatico
     setInterval(checkAutoExport, 60000);
     
+    // ==================== IMPORT EXCEL ====================
+    
+    function handleImportExcel(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        showFeedback('📥 Caricamento file...');
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                
+                let venditeTotali = 0;
+                let speseTotali = 0;
+                let errori = 0;
+                
+                // Itera su tutti i fogli (uno per mese)
+                workbook.SheetNames.forEach(sheetName => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    
+                    // Cerca sezione VENDITE
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (!row || row.length === 0) continue;
+                        
+                        // Se troviamo header VENDITE
+                        if (row[0] && row[0].toString().includes('VENDITE')) {
+                            i++; // Skip header row (Data, Ora, Prodotto...)
+                            i++; // Vai ai dati
+                            
+                            // Leggi vendite fino a riga vuota o TOTALE
+                            while (i < jsonData.length) {
+                                const dataRow = jsonData[i];
+                                if (!dataRow || dataRow.length === 0) break;
+                                if (dataRow[3] === 'TOTALE VENDITE:') break;
+                                
+                                // Importa vendita
+                                try {
+                                    const vendita = {
+                                        id: db.generateId(),
+                                        prodotto_id: db.generateId(),
+                                        nome_prodotto: dataRow[2] || 'Prodotto',
+                                        prezzo: parseFloat(dataRow[4]) || 0,
+                                        categoria: dataRow[3] || 'ALTRO',
+                                        timestamp: parseDataOra(dataRow[0], dataRow[1])
+                                    };
+                                    db.addVendita(vendita);
+                                    venditeTotali++;
+                                } catch (err) {
+                                    errori++;
+                                    if (CONFIG.debug) console.error('Errore import vendita:', err);
+                                }
+                                
+                                i++;
+                            }
+                        }
+                        
+                        // Se troviamo header SPESE
+                        if (row[0] && row[0].toString().includes('SPESE')) {
+                            i++; // Skip header row
+                            i++; // Vai ai dati
+                            
+                            // Leggi spese
+                            while (i < jsonData.length) {
+                                const dataRow = jsonData[i];
+                                if (!dataRow || dataRow.length === 0) break;
+                                if (dataRow[3] === 'TOTALE SPESE:') break;
+                                
+                                // Importa spesa
+                                try {
+                                    const spesa = {
+                                        id: db.generateId(),
+                                        categoria_spesa: dataRow[2] || 'Spesa Generica',
+                                        importo: parseFloat(dataRow[4]) || 0,
+                                        note: dataRow[3] || '',
+                                        timestamp: parseDataOra(dataRow[0], dataRow[1])
+                                    };
+                                    db.addSpesa(spesa);
+                                    speseTotali++;
+                                } catch (err) {
+                                    errori++;
+                                    if (CONFIG.debug) console.error('Errore import spesa:', err);
+                                }
+                                
+                                i++;
+                            }
+                        }
+                    }
+                });
+                
+                // Reset input file
+                event.target.value = '';
+                
+                // Feedback
+                if (venditeTotali > 0 || speseTotali > 0) {
+                    showFeedback(`✅ Importati: ${venditeTotali} vendite, ${speseTotali} spese!`);
+                    setTimeout(() => {
+                        if (confirm(`Import completato!\n\nVendite: ${venditeTotali}\nSpese: ${speseTotali}\n${errori > 0 ? `\nErrori: ${errori}` : ''}\n\nRicaricare l'app per vedere i dati?`)) {
+                            location.reload();
+                        }
+                    }, 1000);
+                } else {
+                    showFeedback('⚠️ Nessun dato trovato nel file');
+                }
+                
+            } catch (error) {
+                showFeedback('❌ Errore lettura file Excel!');
+                console.error('Import error:', error);
+            }
+        };
+        
+        reader.onerror = function() {
+            showFeedback('❌ Errore caricamento file!');
+        };
+        
+        reader.readAsArrayBuffer(file);
+    }
+    
+    function parseDataOra(dataStr, oraStr) {
+        try {
+            // Data formato: dd/mm/yyyy
+            const [giorno, mese, anno] = dataStr.split('/');
+            // Ora formato: hh:mm:ss
+            const [ore, minuti, secondi] = oraStr.split(':');
+            
+            const data = new Date(anno, mese - 1, giorno, ore, minuti, secondi);
+            return data.toISOString();
+        } catch (err) {
+            // Fallback a data corrente se parsing fallisce
+            return new Date().toISOString();
+        }
+    }
+    
     // ==================== CONTROLLO CONNESSIONE E RESOCONTO ====================
     
     function checkConnessioneEResoconto() {
