@@ -55,6 +55,15 @@ function App() {
     }
   };
 
+  const caricaStoricoSpese = async () => {
+    try {
+      const response = await axios.get(`${API}/spese?limite=100`);
+      setSpese(response.data);
+    } catch (error) {
+      console.error('Errore caricamento storico spese:', error);
+    }
+  };
+
   const registraVendita = async (prodotto, prezzoPersonalizzato = null) => {
     setLoading(true);
     try {
