@@ -568,16 +568,6 @@ function App() {
               </div>
             </div>
 
-            {/* Export Button */}
-            <button
-              onClick={esportaCSV}
-              className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3"
-              data-testid="export-csv-btn"
-            >
-              <Download className="w-6 h-6" />
-              Esporta CSV
-            </button>
-
             {/* Reset Button con Password */}
             <button
               onClick={() => setShowResetModal(true)}
