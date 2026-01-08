@@ -285,6 +285,191 @@ async def export_csv(
         headers={"Content-Disposition": "attachment; filename=vendite.csv"}
     )
 
+@api_router.get("/export/excel-completo")
+async def export_excel_completo():
+    """Esporta tutto lo storico in Excel suddiviso per mesi e settimane"""
+    # Ottieni tutte le vendite e spese
+    vendite = await db.vendite.find({}, {"_id": 0}).sort("timestamp", 1).to_list(100000)
+    spese = await db.spese.find({}, {"_id": 0}).sort("timestamp", 1).to_list(100000)
+    
+    # Crea workbook
+    wb = Workbook()
+    wb.remove(wb.active)  # Rimuovi foglio di default
+    
+    # Raggruppa per mese
+    vendite_per_mese = defaultdict(list)
+    spese_per_mese = defaultdict(list)
+    
+    for v in vendite:
+        dt = datetime.fromisoformat(v['timestamp'])
+        mese_key = dt.strftime("%Y-%m")
+        vendite_per_mese[mese_key].append(v)
+    
+    for s in spese:
+        dt = datetime.fromisoformat(s['timestamp'])
+        mese_key = dt.strftime("%Y-%m")
+        spese_per_mese[mese_key].append(s)
+    
+    # Unisci tutti i mesi
+    tutti_mesi = sorted(set(list(vendite_per_mese.keys()) + list(spese_per_mese.keys())), reverse=True)
+    
+    if not tutti_mesi:
+        # Crea foglio vuoto se non ci sono dati
+        ws = wb.create_sheet("Nessun Dato")
+        ws['A1'] = "Nessuna transazione registrata"
+        ws['A1'].font = Font(size=14, bold=True)
+    else:
+        # Crea un foglio per ogni mese
+        for mese in tutti_mesi[:12]:  # Limita a ultimi 12 mesi
+            dt_mese = datetime.strptime(mese, "%Y-%m")
+            nome_mese = dt_mese.strftime("%B %Y")
+            
+            ws = wb.create_sheet(nome_mese)
+            
+            # Header styling
+            header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+            header_font = Font(color="FFFFFF", bold=True, size=12)
+            
+            # Sezione VENDITE
+            ws['A1'] = f"VENDITE - {nome_mese}"
+            ws['A1'].font = Font(size=14, bold=True, color="00B050")
+            ws.merge_cells('A1:E1')
+            
+            # Headers vendite
+            headers_vendite = ['Data', 'Ora', 'Prodotto', 'Categoria', 'Importo €']
+            for col, header in enumerate(headers_vendite, 1):
+                cell = ws.cell(row=2, column=col, value=header)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal='center')
+            
+            # Dati vendite
+            row = 3
+            totale_vendite = 0
+            for v in vendite_per_mese.get(mese, []):
+                dt = datetime.fromisoformat(v['timestamp'])
+                ws.cell(row=row, column=1, value=dt.strftime("%d/%m/%Y"))
+                ws.cell(row=row, column=2, value=dt.strftime("%H:%M:%S"))
+                ws.cell(row=row, column=3, value=v['nome_prodotto'])
+                ws.cell(row=row, column=4, value=v['categoria'])
+                ws.cell(row=row, column=5, value=v['prezzo'])
+                totale_vendite += v['prezzo']
+                row += 1
+            
+            # Totale vendite
+            ws.cell(row=row, column=4, value="TOTALE VENDITE:").font = Font(bold=True)
+            ws.cell(row=row, column=5, value=totale_vendite).font = Font(bold=True, color="00B050")
+            
+            # Sezione SPESE (lascia 2 righe vuote)
+            row += 3
+            ws.cell(row=row, column=1, value=f"SPESE - {nome_mese}").font = Font(size=14, bold=True, color="FF0000")
+            ws.merge_cells(f'A{row}:E{row}')
+            row += 1
+            
+            # Headers spese
+            headers_spese = ['Data', 'Ora', 'Categoria Spesa', 'Note', 'Importo €']
+            for col, header in enumerate(headers_spese, 1):
+                cell = ws.cell(row=row, column=col, value=header)
+                cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+                cell.font = Font(color="FFFFFF", bold=True)
+                cell.alignment = Alignment(horizontal='center')
+            row += 1
+            
+            # Dati spese
+            totale_spese = 0
+            for s in spese_per_mese.get(mese, []):
+                dt = datetime.fromisoformat(s['timestamp'])
+                ws.cell(row=row, column=1, value=dt.strftime("%d/%m/%Y"))
+                ws.cell(row=row, column=2, value=dt.strftime("%H:%M:%S"))
+                ws.cell(row=row, column=3, value=s['categoria_spesa'])
+                ws.cell(row=row, column=4, value=s.get('note', ''))
+                ws.cell(row=row, column=5, value=s['importo'])
+                totale_spese += s['importo']
+                row += 1
+            
+            # Totale spese
+            ws.cell(row=row, column=4, value="TOTALE SPESE:").font = Font(bold=True)
+            ws.cell(row=row, column=5, value=totale_spese).font = Font(bold=True, color="C00000")
+            
+            # RIEPILOGO MESE
+            row += 3
+            ws.cell(row=row, column=1, value="RIEPILOGO MESE").font = Font(size=14, bold=True)
+            ws.merge_cells(f'A{row}:E{row}')
+            row += 1
+            
+            ws.cell(row=row, column=3, value="Incassi Totali:")
+            ws.cell(row=row, column=4, value=totale_vendite).font = Font(color="00B050", bold=True)
+            row += 1
+            
+            ws.cell(row=row, column=3, value="Spese Totali:")
+            ws.cell(row=row, column=4, value=totale_spese).font = Font(color="C00000", bold=True)
+            row += 1
+            
+            profitto = totale_vendite - totale_spese
+            ws.cell(row=row, column=3, value="PROFITTO NETTO:").font = Font(bold=True, size=12)
+            cell_profitto = ws.cell(row=row, column=4, value=profitto)
+            cell_profitto.font = Font(bold=True, size=12, color="00B050" if profitto >= 0 else "C00000")
+            
+            # Larghezza colonne
+            ws.column_dimensions['A'].width = 12
+            ws.column_dimensions['B'].width = 10
+            ws.column_dimensions['C'].width = 30
+            ws.column_dimensions['D'].width = 20
+            ws.column_dimensions['E'].width = 12
+    
+    # Salva in memoria
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=storico_completo.xlsx"}
+    )
+
+@api_router.post("/reset-periodo")
+async def reset_periodo(password: str, periodo: str):
+    """Reset vendite e spese per un periodo specifico (richiede password)"""
+    if password != "5054":
+        raise HTTPException(status_code=403, detail="Password errata")
+    
+    # Calcola date in base al periodo
+    oggi = datetime.now(timezone.utc)
+    
+    if periodo == "oggi":
+        data_inizio = oggi.replace(hour=0, minute=0, second=0, microsecond=0)
+        data_fine = oggi
+    elif periodo == "settimana":
+        data_inizio = oggi - timedelta(days=7)
+        data_fine = oggi
+    elif periodo == "mese":
+        data_inizio = oggi - timedelta(days=30)
+        data_fine = oggi
+    else:
+        raise HTTPException(status_code=400, detail="Periodo non valido")
+    
+    # Elimina vendite e spese del periodo
+    result_vendite = await db.vendite.delete_many({
+        "timestamp": {
+            "$gte": data_inizio.isoformat(),
+            "$lte": data_fine.isoformat()
+        }
+    })
+    
+    result_spese = await db.spese.delete_many({
+        "timestamp": {
+            "$gte": data_inizio.isoformat(),
+            "$lte": data_fine.isoformat()
+        }
+    })
+    
+    return {
+        "message": f"Reset {periodo} completato",
+        "vendite_eliminate": result_vendite.deleted_count,
+        "spese_eliminate": result_spese.deleted_count
+    }
+
 # ========== FUNZIONI HELPER ==========
 
 async def calcola_statistiche(data_inizio: str, data_fine: str, periodo: str) -> StatisticheResponse:
