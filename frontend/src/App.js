@@ -340,6 +340,114 @@ function App() {
           </div>
         )}
 
+        {/* VISTA SPESE */}
+        {view === 'spese' && (
+          <div className="space-y-6">
+            <div className="bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">💸 Registra Spese</h2>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => handleSpesaClick('Cialde caffè', '☕')}
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all active:scale-95"
+                  data-testid="spesa-cialde-caffe"
+                >
+                  <div className="text-5xl mb-3">☕</div>
+                  <div className="font-bold text-lg">Cialde caffè</div>
+                </button>
+
+                <button
+                  onClick={() => handleSpesaClick('Vino', '🍷')}
+                  className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all active:scale-95"
+                  data-testid="spesa-vino"
+                >
+                  <div className="text-5xl mb-3">🍷</div>
+                  <div className="font-bold text-lg">Vino</div>
+                </button>
+
+                <button
+                  onClick={() => handleSpesaClick('Articoli Pulizia', '🧹')}
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all active:scale-95"
+                  data-testid="spesa-pulizia"
+                >
+                  <div className="text-5xl mb-3">🧹</div>
+                  <div className="font-bold text-lg">Articoli Pulizia</div>
+                </button>
+
+                <button
+                  onClick={() => handleSpesaClick('Articoli dal SuperMercato', '🛒')}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all active:scale-95"
+                  data-testid="spesa-supermercato"
+                >
+                  <div className="text-5xl mb-3">🛒</div>
+                  <div className="font-bold text-lg">SuperMercato</div>
+                </button>
+
+                <button
+                  onClick={() => handleSpesaClick('Rimborso Servizio', '💼')}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all active:scale-95"
+                  data-testid="spesa-rimborso"
+                >
+                  <div className="text-5xl mb-3">💼</div>
+                  <div className="font-bold text-lg">Rimborso Servizio</div>
+                </button>
+
+                <button
+                  onClick={() => handleSpesaClick('Spesa Generica', '📋')}
+                  className="bg-gradient-to-r from-gray-500 to-gray-700 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all active:scale-95"
+                  data-testid="spesa-generica"
+                >
+                  <div className="text-5xl mb-3">📋</div>
+                  <div className="font-bold text-lg">Spesa Generica</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Storico Spese Recenti */}
+            <div className="bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-white">📋 Ultime Spese</h3>
+                <button
+                  onClick={caricaStoricoSpese}
+                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl transition-all"
+                >
+                  🔄 Aggiorna
+                </button>
+              </div>
+              
+              {spese.length === 0 ? (
+                <div className="text-white text-center py-8 opacity-75">Nessuna spesa registrata</div>
+              ) : (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {spese.slice(0, 10).map((s) => {
+                    const dt = new Date(s.timestamp);
+                    return (
+                      <div key={s.id} className="bg-white/10 p-4 rounded-xl flex justify-between items-center hover:bg-white/20 transition-all">
+                        <div className="text-white">
+                          <div className="font-bold text-lg">{s.categoria_spesa}</div>
+                          <div className="text-sm opacity-75">
+                            {dt.toLocaleDateString('it-IT')} - {dt.toLocaleTimeString('it-IT')}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-2xl font-black text-red-400">-€{s.importo.toFixed(2)}</div>
+                          <button
+                            onClick={() => eliminaSpesa(s.id)}
+                            className="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/20 rounded-lg transition-all"
+                            data-testid={`delete-spesa-${s.id}`}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* VISTA STATISTICHE */}
         {view === 'statistiche' && statistiche && (
           <div className="space-y-6">
