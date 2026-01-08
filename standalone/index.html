@@ -1125,6 +1125,8 @@ Generato automaticamente da Bar Manager
     function changeView(view) {
         state.view = view;
         render();
+        // Scroll in cima quando cambi vista
+        window.scrollTo(0, 0);
     }
     
     function changePeriodo(periodo) {
