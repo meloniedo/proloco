@@ -253,6 +253,17 @@ function App() {
               🛒 Vendita
             </button>
             <button
+              onClick={() => setView('spese')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                view === 'spese'
+                  ? 'bg-white text-purple-900 shadow-lg scale-105'
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+              data-testid="tab-spese"
+            >
+              💸 Spese
+            </button>
+            <button
               onClick={() => {
                 setView('statistiche');
                 caricaStatistiche(periodo);
