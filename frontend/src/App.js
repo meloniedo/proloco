@@ -282,7 +282,7 @@ function App() {
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6 pb-20">
+      <div className="max-w-7xl mx-auto px-4 py-6 pb-28">{/* pb-28 per spazio footer */}
         {/* VISTA VENDITA */}
         {view === 'vendita' && (
           <div className="space-y-8">
