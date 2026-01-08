@@ -73,6 +73,57 @@ function App() {
     setLoading(false);
   };
 
+  const handleProductClick = (prodotto) => {
+    // Se è un prodotto personalizzabile (prezzo 0), apri tastierino
+    if (prodotto.prezzo === 0 || prodotto.categoria === 'PERSONALIZZATE') {
+      setSelectedProduct(prodotto);
+      setCustomPrice('');
+      setShowKeypad(true);
+    } else {
+      // Altrimenti registra vendita normale
+      registraVendita(prodotto);
+    }
+  };
+
+  const handleKeypadPress = (value) => {
+    if (value === 'C') {
+      setCustomPrice('');
+    } else if (value === ',') {
+      if (!customPrice.includes(',')) {
+        setCustomPrice(customPrice + ',');
+      }
+    } else if (value === '←') {
+      setCustomPrice(customPrice.slice(0, -1));
+    } else {
+      // Limita a 2 decimali
+      if (customPrice.includes(',')) {
+        const parts = customPrice.split(',');
+        if (parts[1] && parts[1].length >= 2) return;
+      }
+      setCustomPrice(customPrice + value);
+    }
+  };
+
+  const handleKeypadConfirm = () => {
+    const prezzo = parseFloat(customPrice.replace(',', '.'));
+    if (isNaN(prezzo) || prezzo <= 0) {
+      setFeedback('❌ Inserisci un prezzo valido!');
+      setTimeout(() => setFeedback(''), 2000);
+      return;
+    }
+    
+    setShowKeypad(false);
+    registraVendita(selectedProduct, prezzo);
+    setCustomPrice('');
+    setSelectedProduct(null);
+  };
+
+  const handleKeypadCancel = () => {
+    setShowKeypad(false);
+    setCustomPrice('');
+    setSelectedProduct(null);
+  };
+
   const eliminaVendita = async (venditaId) => {
     if (!window.confirm('Eliminare questa vendita?')) return;
     try {
