@@ -615,54 +615,6 @@
         `;
     }
     
-    function renderKioskPasswordModal() {
-        return `
-            <div class="fixed inset-0 bg-black/95 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                <div class="bg-gradient-to-br from-yellow-900 to-orange-950 rounded-3xl shadow-2xl max-w-md w-full p-8 border-2 border-yellow-500">
-                    <div class="text-center mb-6">
-                        <div class="text-6xl mb-4">🔐</div>
-                        <h3 class="text-3xl font-bold text-white mb-2">Modalità Schermo Bloccato</h3>
-                        <p class="text-yellow-200">Inserisci password per uscire</p>
-                    </div>
-                    
-                    <div class="bg-white/10 rounded-2xl p-6 mb-6 border-2 border-yellow-400">
-                        <label class="block text-white font-semibold mb-3 text-center">Password</label>
-                        <input type="password" 
-                               id="kioskPasswordInput"
-                               value="${state.kioskPassword}"
-                               oninput="updateKioskPassword(this.value)"
-                               placeholder="5054" 
-                               maxlength="4"
-                               autofocus
-                               class="w-full px-6 py-4 bg-white/20 text-white text-center text-2xl font-bold rounded-xl border-2 border-white/30 focus:border-white focus:outline-none placeholder-white/50">
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="closeKioskPasswordModal()" 
-                                class="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all">
-                            Annulla
-                        </button>
-                        <button onclick="confirmExitKiosk()" 
-                                class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all">
-                            ✅ Sblocca
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    function renderKioskIndicator() {
-        return `
-            <div class="fixed top-4 right-4 z-50">
-                <button onclick="openKioskPasswordModal()" 
-                        class="bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-2 rounded-xl shadow-xl font-bold flex items-center gap-2 animate-pulse">
-                    🔒 Schermo Bloccato
-                </button>
-            </div>
-        `;
-    }
-    
     // ==================== CALCOLO STATISTICHE ====================
     
     function calcolaStatistiche(periodo) {
