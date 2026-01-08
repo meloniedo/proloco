@@ -176,8 +176,6 @@
             ${renderNavigation()}
             ${state.showKeypad ? renderKeypad() : ''}
             ${state.showResetModal ? renderResetModal() : ''}
-            ${state.showKioskPasswordModal ? renderKioskPasswordModal() : ''}
-            ${state.isKioskMode ? renderKioskIndicator() : ''}
         `;
         attachEventListeners();
     }
