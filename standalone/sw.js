@@ -1,9 +1,10 @@
 // Service Worker per funzionamento offline
-const CACHE_NAME = 'bar-manager-v2';
+const CACHE_NAME = 'bar-manager-v3';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
+  './config.js',
   'https://cdn.tailwindcss.com',
   'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js'
 ];
