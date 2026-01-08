@@ -704,6 +704,53 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Modal Reset con Password */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" data-testid="reset-modal">
+          <div className="bg-gradient-to-br from-red-900 to-red-950 rounded-3xl shadow-2xl max-w-md w-full p-8 border-2 border-red-500">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h3 className="text-3xl font-bold text-white mb-2">Reset Periodo</h3>
+              <p className="text-red-200">Elimina tutti i dati del periodo: <span className="font-bold">{periodo}</span></p>
+            </div>
+
+            <div className="bg-white/10 rounded-2xl p-6 mb-6 border-2 border-red-400">
+              <label className="block text-white font-semibold mb-3 text-center">Inserisci Password</label>
+              <input
+                type="password"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full px-6 py-4 bg-white/20 text-white text-center text-2xl font-bold rounded-xl border-2 border-white/30 focus:border-white focus:outline-none placeholder-white/50"
+                data-testid="reset-password-input"
+                maxLength={4}
+              />
+              <p className="text-xs text-red-200 mt-3 text-center">⚠️ Questa azione è irreversibile!</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  setShowResetModal(false);
+                  setResetPassword('');
+                }}
+                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all"
+                data-testid="reset-cancel"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleResetPeriodo}
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all"
+                data-testid="reset-confirm"
+              >
+                🗑️ Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
