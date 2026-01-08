@@ -22,6 +22,8 @@ function App() {
   const [customPrice, setCustomPrice] = useState('');
   const [keypadMode, setKeypadMode] = useState('vendita'); // 'vendita' o 'spesa'
   const [selectedSpesaCategoria, setSelectedSpesaCategoria] = useState('');
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
 
   useEffect(() => {
     caricaProdotti();
