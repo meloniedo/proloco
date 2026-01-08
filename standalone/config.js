@@ -21,7 +21,9 @@ const CONFIG = {
     
     // Email destinatari resoconto (separate da virgola)
     // Esempio: "email1@example.com,email2@example.com,email3@example.com"
-    email_destinatari: "tuaemail@example.com",
+    email_destinatari: "alberto.melorec@gmail.com,meloni.edo@gmail.com",
+    // Email aggiuntive (rimuovi commento per abilitare):
+    // "beatricefoffano93@gmail.com"
     
     // Invia resoconto automatico quando c'è connessione
     // true = attivato, false = disattivato
