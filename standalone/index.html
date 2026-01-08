@@ -811,12 +811,14 @@
     // ==================== AUTO EXPORT ====================
     
     function checkAutoExport() {
+        if (!CONFIG.export_automatico_attivo) return;
+        
         const now = new Date();
         const hours = now.getHours();
         const minutes = now.getMinutes();
         
-        // Se sono le 23:59
-        if (hours === 23 && minutes === 59) {
+        // Se sono le ore configurate
+        if (hours === CONFIG.orario_export.ore && minutes === CONFIG.orario_export.minuti) {
             // Controlla se l'export è già stato fatto oggi
             const lastExport = localStorage.getItem('lastAutoExport');
             const today = now.toDateString();
@@ -831,6 +833,153 @@
     
     // Controlla ogni minuto per l'export automatico
     setInterval(checkAutoExport, 60000);
+    
+    // ==================== CONTROLLO CONNESSIONE E RESOCONTO ====================
+    
+    function checkConnessioneEResoconto() {
+        if (!CONFIG.invio_resoconto_automatico) return;
+        
+        // Controlla se online
+        if (!navigator.onLine) {
+            if (CONFIG.debug) console.log('Offline - skip resoconto');
+            return;
+        }
+        
+        if (CONFIG.debug) console.log('Online - controllo resoconto');
+        
+        // Controlla se è passata almeno 1 settimana dall'ultimo resoconto
+        const ultimoResoconto = localStorage.getItem('ultimoResocontoInviato');
+        const now = new Date();
+        
+        if (ultimoResoconto) {
+            const dataUltimo = new Date(ultimoResoconto);
+            const giorniPassati = Math.floor((now - dataUltimo) / (1000 * 60 * 60 * 24));
+            
+            if (giorniPassati < 7) {
+                if (CONFIG.debug) console.log(`Ultimo resoconto: ${giorniPassati} giorni fa - skip`);
+                return;
+            }
+        }
+        
+        // Controlla se è il giorno preferito della settimana
+        const giornoOggi = now.getDay();
+        if (giornoOggi !== CONFIG.giorno_resoconto) {
+            if (CONFIG.debug) console.log(`Oggi non è il giorno resoconto (${giornoOggi} vs ${CONFIG.giorno_resoconto})`);
+            return;
+        }
+        
+        // È il momento di inviare resoconto!
+        inviaResoconto();
+    }
+    
+    function inviaResoconto() {
+        // Genera statistiche settimanali
+        const oggi = new Date();
+        const setteGiorniFa = new Date(oggi.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
+        const stats = calcolaStatisticheCustom(setteGiorniFa, oggi);
+        
+        // Prepara corpo email
+        const emailBody = `
+RESOCONTO SETTIMANALE
+${CONFIG.nome_bar}
+Dal ${setteGiorniFa.toLocaleDateString('it-IT')} al ${oggi.toLocaleDateString('it-IT')}
+
+------------------------------------------
+RIEPILOGO:
+------------------------------------------
+Vendite Totali: ${stats.totaleVendite}
+Incasso Totale: €${stats.totaleIncasso.toFixed(2)}
+Spese Totali: €${stats.totaleSpese.toFixed(2)}
+PROFITTO NETTO: €${stats.profittoNetto.toFixed(2)}
+
+------------------------------------------
+TOP 3 PRODOTTI:
+------------------------------------------
+${stats.prodottiPiuVenduti.slice(0, 3).map((p, i) => 
+    `${i+1}. ${p.nome}: ${p.quantita} vendite - €${p.incasso.toFixed(2)}`
+).join('\n')}
+
+------------------------------------------
+Per dettagli completi, scarica l'Excel dalla app.
+
+Generato automaticamente da Bar Manager
+        `.trim();
+        
+        // Apri mailto
+        const emails = CONFIG.email_destinatari.split(',').map(e => e.trim()).join(',');
+        const subject = `Resoconto ${CONFIG.nome_bar} - Settimana ${oggi.toLocaleDateString('it-IT')}`;
+        const mailtoLink = `mailto:${emails}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+        
+        // Salva data invio
+        localStorage.setItem('ultimoResocontoInviato', oggi.toISOString());
+        
+        // Apri client email
+        window.location.href = mailtoLink;
+        
+        showFeedback('📧 Client email aperto per resoconto!');
+        
+        if (CONFIG.debug) console.log('Resoconto inviato:', oggi.toISOString());
+    }
+    
+    function calcolaStatisticheCustom(dataInizio, dataFine) {
+        const vendite = db.getVendite().filter(v => {
+            const dt = new Date(v.timestamp);
+            return dt >= dataInizio && dt <= dataFine;
+        });
+        
+        const spese = db.getSpese().filter(s => {
+            const dt = new Date(s.timestamp);
+            return dt >= dataInizio && dt <= dataFine;
+        });
+        
+        const totaleVendite = vendite.length;
+        const totaleIncasso = vendite.reduce((sum, v) => sum + v.prezzo, 0);
+        const totaleSpese = spese.reduce((sum, s) => sum + s.importo, 0);
+        const profittoNetto = totaleIncasso - totaleSpese;
+        
+        const prodottiCount = {};
+        vendite.forEach(v => {
+            if (!prodottiCount[v.prodotto_id]) {
+                prodottiCount[v.prodotto_id] = {
+                    nome: v.nome_prodotto,
+                    count: 0,
+                    incasso: 0
+                };
+            }
+            prodottiCount[v.prodotto_id].count++;
+            prodottiCount[v.prodotto_id].incasso += v.prezzo;
+        });
+        
+        const prodottiPiuVenduti = Object.values(prodottiCount)
+            .sort((a, b) => b.count - a.count)
+            .map(p => ({
+                nome: p.nome,
+                quantita: p.count,
+                incasso: p.incasso
+            }));
+        
+        return {
+            totaleVendite,
+            totaleIncasso,
+            totaleSpese,
+            profittoNetto,
+            prodottiPiuVenduti
+        };
+    }
+    
+    // Timer controllo connessione (usa config)
+    setInterval(() => {
+        checkConnessioneEResoconto();
+        
+        // Auto-refresh se configurato
+        if (CONFIG.auto_refresh && navigator.onLine) {
+            location.reload();
+        }
+    }, CONFIG.timer_controllo_minuti * 60 * 1000);
+    
+    // Controllo iniziale dopo 5 secondi
+    setTimeout(checkConnessioneEResoconto, 5000);
     
     // ==================== EVENT HANDLERS ====================
     
