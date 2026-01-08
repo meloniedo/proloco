@@ -120,11 +120,20 @@ function App() {
     if (prodotto.prezzo === 0 || prodotto.categoria === 'PERSONALIZZATE') {
       setSelectedProduct(prodotto);
       setCustomPrice('');
+      setKeypadMode('vendita');
       setShowKeypad(true);
     } else {
       // Altrimenti registra vendita normale
       registraVendita(prodotto);
     }
+  };
+
+  const handleSpesaClick = (categoria, icona) => {
+    setSelectedSpesaCategoria(categoria);
+    setSelectedProduct({ nome: categoria, icona: icona });
+    setCustomPrice('');
+    setKeypadMode('spesa');
+    setShowKeypad(true);
   };
 
   const handleKeypadPress = (value) => {
