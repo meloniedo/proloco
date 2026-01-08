@@ -212,6 +212,51 @@ async def elimina_vendita(vendita_id: str):
         raise HTTPException(status_code=404, detail="Vendita non trovata")
     return {"message": "Vendita eliminata con successo"}
 
+# ========== SPESE ENDPOINTS ==========
+
+@api_router.post("/spese", response_model=Spesa)
+async def crea_spesa(spesa_input: SpesaCreate):
+    """Registra una nuova spesa"""
+    if spesa_input.importo <= 0:
+        raise HTTPException(status_code=400, detail="Importo non valido")
+    
+    spesa = Spesa(
+        categoria_spesa=spesa_input.categoria_spesa,
+        importo=spesa_input.importo,
+        note=spesa_input.note,
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+    
+    await db.spese.insert_one(spesa.model_dump())
+    return spesa
+
+@api_router.get("/spese", response_model=List[Spesa])
+async def get_spese(
+    data_inizio: Optional[str] = None,
+    data_fine: Optional[str] = None,
+    limite: int = 1000
+):
+    """Ottieni tutte le spese con filtri opzionali"""
+    query = {}
+    
+    if data_inizio or data_fine:
+        query['timestamp'] = {}
+        if data_inizio:
+            query['timestamp']['$gte'] = data_inizio
+        if data_fine:
+            query['timestamp']['$lte'] = data_fine
+    
+    spese = await db.spese.find(query, {"_id": 0}).sort("timestamp", -1).to_list(limite)
+    return spese
+
+@api_router.delete("/spese/{spesa_id}")
+async def elimina_spesa(spesa_id: str):
+    """Elimina una spesa (per correzioni)"""
+    result = await db.spese.delete_one({"id": spesa_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Spesa non trovata")
+    return {"message": "Spesa eliminata con successo"}
+
 @api_router.get("/export/csv")
 async def export_csv(
     data_inizio: Optional[str] = None,
