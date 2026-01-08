@@ -48,9 +48,23 @@ class VenditaCreate(BaseModel):
     prodotto_id: str
     prezzo_personalizzato: Optional[float] = None
 
+class Spesa(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    categoria_spesa: str
+    importo: float
+    note: str = ""
+    timestamp: str
+
+class SpesaCreate(BaseModel):
+    categoria_spesa: str
+    importo: float
+    note: str = ""
+
 class StatisticheResponse(BaseModel):
     totale_vendite: int
     totale_incasso: float
+    totale_spese: float
+    profitto_netto: float
     per_categoria: dict
     prodotti_piu_venduti: List[dict]
     periodo: str
