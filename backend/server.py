@@ -46,6 +46,7 @@ class Vendita(BaseModel):
 
 class VenditaCreate(BaseModel):
     prodotto_id: str
+    prezzo_personalizzato: Optional[float] = None
 
 class StatisticheResponse(BaseModel):
     totale_vendite: int
