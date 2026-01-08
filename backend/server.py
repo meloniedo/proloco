@@ -74,6 +74,11 @@ PRODOTTI_INIZIALI = [
     {"nome": "Cremino", "prezzo": 1.20, "categoria": "GELATI", "icona": "🍦"},
     {"nome": "Cucciolone", "prezzo": 1.50, "categoria": "GELATI", "icona": "🍦"},
     {"nome": "Magnum, Soia e altri Gelati", "prezzo": 2.00, "categoria": "GELATI", "icona": "🍦"},
+    
+    # PERSONALIZZATE
+    {"nome": "Bigliardo", "prezzo": 0.00, "categoria": "PERSONALIZZATE", "icona": "🎱"},
+    {"nome": "Tassametro", "prezzo": 0.00, "categoria": "PERSONALIZZATE", "icona": "🚕"},
+    {"nome": "Extra", "prezzo": 0.00, "categoria": "PERSONALIZZATE", "icona": "➕"},
 ]
 
 @app.on_event("startup")
