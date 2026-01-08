@@ -154,7 +154,8 @@ function App() {
     const colors = {
       'CAFFETTERIA': 'from-amber-500 to-orange-600',
       'BEVANDE': 'from-purple-500 to-pink-600',
-      'GELATI': 'from-cyan-500 to-blue-600'
+      'GELATI': 'from-cyan-500 to-blue-600',
+      'PERSONALIZZATE': 'from-green-500 to-emerald-600'
     };
     return colors[categoria] || 'from-gray-500 to-gray-600';
   };
@@ -163,7 +164,8 @@ function App() {
     const icons = {
       'CAFFETTERIA': <Coffee className="w-8 h-8" />,
       'BEVANDE': <Wine className="w-8 h-8" />,
-      'GELATI': <IceCream className="w-8 h-8" />
+      'GELATI': <IceCream className="w-8 h-8" />,
+      'PERSONALIZZATE': <TrendingUp className="w-8 h-8" />
     };
     return icons[categoria] || null;
   };
