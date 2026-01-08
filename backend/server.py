@@ -92,7 +92,6 @@ PRODOTTI_INIZIALI = [
     
     # PERSONALIZZATE
     {"nome": "Bigliardo", "prezzo": 0.00, "categoria": "PERSONALIZZATE", "icona": "🎱"},
-    {"nome": "Tassametro", "prezzo": 0.00, "categoria": "PERSONALIZZATE", "icona": "🚕"},
     {"nome": "Extra", "prezzo": 0.00, "categoria": "PERSONALIZZATE", "icona": "➕"},
 ]
 
