@@ -85,6 +85,36 @@ function App() {
     setLoading(false);
   };
 
+  const registraSpesa = async (categoria, importo) => {
+    setLoading(true);
+    try {
+      await axios.post(`${API}/spese`, {
+        categoria_spesa: categoria,
+        importo: importo
+      });
+      setFeedback(`✅ Spesa registrata: ${categoria} - €${importo.toFixed(2)}`);
+      setTimeout(() => setFeedback(''), 2000);
+      caricaStatistiche(periodo);
+    } catch (error) {
+      setFeedback('❌ Errore registrazione spesa!');
+      console.error('Errore registrazione spesa:', error);
+    }
+    setLoading(false);
+  };
+
+  const eliminaSpesa = async (spesaId) => {
+    if (!window.confirm('Eliminare questa spesa?')) return;
+    try {
+      await axios.delete(`${API}/spese/${spesaId}`);
+      caricaStoricoSpese();
+      caricaStatistiche(periodo);
+      setFeedback('✅ Spesa eliminata');
+      setTimeout(() => setFeedback(''), 2000);
+    } catch (error) {
+      console.error('Errore eliminazione spesa:', error);
+    }
+  };
+
   const handleProductClick = (prodotto) => {
     // Se è un prodotto personalizzabile (prezzo 0), apri tastierino
     if (prodotto.prezzo === 0 || prodotto.categoria === 'PERSONALIZZATE') {
