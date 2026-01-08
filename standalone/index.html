@@ -444,6 +444,13 @@
     
     function renderStorico() {
         const vendite = db.getVendite().slice(0, 100);
+        const spese = db.getSpese().slice(0, 100);
+        
+        // Unisci vendite e spese e ordina per timestamp
+        const tutteTransazioni = [
+            ...vendite.map(v => ({...v, tipo: 'vendita'})),
+            ...spese.map(s => ({...s, tipo: 'spesa', nome_prodotto: s.categoria_spesa, prezzo: -s.importo}))
+        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 100);
         
         let html = `
             <div class="space-y-4">
@@ -460,27 +467,41 @@
                 </button>
                 
                 <div class="bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20">
-                    <h3 class="text-2xl font-bold text-white mb-6">📋 Ultime 100 Vendite</h3>
+                    <h3 class="text-2xl font-bold text-white mb-6">📋 Ultime 100 Transazioni (Vendite + Spese)</h3>
         `;
         
-        if (vendite.length === 0) {
-            html += '<div class="text-white text-center py-8 opacity-75">Nessuna vendita registrata</div>';
+        if (tutteTransazioni.length === 0) {
+            html += '<div class="text-white text-center py-8 opacity-75">Nessuna transazione registrata</div>';
         } else {
             html += '<div class="space-y-2 max-h-[600px] overflow-y-auto hide-scrollbar">';
-            vendite.forEach(v => {
-                const dt = new Date(v.timestamp);
+            tutteTransazioni.forEach(t => {
+                const dt = new Date(t.timestamp);
+                const isSpesa = t.tipo === 'spesa';
+                const bgColor = isSpesa ? 'bg-red-900/30' : 'bg-white/10';
+                const textColor = isSpesa ? 'text-red-300' : 'text-white';
+                const priceColor = isSpesa ? 'text-red-400' : 'text-green-400';
+                const icon = isSpesa ? '💸' : '💰';
+                
                 html += `
-                    <div class="bg-white/10 p-4 rounded-xl flex justify-between items-center hover:bg-white/20 transition-all">
-                        <div class="text-white">
-                            <div class="font-bold text-lg">${v.nome_prodotto}</div>
-                            <div class="text-sm opacity-75">
-                                ${dt.toLocaleDateString('it-IT')} - ${dt.toLocaleTimeString('it-IT')}
+                    <div class="${bgColor} p-4 rounded-xl flex justify-between items-center hover:bg-white/20 transition-all border ${isSpesa ? 'border-red-500/30' : 'border-white/10'}">
+                        <div class="${textColor}">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">${icon}</span>
+                                <div>
+                                    <div class="font-bold text-lg">${t.nome_prodotto}</div>
+                                    <div class="text-sm opacity-75">
+                                        ${dt.toLocaleDateString('it-IT')} - ${dt.toLocaleTimeString('it-IT')}
+                                    </div>
+                                    ${!isSpesa ? `<div class="text-xs opacity-50">${t.categoria}</div>` : '<div class="text-xs opacity-75">SPESA</div>'}
+                                </div>
                             </div>
-                            <div class="text-xs opacity-50">${v.categoria}</div>
                         </div>
                         <div class="flex items-center gap-4">
-                            <div class="text-2xl font-black text-white">€${v.prezzo.toFixed(2)}</div>
-                            <button onclick="deleteVendita('${v.id}')" class="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/20 rounded-lg transition-all">
+                            <div class="text-2xl font-black ${priceColor}">
+                                ${isSpesa ? '-' : '+'}€${Math.abs(t.prezzo).toFixed(2)}
+                            </div>
+                            <button onclick="${isSpesa ? `deleteSpesa('${t.id}')` : `deleteVendita('${t.id}')`}" 
+                                    class="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/20 rounded-lg transition-all">
                                 🗑️
                             </button>
                         </div>
