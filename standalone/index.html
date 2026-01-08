@@ -717,8 +717,12 @@
             
             const ws_data = [];
             
+            // TITOLO PRINCIPALE
+            ws_data.push([`PROLOCO SANTA BIANCA - ${nomeMese.toUpperCase()}`]);
+            ws_data.push([]);
+            
             // VENDITE
-            ws_data.push([`VENDITE - ${nomeMese}`]);
+            ws_data.push(['VENDITE']);
             ws_data.push(['Data', 'Ora', 'Prodotto', 'Categoria', 'Importo €']);
             
             let totaleVendite = 0;
@@ -738,7 +742,7 @@
             ws_data.push([]);
             
             // SPESE
-            ws_data.push([`SPESE - ${nomeMese}`]);
+            ws_data.push(['SPESE']);
             ws_data.push(['Data', 'Ora', 'Categoria Spesa', 'Note', 'Importo €']);
             
             let totaleSpese = 0;
@@ -756,14 +760,32 @@
             
             ws_data.push(['', '', '', 'TOTALE SPESE:', totaleSpese]);
             ws_data.push([]);
+            ws_data.push([]);
             
             // RIEPILOGO
-            ws_data.push(['RIEPILOGO MESE']);
-            ws_data.push(['', '', 'Incassi Totali:', totaleVendite]);
-            ws_data.push(['', '', 'Spese Totali:', totaleSpese]);
-            ws_data.push(['', '', 'PROFITTO NETTO:', totaleVendite - totaleSpese]);
+            ws_data.push(['RIEPILOGO MENSILE']);
+            ws_data.push([]);
+            ws_data.push(['Descrizione', 'Importo €']);
+            ws_data.push(['Incassi Totali', totaleVendite]);
+            ws_data.push(['Spese Totali', totaleSpese]);
+            ws_data.push(['PROFITTO NETTO', totaleVendite - totaleSpese]);
             
             const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            
+            // Imposta larghezza colonne
+            ws['!cols'] = [
+                {wch: 12},  // Data
+                {wch: 10},  // Ora
+                {wch: 35},  // Prodotto/Categoria
+                {wch: 20},  // Categoria/Note
+                {wch: 12}   // Importo
+            ];
+            
+            // Imposta altezza righe per titoli
+            ws['!rows'] = [
+                {hpt: 25},  // Titolo principale
+            ];
+            
             XLSX.utils.book_append_sheet(wb, ws, nomeMese.substring(0, 31));
         });
         
@@ -771,20 +793,25 @@
         const now = new Date();
         const fileName = `storico_${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}.xlsx`;
         
-        XLSX.writeFile(wb, fileName);
-        
-        if (autoExport) {
-            showFeedback('✅ Backup automatico completato!');
-            console.log('Export automatico eseguito:', fileName);
-        } else {
-            showFeedback('✅ Excel scaricato! Controlla i Download');
+        try {
+            XLSX.writeFile(wb, fileName);
             
-            // Mostra istruzioni per email
-            setTimeout(() => {
-                if (confirm('Excel scaricato!\n\nVuoi aprire il client email per inviare il backup?\n\n(Dovrai allegare manualmente il file dalla cartella Download)')) {
-                    window.location.href = `mailto:?subject=Backup Proloco Santa Bianca - ${now.toLocaleDateString('it-IT')}&body=In allegato il backup Excel dello storico completo del ${now.toLocaleDateString('it-IT')} alle ${now.toLocaleTimeString('it-IT')}.`;
-                }
-            }, 1000);
+            if (autoExport) {
+                showFeedback('✅ Backup automatico completato!');
+                console.log('Export automatico eseguito:', fileName);
+            } else {
+                showFeedback('✅ Excel scaricato! Controlla i Download');
+                
+                // Mostra istruzioni per email
+                setTimeout(() => {
+                    if (confirm('Excel scaricato!\n\nVuoi aprire il client email per inviare il backup?\n\n(Dovrai allegare manualmente il file dalla cartella Download)')) {
+                        window.location.href = `mailto:?subject=Backup Proloco Santa Bianca - ${now.toLocaleDateString('it-IT')}&body=In allegato il backup Excel dello storico completo del ${now.toLocaleDateString('it-IT')} alle ${now.toLocaleTimeString('it-IT')}.`;
+                    }
+                }, 1000);
+            }
+        } catch (error) {
+            showFeedback('❌ Errore durante export. Riprova!');
+            console.error('Export error:', error);
         }
     }
     
