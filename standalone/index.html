@@ -442,7 +442,16 @@
             <div class="space-y-4">
                 <button onclick="exportExcelCompleto()" 
                         class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3">
-                    📊 💾 Scarica Excel Completo (Storico per Mesi)
+                    📊 Crea Resoconto Excel
+                </button>
+                
+                <!-- Input file nascosto per import -->
+                <input type="file" id="importExcelInput" accept=".xlsx,.xls" style="display: none;" onchange="handleImportExcel(event)">
+                
+                <!-- Pulsante Import discreto -->
+                <button onclick="document.getElementById('importExcelInput').click()" 
+                        class="w-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-white/20">
+                    📥 Importa Dati da Excel
                 </button>
                 
                 <div class="bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20">
