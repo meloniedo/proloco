@@ -14,6 +14,11 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [periodo, setPeriodo] = useState('oggi'); // 'oggi', 'settimana', 'mese'
+  
+  // Stati per tastierino
+  const [showKeypad, setShowKeypad] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [customPrice, setCustomPrice] = useState('');
 
   useEffect(() => {
     caricaProdotti();
