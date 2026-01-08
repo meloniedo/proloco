@@ -76,6 +76,44 @@ Per backup completo:
 
 ---
 
+## 🔒 **NUOVE FUNZIONALITÀ:**
+
+### **1. Modalità Kiosk (Schermo Bloccato)**
+
+**Dove:** Sezione Storico
+
+**Come funziona:**
+1. Vai su "📋 Storico"
+2. Tap su "🔒 Blocca Schermo (Modalità Kiosk)"
+3. Il telefono entra in **fullscreen bloccato**
+4. Per uscire: Tap sull'indicatore "🔒 Schermo Bloccato" in alto a destra
+5. Inserisci password **5054**
+6. Schermo sbloccato!
+
+**Vantaggi:**
+- ✅ Impedisce che altri utenti escano dall'app
+- ✅ Perfetto per lasciare il telefono sul bancone del bar
+- ✅ Blocca tasto back e navigazione
+- ✅ Solo tu puoi uscire con la password
+
+---
+
+### **2. Export Automatico Notturno**
+
+**Funzionamento Automatico:**
+- ✅ Ogni giorno alle **23:59** l'app esporta automaticamente lo storico
+- ✅ File salvato in **Download** con nome: `storico_DD-MM-YYYY_HH-MM.xlsx`
+- ✅ Esempio: `storico_08-01-2026_23-59.xlsx`
+- ✅ Backup giornaliero senza doverti ricordare!
+
+**Come verificare:**
+- Vai nella cartella Download del telefono il giorno dopo
+- Troverai il file Excel con la data di ieri
+
+**Nota:** L'app deve essere **aperta** alle 23:59 perché l'export si attivi. Se è chiusa, l'export avverrà alla prossima apertura dell'app vicino alle 23:59.
+
+---
+
 ## 📊 Funzionalità Complete:
 
 ### **Vendite:**
