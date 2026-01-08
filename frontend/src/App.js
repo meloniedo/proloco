@@ -266,63 +266,9 @@ function App() {
       {/* Header */}
       <div className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-white text-center mb-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-white text-center">
             ☕ Proloco Santa Bianca
           </h1>
-          
-          {/* Navigation */}
-          <div className="flex gap-2 justify-center flex-wrap">
-            <button
-              onClick={() => setView('vendita')}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                view === 'vendita'
-                  ? 'bg-white text-purple-900 shadow-lg scale-105'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              data-testid="tab-vendita"
-            >
-              🛒 Vendita
-            </button>
-            <button
-              onClick={() => setView('spese')}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                view === 'spese'
-                  ? 'bg-white text-purple-900 shadow-lg scale-105'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              data-testid="tab-spese"
-            >
-              💸 Spese
-            </button>
-            <button
-              onClick={() => {
-                setView('statistiche');
-                caricaStatistiche(periodo);
-              }}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                view === 'statistiche'
-                  ? 'bg-white text-purple-900 shadow-lg scale-105'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              data-testid="tab-statistiche"
-            >
-              📊 Statistiche
-            </button>
-            <button
-              onClick={() => {
-                setView('storico');
-                caricaStorico();
-              }}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                view === 'storico'
-                  ? 'bg-white text-purple-900 shadow-lg scale-105'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              data-testid="tab-storico"
-            >
-              📋 Storico
-            </button>
-          </div>
         </div>
       </div>
 
