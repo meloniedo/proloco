@@ -583,6 +583,16 @@ function App() {
         {/* VISTA STORICO */}
         {view === 'storico' && (
           <div className="space-y-4">
+            {/* Pulsante Export Excel Completo */}
+            <button
+              onClick={esportaExcelCompleto}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3"
+              data-testid="export-excel-completo-btn"
+            >
+              <Download className="w-6 h-6" />
+              📊 Scarica Excel Completo (Storico per Mesi)
+            </button>
+
             <div className="bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20">
               <h3 className="text-2xl font-bold text-white mb-6">📋 Ultime 100 Vendite</h3>
               
