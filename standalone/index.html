@@ -1128,7 +1128,7 @@ Generato automaticamente da Bar Manager
     }
     
     function confirmReset() {
-        if (state.resetPassword !== '5054') {
+        if (state.resetPassword !== CONFIG.password_reset) {
             showFeedback('❌ Password errata!');
             return;
         }
