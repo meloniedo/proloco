@@ -104,7 +104,7 @@ const CONFIG = {
         {nome: "Cialde caffè", icona: "☕", colore: "from-amber-500 to-orange-600"},
         {nome: "Vino", icona: "🍷", colore: "from-purple-500 to-pink-600"},
         {nome: "Articoli Pulizia", icona: "🧹", colore: "from-cyan-500 to-blue-600"},
-        {nome: "Articoli dal SuperMercato", icona: "🛒", colore: "from-green-500 to-emerald-600"},
+        {nome: "Articoli S. Mercato", icona: "🛒", colore: "from-green-500 to-emerald-600"},
         {nome: "Rimborso Servizio", icona: "💼", colore: "from-indigo-500 to-purple-600"},
         {nome: "Spesa Generica", icona: "📋", colore: "from-gray-500 to-gray-700"}
     ],
