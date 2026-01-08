@@ -577,6 +577,68 @@ function App() {
         )}
       </div>
 
+      {/* Navigation Footer - Fisso in basso */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-t border-white/20 z-50 safe-area-inset-bottom">
+        <div className="max-w-7xl mx-auto px-2 py-3">
+          <div className="grid grid-cols-4 gap-2">
+            <button
+              onClick={() => setView('vendita')}
+              className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold transition-all ${
+                view === 'vendita'
+                  ? 'bg-white text-purple-900 shadow-lg'
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+              data-testid="tab-vendita"
+            >
+              <span className="text-2xl mb-1">🛒</span>
+              <span className="text-xs">Vendita</span>
+            </button>
+            <button
+              onClick={() => setView('spese')}
+              className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold transition-all ${
+                view === 'spese'
+                  ? 'bg-white text-purple-900 shadow-lg'
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+              data-testid="tab-spese"
+            >
+              <span className="text-2xl mb-1">💸</span>
+              <span className="text-xs">Spese</span>
+            </button>
+            <button
+              onClick={() => {
+                setView('statistiche');
+                caricaStatistiche(periodo);
+              }}
+              className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold transition-all ${
+                view === 'statistiche'
+                  ? 'bg-white text-purple-900 shadow-lg'
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+              data-testid="tab-statistiche"
+            >
+              <span className="text-2xl mb-1">📊</span>
+              <span className="text-xs">Statistiche</span>
+            </button>
+            <button
+              onClick={() => {
+                setView('storico');
+                caricaStorico();
+              }}
+              className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold transition-all ${
+                view === 'storico'
+                  ? 'bg-white text-purple-900 shadow-lg'
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+              data-testid="tab-storico"
+            >
+              <span className="text-2xl mb-1">📋</span>
+              <span className="text-xs">Storico</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Modal Tastierino Numerico */}
       {showKeypad && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" data-testid="keypad-modal">
