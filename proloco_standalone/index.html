@@ -1025,7 +1025,24 @@
         const fileName = `storico_${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}.xlsx`;
         
         try {
-            XLSX.writeFile(wb, fileName);
+            // Metodo compatibile con mobile
+            const wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'array'});
+            const blob = new Blob([wbout], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+            
+            // Crea link di download
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
             showFeedback(autoExport ? '✅ Backup automatico completato!' : '✅ Excel scaricato!');
         } catch (error) {
             showFeedback('❌ Errore durante export');
