@@ -294,12 +294,6 @@
                             </div>
                         `}
                     </div>
-                    <!-- Data ultimo report -->
-                    <div class="text-center mt-2">
-                        <span class="text-xs text-white/60">
-                            📧 Ultimo report: ${dataUltimoReport}
-                        </span>
-                    </div>
                 </div>
             </div>
         `;
@@ -459,15 +453,15 @@
         
         let html = `
             <div class="space-y-6">
-                <div class="flex gap-2 justify-center flex-wrap">
+                <div class="grid grid-cols-3 gap-2">
                     ${['oggi', 'settimana', 'mese'].map(p => `
                         <button onclick="changePeriodo('${p}')"
-                                class="px-6 py-3 rounded-xl font-semibold transition-all ${
+                                class="px-3 py-2 rounded-xl font-semibold transition-all text-sm ${
                                     state.periodo === p 
                                     ? 'bg-white text-purple-900 shadow-lg' 
                                     : 'bg-white/20 text-white hover:bg-white/30'
                                 }">
-                            ${p === 'oggi' ? '📅 Oggi' : p === 'settimana' ? '📆 Settimana' : '🗓️ Mese'}
+                            ${p === 'oggi' ? '📅 Oggi' : p === 'settimana' ? '📆 Sett.' : '🗓️ Mese'}
                         </button>
                     `).join('')}
                 </div>
