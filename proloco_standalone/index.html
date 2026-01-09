@@ -251,6 +251,23 @@
         };
     }
     
+    // Formatta data senza slash (per evitare encoding HTML)
+    function formatDataPerEmail(data) {
+        const giorno = String(data.getDate()).padStart(2, '0');
+        const mese = String(data.getMonth() + 1).padStart(2, '0');
+        const anno = data.getFullYear();
+        return `${giorno}-${mese}-${anno}`;
+    }
+    
+    function formatDataOraPerEmail(data) {
+        const giorno = String(data.getDate()).padStart(2, '0');
+        const mese = String(data.getMonth() + 1).padStart(2, '0');
+        const anno = data.getFullYear();
+        const ore = String(data.getHours()).padStart(2, '0');
+        const minuti = String(data.getMinutes()).padStart(2, '0');
+        return `${giorno}-${mese}-${anno} ore ${ore}:${minuti}`;
+    }
+    
     // ==================== RENDERING ====================
     
     function render() {
