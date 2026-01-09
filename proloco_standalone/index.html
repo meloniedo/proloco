@@ -938,6 +938,12 @@
         const vendite = db.getVendite();
         const spese = db.getSpese();
         
+        // Controllo se ci sono dati
+        if (vendite.length === 0 && spese.length === 0) {
+            showFeedback('⚠️ Nessun dato da esportare!');
+            return;
+        }
+        
         const venditePerMese = {};
         const spesePerMese = {};
         
