@@ -75,7 +75,6 @@
         
         init() {
             if (!localStorage.getItem('prodotti')) {
-                // Usa listino da config.js
                 const prodottiIniziali = CONFIG.listino.map(p => ({
                     ...p,
                     id: this.generateId()
@@ -94,11 +93,6 @@
             // Inizializza ultimo resoconto inviato
             if (!localStorage.getItem('ultimoResocontoInviato')) {
                 localStorage.setItem('ultimoResocontoInviato', '');
-            }
-            
-            // Inizializza flag resoconto in attesa
-            if (!localStorage.getItem('resocontoPendente')) {
-                localStorage.setItem('resocontoPendente', 'true');
             }
         }
         
@@ -122,16 +116,12 @@
             const vendite = this.getVendite();
             vendite.unshift(vendita);
             localStorage.setItem('vendite', JSON.stringify(vendite));
-            // Quando c'è una nuova vendita, segna che c'è un resoconto da inviare
-            localStorage.setItem('resocontoPendente', 'true');
         }
         
         addSpesa(spesa) {
             const spese = this.getSpese();
             spese.unshift(spesa);
             localStorage.setItem('spese', JSON.stringify(spese));
-            // Quando c'è una nuova spesa, segna che c'è un resoconto da inviare
-            localStorage.setItem('resocontoPendente', 'true');
         }
         
         deleteVendita(id) {
@@ -181,8 +171,85 @@
         feedback: '',
         wakeLock: null,
         wakeLockAttivo: false,
-        invioEmailInCorso: false
+        invioEmailInCorso: false,
+        timerControlloAttivo: false
     };
+    
+    // ==================== FUNZIONI UTILITÀ DATA ====================
+    
+    function getGiorniDaUltimoReport() {
+        const ultimoReport = localStorage.getItem('ultimoResocontoInviato');
+        if (!ultimoReport) return Infinity; // Mai inviato
+        
+        const dataUltimo = new Date(ultimoReport);
+        const now = new Date();
+        const diffMs = now - dataUltimo;
+        const diffGiorni = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        
+        return diffGiorni;
+    }
+    
+    function getDataUltimoReport() {
+        const ultimoReport = localStorage.getItem('ultimoResocontoInviato');
+        if (!ultimoReport) return 'Mai inviato';
+        
+        const data = new Date(ultimoReport);
+        return data.toLocaleDateString('it-IT', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    function isReportPendente() {
+        if (!CONFIG.invio_resoconto_automatico) return false;
+        
+        const giorniPassati = getGiorniDaUltimoReport();
+        return giorniPassati >= CONFIG.giorni_minimo_tra_report;
+    }
+    
+    function isOraGiustaPerInvio() {
+        const now = new Date();
+        const giornoSettimana = now.getDay(); // 0=Domenica, 1=Lunedì, ...
+        const ora = now.getHours();
+        const minuti = now.getMinutes();
+        
+        // Controlla se è il giorno giusto (Lunedì = 1)
+        if (giornoSettimana !== CONFIG.giorno_invio_report) return false;
+        
+        // Controlla se è l'ora giusta (8:00)
+        if (ora < CONFIG.ora_invio_report) return false;
+        if (ora === CONFIG.ora_invio_report && minuti < CONFIG.minuti_invio_report) return false;
+        
+        return true;
+    }
+    
+    function getSettimanaScorsa() {
+        const oggi = new Date();
+        // Trova il Lunedì di questa settimana
+        const giornoSettimana = oggi.getDay();
+        const diffLunedi = giornoSettimana === 0 ? 6 : giornoSettimana - 1;
+        
+        const lunediQuestaSett = new Date(oggi);
+        lunediQuestaSett.setDate(oggi.getDate() - diffLunedi);
+        lunediQuestaSett.setHours(0, 0, 0, 0);
+        
+        // Settimana scorsa: da Lunedì -7 a Domenica -1
+        const lunediScorso = new Date(lunediQuestaSett);
+        lunediScorso.setDate(lunediScorso.getDate() - 7);
+        
+        const domenicaScorsa = new Date(lunediQuestaSett);
+        domenicaScorsa.setDate(domenicaScorsa.getDate() - 1);
+        domenicaScorsa.setHours(23, 59, 59, 999);
+        
+        return {
+            inizio: lunediScorso,
+            fine: domenicaScorsa
+        };
+    }
     
     // ==================== RENDERING ====================
     
@@ -200,8 +267,9 @@
     }
     
     function renderHeader() {
-        // Controlla se mostrare segnalino resoconto pendente
-        const mostraSegnalino = isResocontoPendente();
+        const reportPendente = isReportPendente();
+        const giorniPassati = getGiorniDaUltimoReport();
+        const dataUltimoReport = getDataUltimoReport();
         
         return `
             <div class="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-40">
@@ -210,33 +278,37 @@
                         <h1 class="text-2xl md:text-3xl font-bold text-white text-center">
                             ☕ ${CONFIG.nome_bar}
                         </h1>
-                        ${mostraSegnalino ? `
+                        ${reportPendente ? `
                             <div class="relative group cursor-pointer" onclick="tentaInvioManualeResoconto()">
-                                <span class="inline-flex items-center justify-center w-4 h-4 bg-orange-500 rounded-full animate-pulse" title="Resoconto in attesa - Clicca per inviare"></span>
-                                <span class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                                    📧 Resoconto in attesa
+                                <span class="inline-flex items-center justify-center w-4 h-4 bg-orange-500 rounded-full animate-pulse" title="Report in attesa (${giorniPassati} giorni)"></span>
+                                <span class="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-black/90 text-white text-xs px-3 py-2 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                                    📧 Report pendente (${giorniPassati}+ giorni)
                                 </span>
                             </div>
                         ` : `
-                            <div class="relative">
-                                <span class="inline-flex items-center justify-center w-4 h-4 bg-green-500 rounded-full" title="Resoconto inviato ✓"></span>
+                            <div class="relative group">
+                                <span class="inline-flex items-center justify-center w-4 h-4 bg-green-500 rounded-full" title="Report OK"></span>
+                                <span class="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-black/90 text-white text-xs px-3 py-2 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                                    ✓ Ultimo: ${giorniPassati === Infinity ? 'Mai' : giorniPassati + ' giorni fa'}
+                                </span>
                             </div>
                         `}
+                    </div>
+                    <!-- Data ultimo report -->
+                    <div class="text-center mt-2">
+                        <span class="text-xs text-white/60">
+                            📧 Ultimo report: ${dataUltimoReport}
+                        </span>
                     </div>
                 </div>
             </div>
         `;
     }
     
-    function isResocontoPendente() {
-        if (!CONFIG.invio_resoconto_automatico) return false;
-        return localStorage.getItem('resocontoPendente') === 'true';
-    }
-    
     function renderFeedback() {
         if (!state.feedback) return '';
         return `
-            <div class="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+            <div class="fixed top-32 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
                 <div class="bg-white text-gray-900 px-8 py-4 rounded-2xl shadow-2xl text-xl font-bold">
                     ${state.feedback}
                 </div>
@@ -316,8 +388,6 @@
     
     function renderSpese() {
         const spese = db.getSpese().slice(0, 10);
-        
-        // Usa categorie da config
         const categorie = CONFIG.categorie_spese;
         
         let html = `
@@ -447,7 +517,7 @@
                 <div class="bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20">
                     <h3 class="text-2xl font-bold text-white mb-6">🏆 Top 5 Prodotti</h3>
                     <div class="space-y-3">
-                        ${stats.prodottiPiuVenduti.map((prod, idx) => `
+                        ${stats.prodottiPiuVenduti.length > 0 ? stats.prodottiPiuVenduti.map((prod, idx) => `
                             <div class="bg-white/10 p-4 rounded-xl flex justify-between items-center">
                                 <div class="flex items-center gap-4">
                                     <div class="text-3xl font-black text-yellow-400">#${idx + 1}</div>
@@ -458,7 +528,7 @@
                                 </div>
                                 <div class="text-2xl font-black text-white">€${prod.incasso.toFixed(2)}</div>
                             </div>
-                        `).join('')}
+                        `).join('') : '<div class="text-white/50 text-center py-4">Nessuna vendita nel periodo</div>'}
                     </div>
                 </div>
                 
@@ -475,8 +545,9 @@
     function renderStorico() {
         const vendite = db.getVendite().slice(0, 100);
         const spese = db.getSpese().slice(0, 100);
+        const reportPendente = isReportPendente();
+        const giorniPassati = getGiorniDaUltimoReport();
         
-        // Unisci vendite e spese e ordina per timestamp
         const tutteTransazioni = [
             ...vendite.map(v => ({...v, tipo: 'vendita'})),
             ...spese.map(s => ({...s, tipo: 'spesa', nome_prodotto: s.categoria_spesa, prezzo: -s.importo}))
@@ -484,6 +555,40 @@
         
         let html = `
             <div class="space-y-4">
+                <!-- Info Report -->
+                <div class="bg-white/10 backdrop-blur-lg p-4 rounded-2xl border border-white/20">
+                    <div class="flex items-center justify-between">
+                        <div class="text-white">
+                            <div class="text-sm opacity-75">📧 Ultimo report inviato:</div>
+                            <div class="font-bold">${getDataUltimoReport()}</div>
+                        </div>
+                        <div class="text-right">
+                            ${reportPendente ? `
+                                <span class="inline-flex items-center gap-2 bg-orange-500/20 text-orange-300 px-3 py-1 rounded-full text-sm">
+                                    <span class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                                    Pendente (${giorniPassati}+ giorni)
+                                </span>
+                            ` : `
+                                <span class="inline-flex items-center gap-2 bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-sm">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    Inviato
+                                </span>
+                            `}
+                        </div>
+                    </div>
+                    <div class="text-xs text-white/50 mt-2">
+                        ⏰ Prossimo invio programmato: Lunedì alle 08:00 (se passati 7+ giorni)
+                    </div>
+                </div>
+                
+                <!-- Pulsante Schermo Acceso -->
+                <button onclick="toggleWakeLock()" 
+                        class="w-full ${state.wakeLockAttivo 
+                            ? 'bg-gradient-to-r from-yellow-500 to-orange-500' 
+                            : 'bg-gradient-to-r from-gray-600 to-gray-700'} text-white py-3 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3">
+                    ${state.wakeLockAttivo ? '🔆 Schermo Acceso (Attivo)' : '🔅 Tieni Schermo Acceso'}
+                </button>
+                
                 <button onclick="exportExcelCompleto()" 
                         class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3">
                     📊 Crea Resoconto Excel
@@ -491,8 +596,8 @@
                 
                 <!-- Pulsante invio manuale email -->
                 <button onclick="tentaInvioManualeResoconto()" 
-                        class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3 ${!isResocontoPendente() ? 'opacity-50' : ''}">
-                    📧 ${isResocontoPendente() ? 'Invia Resoconto Email Ora' : 'Resoconto già inviato ✓'}
+                        class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3 ${!reportPendente ? 'opacity-50' : ''}">
+                    📧 ${reportPendente ? 'Invia Report Settimanale Ora' : 'Report già inviato questa settimana ✓'}
                 </button>
                 
                 <!-- Input file nascosto per import -->
@@ -505,7 +610,7 @@
                 </button>
                 
                 <div class="bg-white/10 backdrop-blur-lg p-6 rounded-3xl border border-white/20">
-                    <h3 class="text-2xl font-bold text-white mb-6">📋 Ultime 100 Transazioni (Vendite + Spese)</h3>
+                    <h3 class="text-2xl font-bold text-white mb-6">📋 Ultime 100 Transazioni</h3>
         `;
         
         if (tutteTransazioni.length === 0) {
@@ -530,7 +635,6 @@
                                     <div class="text-sm opacity-75">
                                         ${dt.toLocaleDateString('it-IT')} - ${dt.toLocaleTimeString('it-IT')}
                                     </div>
-                                    ${!isSpesa ? `<div class="text-xs opacity-50">${t.categoria}</div>` : '<div class="text-xs opacity-75">SPESA</div>'}
                                 </div>
                             </div>
                         </div>
@@ -665,6 +769,42 @@
         `;
     }
     
+    // ==================== WAKE LOCK (Schermo Acceso) ====================
+    
+    async function toggleWakeLock() {
+        if (state.wakeLockAttivo) {
+            // Disattiva
+            if (state.wakeLock) {
+                await state.wakeLock.release();
+                state.wakeLock = null;
+            }
+            state.wakeLockAttivo = false;
+            showFeedback('🔅 Schermo acceso disattivato');
+        } else {
+            // Attiva
+            try {
+                if ('wakeLock' in navigator) {
+                    state.wakeLock = await navigator.wakeLock.request('screen');
+                    state.wakeLockAttivo = true;
+                    showFeedback('🔆 Schermo sempre acceso!');
+                    
+                    // Riattiva se la pagina torna visibile
+                    document.addEventListener('visibilitychange', async () => {
+                        if (state.wakeLockAttivo && document.visibilityState === 'visible') {
+                            state.wakeLock = await navigator.wakeLock.request('screen');
+                        }
+                    });
+                } else {
+                    showFeedback('❌ Funzione non supportata su questo browser');
+                }
+            } catch (err) {
+                console.error('Wake Lock error:', err);
+                showFeedback('❌ Impossibile attivare schermo acceso');
+            }
+        }
+        render();
+    }
+    
     // ==================== CALCOLO STATISTICHE ====================
     
     function calcolaStatistiche(periodo) {
@@ -729,404 +869,17 @@
         };
     }
     
-    // ==================== EXPORT EXCEL ====================
-    
-    function exportExcelCompleto(autoExport = false) {
-        const vendite = db.getVendite();
-        const spese = db.getSpese();
+    function calcolaStatisticheSettimanaScorsa() {
+        const settimana = getSettimanaScorsa();
         
-        // Raggruppa per mese
-        const venditePerMese = {};
-        const spesePerMese = {};
-        
-        vendite.forEach(v => {
-            const dt = new Date(v.timestamp);
-            const mese = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
-            if (!venditePerMese[mese]) venditePerMese[mese] = [];
-            venditePerMese[mese].push(v);
-        });
-        
-        spese.forEach(s => {
-            const dt = new Date(s.timestamp);
-            const mese = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
-            if (!spesePerMese[mese]) spesePerMese[mese] = [];
-            spesePerMese[mese].push(s);
-        });
-        
-        const tuttiMesi = [...new Set([...Object.keys(venditePerMese), ...Object.keys(spesePerMese)])].sort().reverse();
-        
-        const wb = XLSX.utils.book_new();
-        
-        tuttiMesi.slice(0, 12).forEach(mese => {
-            const [anno, meseNum] = mese.split('-');
-            const nomeMese = new Date(anno, meseNum - 1).toLocaleDateString('it-IT', {month: 'long', year: 'numeric'});
-            
-            const ws_data = [];
-            
-            // TITOLO PRINCIPALE
-            ws_data.push([`PROLOCO SANTA BIANCA - ${nomeMese.toUpperCase()}`]);
-            ws_data.push([]);
-            
-            // VENDITE
-            ws_data.push(['VENDITE']);
-            ws_data.push(['Data', 'Ora', 'Prodotto', 'Categoria', 'Importo €']);
-            
-            let totaleVendite = 0;
-            (venditePerMese[mese] || []).forEach(v => {
-                const dt = new Date(v.timestamp);
-                ws_data.push([
-                    dt.toLocaleDateString('it-IT'),
-                    dt.toLocaleTimeString('it-IT'),
-                    v.nome_prodotto,
-                    v.categoria,
-                    v.prezzo
-                ]);
-                totaleVendite += v.prezzo;
-            });
-            
-            ws_data.push(['', '', '', 'TOTALE VENDITE:', totaleVendite]);
-            ws_data.push([]);
-            
-            // SPESE
-            ws_data.push(['SPESE']);
-            ws_data.push(['Data', 'Ora', 'Categoria Spesa', 'Note', 'Importo €']);
-            
-            let totaleSpese = 0;
-            (spesePerMese[mese] || []).forEach(s => {
-                const dt = new Date(s.timestamp);
-                ws_data.push([
-                    dt.toLocaleDateString('it-IT'),
-                    dt.toLocaleTimeString('it-IT'),
-                    s.categoria_spesa,
-                    s.note || '',
-                    s.importo
-                ]);
-                totaleSpese += s.importo;
-            });
-            
-            ws_data.push(['', '', '', 'TOTALE SPESE:', totaleSpese]);
-            ws_data.push([]);
-            ws_data.push([]);
-            
-            // RIEPILOGO
-            ws_data.push(['RIEPILOGO MENSILE']);
-            ws_data.push([]);
-            ws_data.push(['Descrizione', 'Importo €']);
-            ws_data.push(['Incassi Totali', totaleVendite]);
-            ws_data.push(['Spese Totali', totaleSpese]);
-            ws_data.push(['PROFITTO NETTO', totaleVendite - totaleSpese]);
-            
-            const ws = XLSX.utils.aoa_to_sheet(ws_data);
-            
-            // Imposta larghezza colonne
-            ws['!cols'] = [
-                {wch: 12},  // Data
-                {wch: 10},  // Ora
-                {wch: 35},  // Prodotto/Categoria
-                {wch: 20},  // Categoria/Note
-                {wch: 12}   // Importo
-            ];
-            
-            // Imposta altezza righe per titoli
-            ws['!rows'] = [
-                {hpt: 25},  // Titolo principale
-            ];
-            
-            XLSX.utils.book_append_sheet(wb, ws, nomeMese.substring(0, 31));
-        });
-        
-        // Nome file con data e ora
-        const now = new Date();
-        const fileName = `storico_${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}.xlsx`;
-        
-        try {
-            XLSX.writeFile(wb, fileName);
-            
-            if (autoExport) {
-                showFeedback('✅ Backup automatico completato!');
-                console.log('Export automatico eseguito:', fileName);
-            } else {
-                showFeedback('✅ Excel scaricato! Controlla i Download');
-            }
-        } catch (error) {
-            showFeedback('❌ Errore durante export. Riprova!');
-            console.error('Export error:', error);
-        }
-    }
-    
-    // ==================== AUTO EXPORT ====================
-    
-    function checkAutoExport() {
-        if (!CONFIG.export_automatico_attivo) return;
-        
-        const now = new Date();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        
-        // Se sono le ore configurate
-        if (hours === CONFIG.orario_export.ore && minutes === CONFIG.orario_export.minuti) {
-            // Controlla se l'export è già stato fatto oggi
-            const lastExport = localStorage.getItem('lastAutoExport');
-            const today = now.toDateString();
-            
-            if (lastExport !== today) {
-                // Esegui export automatico
-                exportExcelCompleto(true);
-                localStorage.setItem('lastAutoExport', today);
-            }
-        }
-    }
-    
-    // Controlla ogni minuto per l'export automatico
-    setInterval(checkAutoExport, 60000);
-    
-    // ==================== IMPORT EXCEL ====================
-    
-    function handleImportExcel(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        showFeedback('📥 Caricamento file...');
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                
-                let venditeTotali = 0;
-                let speseTotali = 0;
-                let errori = 0;
-                
-                // Itera su tutti i fogli (uno per mese)
-                workbook.SheetNames.forEach(sheetName => {
-                    const worksheet = workbook.Sheets[sheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                    
-                    // Cerca sezione VENDITE
-                    for (let i = 0; i < jsonData.length; i++) {
-                        const row = jsonData[i];
-                        if (!row || row.length === 0) continue;
-                        
-                        // Se troviamo header VENDITE
-                        if (row[0] && row[0].toString().includes('VENDITE')) {
-                            i++; // Skip header row (Data, Ora, Prodotto...)
-                            i++; // Vai ai dati
-                            
-                            // Leggi vendite fino a riga vuota o TOTALE
-                            while (i < jsonData.length) {
-                                const dataRow = jsonData[i];
-                                if (!dataRow || dataRow.length === 0) break;
-                                if (dataRow[3] === 'TOTALE VENDITE:') break;
-                                
-                                // Importa vendita
-                                try {
-                                    const vendita = {
-                                        id: db.generateId(),
-                                        prodotto_id: db.generateId(),
-                                        nome_prodotto: dataRow[2] || 'Prodotto',
-                                        prezzo: parseFloat(dataRow[4]) || 0,
-                                        categoria: dataRow[3] || 'ALTRO',
-                                        timestamp: parseDataOra(dataRow[0], dataRow[1])
-                                    };
-                                    db.addVendita(vendita);
-                                    venditeTotali++;
-                                } catch (err) {
-                                    errori++;
-                                    if (CONFIG.debug) console.error('Errore import vendita:', err);
-                                }
-                                
-                                i++;
-                            }
-                        }
-                        
-                        // Se troviamo header SPESE
-                        if (row[0] && row[0].toString().includes('SPESE')) {
-                            i++; // Skip header row
-                            i++; // Vai ai dati
-                            
-                            // Leggi spese
-                            while (i < jsonData.length) {
-                                const dataRow = jsonData[i];
-                                if (!dataRow || dataRow.length === 0) break;
-                                if (dataRow[3] === 'TOTALE SPESE:') break;
-                                
-                                // Importa spesa
-                                try {
-                                    const spesa = {
-                                        id: db.generateId(),
-                                        categoria_spesa: dataRow[2] || 'Spesa Generica',
-                                        importo: parseFloat(dataRow[4]) || 0,
-                                        note: dataRow[3] || '',
-                                        timestamp: parseDataOra(dataRow[0], dataRow[1])
-                                    };
-                                    db.addSpesa(spesa);
-                                    speseTotali++;
-                                } catch (err) {
-                                    errori++;
-                                    if (CONFIG.debug) console.error('Errore import spesa:', err);
-                                }
-                                
-                                i++;
-                            }
-                        }
-                    }
-                });
-                
-                // Reset input file
-                event.target.value = '';
-                
-                // Feedback
-                if (venditeTotali > 0 || speseTotali > 0) {
-                    showFeedback(`✅ Importati: ${venditeTotali} vendite, ${speseTotali} spese!`);
-                    setTimeout(() => {
-                        if (confirm(`Import completato!\n\nVendite: ${venditeTotali}\nSpese: ${speseTotali}\n${errori > 0 ? `\nErrori: ${errori}` : ''}\n\nRicaricare l'app per vedere i dati?`)) {
-                            location.reload();
-                        }
-                    }, 1000);
-                } else {
-                    showFeedback('⚠️ Nessun dato trovato nel file');
-                }
-                
-            } catch (error) {
-                showFeedback('❌ Errore lettura file Excel!');
-                console.error('Import error:', error);
-            }
-        };
-        
-        reader.onerror = function() {
-            showFeedback('❌ Errore caricamento file!');
-        };
-        
-        reader.readAsArrayBuffer(file);
-    }
-    
-    function parseDataOra(dataStr, oraStr) {
-        try {
-            // Data formato: dd/mm/yyyy
-            const [giorno, mese, anno] = dataStr.split('/');
-            // Ora formato: hh:mm:ss
-            const [ore, minuti, secondi] = oraStr.split(':');
-            
-            const data = new Date(anno, mese - 1, giorno, ore, minuti, secondi);
-            return data.toISOString();
-        } catch (err) {
-            // Fallback a data corrente se parsing fallisce
-            return new Date().toISOString();
-        }
-    }
-    
-    // ==================== INVIO EMAIL AUTOMATICO CON EMAILJS ====================
-    
-    async function inviaResocontoEmailJS() {
-        if (!CONFIG.invio_resoconto_automatico) {
-            if (CONFIG.debug) console.log('Invio resoconto disattivato');
-            return false;
-        }
-        
-        if (state.invioEmailInCorso) {
-            if (CONFIG.debug) console.log('Invio già in corso, skip');
-            return false;
-        }
-        
-        // Controlla se c'è un resoconto pendente
-        if (!isResocontoPendente()) {
-            if (CONFIG.debug) console.log('Nessun resoconto pendente');
-            return false;
-        }
-        
-        // Controlla connessione
-        if (!navigator.onLine) {
-            if (CONFIG.debug) console.log('Offline - impossibile inviare');
-            return false;
-        }
-        
-        state.invioEmailInCorso = true;
-        showFeedback('📧 Invio resoconto in corso...');
-        
-        try {
-            // Calcola statistiche dall'ultimo invio o ultimi 7 giorni
-            const ultimoInvio = localStorage.getItem('ultimoResocontoInviato');
-            let dataInizio;
-            
-            if (ultimoInvio) {
-                dataInizio = new Date(ultimoInvio);
-            } else {
-                // Se mai inviato, prendi ultimi 7 giorni
-                dataInizio = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-            }
-            
-            const oggi = new Date();
-            const stats = calcolaStatisticheCustom(dataInizio, oggi);
-            
-            // Prepara top prodotti come stringa
-            const topProdottiStr = stats.prodottiPiuVenduti.slice(0, 3).map((p, i) => 
-                `${i+1}. ${p.nome}: ${p.quantita} vendite - €${p.incasso.toFixed(2)}`
-            ).join('\n') || 'Nessuna vendita nel periodo';
-            
-            // Prepara parametri per EmailJS
-            const templateParams = {
-                destinatari: CONFIG.email_destinatari,
-                nome_bar: CONFIG.nome_bar,
-                data: oggi.toLocaleDateString('it-IT') + ' ' + oggi.toLocaleTimeString('it-IT'),
-                totale_vendite: stats.totaleVendite.toString(),
-                incasso_totale: stats.totaleIncasso.toFixed(2),
-                spese_totali: stats.totaleSpese.toFixed(2),
-                profitto_netto: stats.profittoNetto.toFixed(2),
-                top_prodotti: topProdottiStr
-            };
-            
-            if (CONFIG.debug) {
-                console.log('Invio email con parametri:', templateParams);
-            }
-            
-            // Invia email via EmailJS
-            const response = await emailjs.send(
-                CONFIG.emailjs_service_id,
-                CONFIG.emailjs_template_id,
-                templateParams
-            );
-            
-            if (CONFIG.debug) {
-                console.log('EmailJS Response:', response);
-            }
-            
-            if (response.status === 200) {
-                // Successo! Aggiorna stato
-                localStorage.setItem('ultimoResocontoInviato', oggi.toISOString());
-                localStorage.setItem('resocontoPendente', 'false');
-                
-                showFeedback('✅ Resoconto inviato con successo!');
-                console.log('📧 Resoconto inviato:', oggi.toISOString());
-                
-                // Re-render per aggiornare pallino
-                setTimeout(() => {
-                    state.invioEmailInCorso = false;
-                    render();
-                }, 2000);
-                
-                return true;
-            } else {
-                throw new Error('Risposta EmailJS non OK');
-            }
-            
-        } catch (error) {
-            console.error('❌ Errore invio email:', error);
-            showFeedback('❌ Errore invio email. Riprovo dopo...');
-            state.invioEmailInCorso = false;
-            return false;
-        }
-    }
-    
-    function calcolaStatisticheCustom(dataInizio, dataFine) {
         const vendite = db.getVendite().filter(v => {
             const dt = new Date(v.timestamp);
-            return dt >= dataInizio && dt <= dataFine;
+            return dt >= settimana.inizio && dt <= settimana.fine;
         });
         
         const spese = db.getSpese().filter(s => {
             const dt = new Date(s.timestamp);
-            return dt >= dataInizio && dt <= dataFine;
+            return dt >= settimana.inizio && dt <= settimana.fine;
         });
         
         const totaleVendite = vendite.length;
@@ -1160,76 +913,411 @@
             totaleIncasso,
             totaleSpese,
             profittoNetto,
-            prodottiPiuVenduti
+            prodottiPiuVenduti,
+            periodo: {
+                inizio: settimana.inizio,
+                fine: settimana.fine
+            }
         };
     }
     
-    // Funzione per invio manuale
+    // ==================== EXPORT EXCEL ====================
+    
+    function exportExcelCompleto(autoExport = false) {
+        const vendite = db.getVendite();
+        const spese = db.getSpese();
+        
+        const venditePerMese = {};
+        const spesePerMese = {};
+        
+        vendite.forEach(v => {
+            const dt = new Date(v.timestamp);
+            const mese = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+            if (!venditePerMese[mese]) venditePerMese[mese] = [];
+            venditePerMese[mese].push(v);
+        });
+        
+        spese.forEach(s => {
+            const dt = new Date(s.timestamp);
+            const mese = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+            if (!spesePerMese[mese]) spesePerMese[mese] = [];
+            spesePerMese[mese].push(s);
+        });
+        
+        const tuttiMesi = [...new Set([...Object.keys(venditePerMese), ...Object.keys(spesePerMese)])].sort().reverse();
+        
+        const wb = XLSX.utils.book_new();
+        
+        tuttiMesi.slice(0, 12).forEach(mese => {
+            const [anno, meseNum] = mese.split('-');
+            const nomeMese = new Date(anno, meseNum - 1).toLocaleDateString('it-IT', {month: 'long', year: 'numeric'});
+            
+            const ws_data = [];
+            ws_data.push([`PROLOCO SANTA BIANCA - ${nomeMese.toUpperCase()}`]);
+            ws_data.push([]);
+            ws_data.push(['VENDITE']);
+            ws_data.push(['Data', 'Ora', 'Prodotto', 'Categoria', 'Importo €']);
+            
+            let totaleVendite = 0;
+            (venditePerMese[mese] || []).forEach(v => {
+                const dt = new Date(v.timestamp);
+                ws_data.push([
+                    dt.toLocaleDateString('it-IT'),
+                    dt.toLocaleTimeString('it-IT'),
+                    v.nome_prodotto,
+                    v.categoria,
+                    v.prezzo
+                ]);
+                totaleVendite += v.prezzo;
+            });
+            
+            ws_data.push(['', '', '', 'TOTALE VENDITE:', totaleVendite]);
+            ws_data.push([]);
+            ws_data.push(['SPESE']);
+            ws_data.push(['Data', 'Ora', 'Categoria Spesa', 'Note', 'Importo €']);
+            
+            let totaleSpese = 0;
+            (spesePerMese[mese] || []).forEach(s => {
+                const dt = new Date(s.timestamp);
+                ws_data.push([
+                    dt.toLocaleDateString('it-IT'),
+                    dt.toLocaleTimeString('it-IT'),
+                    s.categoria_spesa,
+                    s.note || '',
+                    s.importo
+                ]);
+                totaleSpese += s.importo;
+            });
+            
+            ws_data.push(['', '', '', 'TOTALE SPESE:', totaleSpese]);
+            ws_data.push([]);
+            ws_data.push(['RIEPILOGO MENSILE']);
+            ws_data.push([]);
+            ws_data.push(['Descrizione', 'Importo €']);
+            ws_data.push(['Incassi Totali', totaleVendite]);
+            ws_data.push(['Spese Totali', totaleSpese]);
+            ws_data.push(['PROFITTO NETTO', totaleVendite - totaleSpese]);
+            
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            ws['!cols'] = [{wch: 12}, {wch: 10}, {wch: 35}, {wch: 20}, {wch: 12}];
+            
+            XLSX.utils.book_append_sheet(wb, ws, nomeMese.substring(0, 31));
+        });
+        
+        const now = new Date();
+        const fileName = `storico_${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}.xlsx`;
+        
+        try {
+            XLSX.writeFile(wb, fileName);
+            showFeedback(autoExport ? '✅ Backup automatico completato!' : '✅ Excel scaricato!');
+        } catch (error) {
+            showFeedback('❌ Errore durante export');
+            console.error('Export error:', error);
+        }
+    }
+    
+    // ==================== AUTO EXPORT ====================
+    
+    function checkAutoExport() {
+        if (!CONFIG.export_automatico_attivo) return;
+        
+        const now = new Date();
+        if (now.getHours() === CONFIG.orario_export.ore && now.getMinutes() === CONFIG.orario_export.minuti) {
+            const lastExport = localStorage.getItem('lastAutoExport');
+            const today = now.toDateString();
+            
+            if (lastExport !== today) {
+                exportExcelCompleto(true);
+                localStorage.setItem('lastAutoExport', today);
+            }
+        }
+    }
+    
+    setInterval(checkAutoExport, 60000);
+    
+    // ==================== IMPORT EXCEL ====================
+    
+    function handleImportExcel(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        showFeedback('📥 Caricamento file...');
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                
+                let venditeTotali = 0;
+                let speseTotali = 0;
+                
+                workbook.SheetNames.forEach(sheetName => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const row = jsonData[i];
+                        if (!row || row.length === 0) continue;
+                        
+                        if (row[0] && row[0].toString().includes('VENDITE')) {
+                            i += 2;
+                            while (i < jsonData.length) {
+                                const dataRow = jsonData[i];
+                                if (!dataRow || dataRow.length === 0 || dataRow[3] === 'TOTALE VENDITE:') break;
+                                
+                                try {
+                                    const vendita = {
+                                        id: db.generateId(),
+                                        prodotto_id: db.generateId(),
+                                        nome_prodotto: dataRow[2] || 'Prodotto',
+                                        prezzo: parseFloat(dataRow[4]) || 0,
+                                        categoria: dataRow[3] || 'ALTRO',
+                                        timestamp: parseDataOra(dataRow[0], dataRow[1])
+                                    };
+                                    db.addVendita(vendita);
+                                    venditeTotali++;
+                                } catch (err) {}
+                                i++;
+                            }
+                        }
+                        
+                        if (row[0] && row[0].toString().includes('SPESE')) {
+                            i += 2;
+                            while (i < jsonData.length) {
+                                const dataRow = jsonData[i];
+                                if (!dataRow || dataRow.length === 0 || dataRow[3] === 'TOTALE SPESE:') break;
+                                
+                                try {
+                                    const spesa = {
+                                        id: db.generateId(),
+                                        categoria_spesa: dataRow[2] || 'Spesa Generica',
+                                        importo: parseFloat(dataRow[4]) || 0,
+                                        note: dataRow[3] || '',
+                                        timestamp: parseDataOra(dataRow[0], dataRow[1])
+                                    };
+                                    db.addSpesa(spesa);
+                                    speseTotali++;
+                                } catch (err) {}
+                                i++;
+                            }
+                        }
+                    }
+                });
+                
+                event.target.value = '';
+                
+                if (venditeTotali > 0 || speseTotali > 0) {
+                    showFeedback(`✅ Importati: ${venditeTotali} vendite, ${speseTotali} spese!`);
+                    setTimeout(() => {
+                        if (confirm(`Import completato!\n\nVendite: ${venditeTotali}\nSpese: ${speseTotali}\n\nRicaricare l'app?`)) {
+                            location.reload();
+                        }
+                    }, 1000);
+                } else {
+                    showFeedback('⚠️ Nessun dato trovato');
+                }
+            } catch (error) {
+                showFeedback('❌ Errore lettura file');
+            }
+        };
+        
+        reader.readAsArrayBuffer(file);
+    }
+    
+    function parseDataOra(dataStr, oraStr) {
+        try {
+            const [giorno, mese, anno] = dataStr.split('/');
+            const [ore, minuti, secondi] = oraStr.split(':');
+            return new Date(anno, mese - 1, giorno, ore, minuti, secondi).toISOString();
+        } catch (err) {
+            return new Date().toISOString();
+        }
+    }
+    
+    // ==================== INVIO EMAIL SETTIMANALE ====================
+    
+    let timerControlloId = null;
+    
+    async function inviaReportSettimanale() {
+        if (!CONFIG.invio_resoconto_automatico) {
+            if (CONFIG.debug) console.log('Invio report disattivato');
+            return false;
+        }
+        
+        if (state.invioEmailInCorso) {
+            if (CONFIG.debug) console.log('Invio già in corso');
+            return false;
+        }
+        
+        if (!navigator.onLine) {
+            if (CONFIG.debug) console.log('Offline - impossibile inviare');
+            return false;
+        }
+        
+        state.invioEmailInCorso = true;
+        showFeedback('📧 Invio report settimanale...');
+        
+        try {
+            const stats = calcolaStatisticheSettimanaScorsa();
+            const ultimoReport = getDataUltimoReport();
+            
+            const periodoStr = `${stats.periodo.inizio.toLocaleDateString('it-IT')} - ${stats.periodo.fine.toLocaleDateString('it-IT')}`;
+            
+            const topProdottiStr = stats.prodottiPiuVenduti.slice(0, 3).map((p, i) => 
+                `${i+1}. ${p.nome}: ${p.quantita} vendite - €${p.incasso.toFixed(2)}`
+            ).join('\n') || 'Nessuna vendita nel periodo';
+            
+            const templateParams = {
+                destinatari: CONFIG.email_destinatari,
+                nome_bar: CONFIG.nome_bar,
+                data: new Date().toLocaleDateString('it-IT') + ' ' + new Date().toLocaleTimeString('it-IT'),
+                periodo: periodoStr,
+                ultimo_report: ultimoReport,
+                totale_vendite: stats.totaleVendite.toString(),
+                incasso_totale: stats.totaleIncasso.toFixed(2),
+                spese_totali: stats.totaleSpese.toFixed(2),
+                profitto_netto: stats.profittoNetto.toFixed(2),
+                top_prodotti: topProdottiStr
+            };
+            
+            if (CONFIG.debug) console.log('Invio email con:', templateParams);
+            
+            const response = await emailjs.send(
+                CONFIG.emailjs_service_id,
+                CONFIG.emailjs_template_id,
+                templateParams
+            );
+            
+            if (response.status === 200) {
+                localStorage.setItem('ultimoResocontoInviato', new Date().toISOString());
+                
+                showFeedback('✅ Report settimanale inviato!');
+                console.log('📧 Report inviato:', new Date().toISOString());
+                
+                // Ferma il timer di controllo
+                stopTimerControllo();
+                
+                setTimeout(() => {
+                    state.invioEmailInCorso = false;
+                    render();
+                }, 2000);
+                
+                return true;
+            } else {
+                throw new Error('Risposta non OK');
+            }
+        } catch (error) {
+            console.error('❌ Errore invio:', error);
+            showFeedback('❌ Errore invio. Riprovo...');
+            state.invioEmailInCorso = false;
+            return false;
+        }
+    }
+    
     async function tentaInvioManualeResoconto() {
-        if (!isResocontoPendente()) {
-            showFeedback('✅ Resoconto già inviato!');
+        if (!isReportPendente()) {
+            showFeedback('✅ Report già inviato questa settimana!');
             return;
         }
         
         if (!navigator.onLine) {
-            showFeedback('❌ Nessuna connessione internet!');
+            showFeedback('❌ Nessuna connessione!');
             return;
         }
         
-        await inviaResocontoEmailJS();
+        await inviaReportSettimanale();
     }
     
-    // ==================== CONTROLLO CONNESSIONE AUTOMATICO ====================
+    // ==================== TIMER CONTROLLO CONNESSIONE ====================
     
-    // Listener per quando torna online
+    function startTimerControllo() {
+        if (timerControlloId) return; // Già attivo
+        
+        if (CONFIG.debug) console.log('⏰ Timer controllo ATTIVATO (ogni', CONFIG.timer_controllo_minuti, 'minuti)');
+        
+        timerControlloId = setInterval(async () => {
+            if (CONFIG.debug) console.log('⏰ Controllo periodico...');
+            
+            if (navigator.onLine && isReportPendente()) {
+                if (CONFIG.debug) console.log('Online + Report pendente → tento invio');
+                await inviaReportSettimanale();
+            }
+        }, CONFIG.timer_controllo_minuti * 60 * 1000);
+        
+        state.timerControlloAttivo = true;
+    }
+    
+    function stopTimerControllo() {
+        if (timerControlloId) {
+            clearInterval(timerControlloId);
+            timerControlloId = null;
+            state.timerControlloAttivo = false;
+            if (CONFIG.debug) console.log('⏰ Timer controllo FERMATO');
+        }
+    }
+    
+    // Listener connessione
     window.addEventListener('online', async () => {
         if (CONFIG.debug) console.log('📶 Connessione rilevata!');
         
-        // Aspetta 2 secondi per stabilizzare la connessione
-        setTimeout(async () => {
-            if (navigator.onLine && isResocontoPendente()) {
-                showFeedback('📶 Connessione rilevata! Invio resoconto...');
-                await inviaResocontoEmailJS();
-            }
-        }, 2000);
+        if (isReportPendente()) {
+            showFeedback('📶 Online! Controllo report...');
+            
+            setTimeout(async () => {
+                if (navigator.onLine && isReportPendente()) {
+                    await inviaReportSettimanale();
+                }
+            }, 2000);
+        }
     });
     
-    // Listener per quando va offline
     window.addEventListener('offline', () => {
-        if (CONFIG.debug) console.log('📴 Connessione persa');
+        if (CONFIG.debug) console.log('📴 Offline');
     });
     
-    // Timer periodico per controllo e invio (ogni X minuti da config)
-    setInterval(async () => {
-        if (CONFIG.debug) console.log('⏰ Controllo periodico connessione...');
-        
-        if (navigator.onLine && isResocontoPendente()) {
-            if (CONFIG.debug) console.log('Online con resoconto pendente - tento invio');
-            await inviaResocontoEmailJS();
-        }
-        
-        // Auto-refresh se configurato
-        if (CONFIG.auto_refresh && navigator.onLine) {
-            location.reload();
-        }
-    }, CONFIG.timer_controllo_minuti * 60 * 1000);
+    // ==================== INIT ====================
     
-    // Controllo iniziale dopo 5 secondi dall'avvio
+    // Controllo iniziale all'avvio
     setTimeout(async () => {
-        if (CONFIG.debug) console.log('🚀 Controllo iniziale connessione...');
-        
-        if (navigator.onLine && isResocontoPendente()) {
-            if (CONFIG.debug) console.log('Online con resoconto pendente - tento invio iniziale');
-            await inviaResocontoEmailJS();
+        if (CONFIG.debug) {
+            console.log('🚀 App avviata');
+            console.log('📧 Report pendente:', isReportPendente());
+            console.log('📅 Giorni da ultimo report:', getGiorniDaUltimoReport());
+            console.log('📶 Online:', navigator.onLine);
         }
-    }, 5000);
+        
+        // Se è passata più di 1 settimana, attiva il timer
+        if (isReportPendente()) {
+            if (CONFIG.debug) console.log('Report pendente - attivo timer controllo');
+            startTimerControllo();
+            
+            // Prova subito se online
+            if (navigator.onLine) {
+                await inviaReportSettimanale();
+            }
+        }
+    }, 3000);
+    
+    // Controllo ogni minuto per l'orario programmato (Lunedì 8:00)
+    setInterval(() => {
+        if (isOraGiustaPerInvio() && isReportPendente()) {
+            if (CONFIG.debug) console.log('È Lunedì 8:00 + Report pendente');
+            
+            if (navigator.onLine) {
+                inviaReportSettimanale();
+            } else {
+                // Attiva timer se non online
+                startTimerControllo();
+            }
+        }
+    }, 60000);
     
     // ==================== EVENT HANDLERS ====================
     
     function changeView(view) {
         state.view = view;
         render();
-        // Scroll in cima quando cambi vista
         window.scrollTo(0, 0);
     }
     
@@ -1263,12 +1351,8 @@
     }
     
     function handleKeypadPress(key) {
-        if (key === 'C') {
-            state.customPrice = '';
-        } else if (key === ',') {
-            if (!state.customPrice.includes(',')) {
-                state.customPrice += ',';
-            }
+        if (key === ',') {
+            if (!state.customPrice.includes(',')) state.customPrice += ',';
         } else if (key === '←') {
             state.customPrice = state.customPrice.slice(0, -1);
         } else {
@@ -1296,7 +1380,7 @@
     function confirmKeypad() {
         const prezzo = parseFloat(state.customPrice.replace(',', '.'));
         if (isNaN(prezzo) || prezzo <= 0) {
-            showFeedback('❌ Inserisci un importo valido!');
+            showFeedback('❌ Importo non valido!');
             return;
         }
         
@@ -1304,7 +1388,7 @@
         
         if (state.keypadMode === 'vendita') {
             registraVendita(state.selectedProduct, prezzo);
-        } else if (state.keypadMode === 'spesa') {
+        } else {
             registraSpesa(state.selectedSpesaCategoria, prezzo);
         }
         
@@ -1338,21 +1422,21 @@
         };
         
         db.addSpesa(spesa);
-        showFeedback(`✅ Spesa registrata: ${categoria} - €${importo.toFixed(2)}`);
+        showFeedback(`✅ Spesa: ${categoria} - €${importo.toFixed(2)}`);
         render();
     }
     
     function deleteVendita(id) {
         if (!confirm('Eliminare questa vendita?')) return;
         db.deleteVendita(id);
-        showFeedback('✅ Vendita eliminata');
+        showFeedback('✅ Eliminata');
         render();
     }
     
     function deleteSpesa(id) {
         if (!confirm('Eliminare questa spesa?')) return;
         db.deleteSpesa(id);
-        showFeedback('✅ Spesa eliminata');
+        showFeedback('✅ Eliminata');
         render();
     }
     
@@ -1378,15 +1462,11 @@
             return;
         }
         
-        if (!confirm(`Sei sicuro di voler eliminare TUTTI i dati del periodo "${state.periodo}"? Questa azione è irreversibile!`)) {
-            return;
-        }
+        if (!confirm(`Eliminare TUTTI i dati del periodo "${state.periodo}"?`)) return;
         
         db.resetPeriodo(state.periodo);
-        
         state.showResetModal = false;
         state.resetPassword = '';
-        
         showFeedback('✅ Reset completato!');
         render();
     }
@@ -1397,33 +1477,19 @@
         setTimeout(() => {
             state.feedback = '';
             render();
-        }, 2000);
+        }, 2500);
     }
     
-    function attachEventListeners() {
-        // Gli event listeners inline gestiscono già tutto
-    }
-    
-    // ==================== INIT ====================
+    function attachEventListeners() {}
     
     // Initial render
     render();
     
-    // PWA Service Worker (opzionale per offline completo)
+    // Service Worker
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js', { scope: './' })
-                .then(reg => console.log('Service Worker registrato:', reg.scope))
-                .catch(err => console.log('Service Worker errore:', err));
-        });
-    }
-    
-    // Log stato iniziale
-    if (CONFIG.debug) {
-        console.log('🚀 App avviata');
-        console.log('📧 Resoconto pendente:', isResocontoPendente());
-        console.log('📶 Online:', navigator.onLine);
-        console.log('⏰ Timer controllo:', CONFIG.timer_controllo_minuti, 'minuti');
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+            .then(reg => console.log('SW registrato'))
+            .catch(err => console.log('SW errore:', err));
     }
     </script>
 </body>
