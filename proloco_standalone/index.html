@@ -1173,7 +1173,9 @@
             const stats = calcolaStatisticheSettimanaScorsa();
             const ultimoReport = getDataUltimoReport();
             
-            const periodoStr = `${stats.periodo.inizio.toLocaleDateString('it-IT')} - ${stats.periodo.fine.toLocaleDateString('it-IT')}`;
+            // Formato pulito senza slash (evita encoding HTML)
+            const periodoStr = `${formatDataPerEmail(stats.periodo.inizio)} al ${formatDataPerEmail(stats.periodo.fine)}`;
+            const dataInvioStr = formatDataOraPerEmail(new Date());
             
             const topProdottiStr = stats.prodottiPiuVenduti.slice(0, 3).map((p, i) => 
                 `${i+1}. ${p.nome}: ${p.quantita} vendite - €${p.incasso.toFixed(2)}`
@@ -1182,7 +1184,7 @@
             const templateParams = {
                 destinatari: CONFIG.email_destinatari,
                 nome_bar: CONFIG.nome_bar,
-                data: new Date().toLocaleDateString('it-IT') + ' ' + new Date().toLocaleTimeString('it-IT'),
+                data: dataInvioStr,
                 periodo: periodoStr,
                 ultimo_report: ultimoReport,
                 totale_vendite: stats.totaleVendite.toString(),
