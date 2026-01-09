@@ -22,8 +22,6 @@ const CONFIG = {
     // Email destinatari resoconto (separate da virgola)
     // Esempio: "email1@example.com,email2@example.com,email3@example.com"
     email_destinatari: "alberto.melorec@gmail.com,meloni.edo@gmail.com",
-    // Email aggiuntive (rimuovi commento per abilitare):
-    // "beatricefoffano93@gmail.com"
 
     // Invia resoconto automatico quando c'è connessione
     // true = attivato, false = disattivato
@@ -36,11 +34,22 @@ const CONFIG = {
     emailjs_template_id: "template_to1ne4j",
     emailjs_public_key: "8Z--4zZR5hi4yeyOS",
 
+    // ==================== PROGRAMMAZIONE INVIO REPORT ====================
+    
+    // Giorno della settimana per invio report (0=Domenica, 1=Lunedì, ..., 6=Sabato)
+    giorno_invio_report: 1, // Lunedì
+    
+    // Ora di invio report (formato 24h)
+    ora_invio_report: 8,    // 08:00
+    minuti_invio_report: 0,
+    
+    // Giorni minimi tra un report e l'altro
+    giorni_minimo_tra_report: 7,
+
     // ==================== TIMER E REFRESH ====================
 
     // Timer controllo connessione internet (in minuti)
-    // L'app controllerà la connessione ogni X minuti
-    // e invierà il resoconto se online
+    // Usato solo quando c'è un report pendente (passata più di 1 settimana)
     timer_controllo_minuti: 5,
 
     // Auto-refresh pagina dopo controllo connessione
@@ -113,7 +122,7 @@ const CONFIG = {
     debug: true,
 
     // Versione configurazione (non modificare)
-    versione: "2.0"
+    versione: "2.1"
 };
 
 // Non modificare questa riga
