@@ -1430,6 +1430,159 @@ copy(JSON.stringify({vendite: JSON.parse(localStorage.getItem('vendite')), spese
         }, 2500);
     }
     
+    // ==================== IMPOSTAZIONI ====================
+    
+    function openImpostazioniModal() {
+        state.showImpostazioniModal = true;
+        state.impostazioniSbloccate = false;
+        state.impostazioniTab = 'generale';
+        render();
+    }
+    
+    function closeImpostazioniModal() {
+        state.showImpostazioniModal = false;
+        state.impostazioniSbloccate = false;
+        render();
+    }
+    
+    async function sbloccaImpostazioni() {
+        const password = document.getElementById('impostazioniPassword')?.value;
+        
+        if (!password) {
+            showFeedback('❌ Inserisci la password');
+            return;
+        }
+        
+        try {
+            await apiCall('/api/verifica-password', 'POST', { password });
+            
+            // Carica impostazioni aggiornate
+            const imp = await apiCall('/api/impostazioni');
+            CONFIG.wifi_ssid = imp.wifi_ssid;
+            CONFIG.wifi_password = imp.wifi_password;
+            CONFIG.password_download = imp.password_download;
+            CONFIG.password_reset = imp.password_reset;
+            CONFIG.email_destinatari = imp.email_destinatari;
+            
+            state.impostazioniSbloccate = true;
+            render();
+        } catch (error) {
+            showFeedback('❌ Password errata!');
+        }
+    }
+    
+    function changeImpostazioniTab(tab) {
+        state.impostazioniTab = tab;
+        render();
+    }
+    
+    async function salvaImpostazioni() {
+        const updates = {};
+        
+        // Raccogli valori dai form in base al tab corrente
+        const nome_bar = document.getElementById('imp_nome_bar')?.value;
+        const wifi_ssid = document.getElementById('imp_wifi_ssid')?.value;
+        const wifi_password = document.getElementById('imp_wifi_password')?.value;
+        const password_download = document.getElementById('imp_password_download')?.value;
+        const password_reset = document.getElementById('imp_password_reset')?.value;
+        
+        if (nome_bar) updates.nome_bar = nome_bar;
+        if (wifi_ssid) updates.wifi_ssid = wifi_ssid;
+        if (wifi_password) updates.wifi_password = wifi_password;
+        if (password_download) updates.password_download = password_download;
+        if (password_reset) updates.password_reset = password_reset;
+        
+        // Email destinatari
+        if (CONFIG.email_destinatari) {
+            updates.email_destinatari = CONFIG.email_destinatari;
+        }
+        
+        try {
+            await apiCall('/api/impostazioni', 'POST', updates);
+            
+            // Aggiorna CONFIG locale
+            Object.assign(CONFIG, updates);
+            
+            showFeedback('✅ Impostazioni salvate!');
+            
+            // Se WiFi modificato, avvisa
+            if (updates.wifi_ssid || updates.wifi_password) {
+                setTimeout(() => {
+                    alert('⚠️ Hai modificato le credenziali WiFi.\n\nPer applicare le modifiche:\n1. Accedi al Raspberry via SSH o monitor\n2. Esegui: sudo bash setup_wifi_ap.sh\n3. Riavvia: sudo reboot');
+                }, 500);
+            }
+            
+        } catch (error) {
+            showFeedback('❌ Errore salvataggio');
+        }
+    }
+    
+    // Gestione listino
+    function aggiungiProdottoForm() {
+        document.getElementById('formNuovoProdotto')?.classList.remove('hidden');
+    }
+    
+    function chiudiFormProdotto() {
+        document.getElementById('formNuovoProdotto')?.classList.add('hidden');
+    }
+    
+    async function confermaNuovoProdotto() {
+        const nome = document.getElementById('nuovo_nome')?.value;
+        const prezzo = parseFloat(document.getElementById('nuovo_prezzo')?.value) || 0;
+        const categoria = document.getElementById('nuovo_categoria')?.value;
+        const icona = document.getElementById('nuovo_icona')?.value || '📦';
+        
+        if (!nome) {
+            showFeedback('❌ Inserisci il nome');
+            return;
+        }
+        
+        try {
+            await apiCall('/api/aggiungi-prodotto', 'POST', { nome, prezzo, categoria, icona });
+            
+            CONFIG.listino.push({ nome, prezzo, categoria, icona });
+            prodotti = await apiCall('/api/prodotti');
+            
+            showFeedback('✅ Prodotto aggiunto!');
+            chiudiFormProdotto();
+            render();
+        } catch (error) {
+            showFeedback('❌ Errore aggiunta prodotto');
+        }
+    }
+    
+    async function rimuoviProdotto(nome) {
+        if (!confirm(`Rimuovere "${nome}" dal listino?`)) return;
+        
+        try {
+            await apiCall(`/api/rimuovi-prodotto/${encodeURIComponent(nome)}`, 'DELETE');
+            
+            CONFIG.listino = CONFIG.listino.filter(p => p.nome !== nome);
+            prodotti = await apiCall('/api/prodotti');
+            
+            showFeedback('✅ Prodotto rimosso');
+            render();
+        } catch (error) {
+            showFeedback('❌ Errore rimozione');
+        }
+    }
+    
+    // Gestione email
+    function aggiungiEmail() {
+        if (!CONFIG.email_destinatari) CONFIG.email_destinatari = [];
+        CONFIG.email_destinatari.push('');
+        render();
+    }
+    
+    function rimuoviEmail(idx) {
+        CONFIG.email_destinatari.splice(idx, 1);
+        render();
+    }
+    
+    function aggiornaEmail(idx, value) {
+        CONFIG.email_destinatari[idx] = value;
+    }
+    
     // ==================== INIT ====================
     
     init();
