@@ -142,6 +142,25 @@ WATCHDOGEOF
 systemctl enable watchdog
 systemctl start watchdog 2>/dev/null || true
 
+# ==================== BACKUP AUTOMATICO USB ====================
+echo -e "${YELLOW}💾 Configurazione backup automatico su USB...${NC}"
+
+# Copia script backup
+cp /home/pi/bar_manager/usb_backup.py /home/pi/bar_manager/usb_backup.py
+chmod +x /home/pi/bar_manager/usb_backup.py
+
+# Crea regola udev per rilevare chiavette USB
+cat > /etc/udev/rules.d/99-usb-backup.rules << 'UDEVEOF'
+# Backup automatico quando viene inserita una chiavetta USB
+ACTION=="add", SUBSYSTEM=="block", KERNEL=="sd[a-z][0-9]", RUN+="/bin/bash -c '/usr/bin/python3 /home/pi/bar_manager/usb_backup.py >> /var/log/usb_backup.log 2>&1 &'"
+UDEVEOF
+
+# Ricarica regole udev
+udevadm control --reload-rules
+udevadm trigger
+
+echo -e "${GREEN}✅ Backup USB configurato${NC}"
+
 # Ottieni IP
 IP=$(hostname -I | awk '{print $1}')
 
