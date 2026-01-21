@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bar Manager - Preview Rustico</title>
+    <title>Bar Manager - Sezione Storico</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,8 +12,8 @@
             theme: {
                 extend: {
                     colors: {
-                        felt: { 500: '#1a472a', 600: '#165c26', 700: '#0d3d19' },
-                        wood: { 50: '#fdf8f3', 100: '#f5e6d3', 200: '#e8cdb3', 300: '#d4a574', 500: '#8b5a2b', 600: '#6d4422', 700: '#4a2c17', 800: '#3d2414' },
+                        felt: { 500: '#1a472a', 600: '#165c26', 700: '#0d3d19', 800: '#0a2f14' },
+                        wood: { 50: '#fdf8f3', 100: '#f5e6d3', 200: '#e8cdb3', 300: '#d4a574', 500: '#8b5a2b', 600: '#6d4422', 700: '#4a2c17', 800: '#3d2414', 900: '#2d1a0f' },
                         brass: { 400: '#d4af37', 500: '#b8960c' }
                     }
                 }
@@ -28,141 +28,128 @@
         .elegant-border { border: 3px solid #d4af37; box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.4); }
         .wood-btn { background: linear-gradient(180deg, #a67c52 0%, #8b5a2b 50%, #6d4422 100%); box-shadow: 0 4px 0 #4a2c17; border: 2px solid #d4af37; }
         .felt-btn { background: linear-gradient(180deg, #2d5a3d 0%, #1a472a 50%, #0d3d19 100%); box-shadow: 0 4px 0 #06200d; border: 2px solid #d4af37; }
-        .billiard-ball { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset -3px -3px 8px rgba(0,0,0,0.4), 2px 2px 4px rgba(0,0,0,0.3); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .animate-pulse { animation: pulse 2s ease-in-out infinite; }
     </style>
 </head>
 <body class="felt-texture min-h-screen">
     
-    <!-- Indicatore connessione -->
-    <div class="fixed top-3 right-3 z-50">
-        <div class="flex items-center gap-2 bg-wood-800/90 backdrop-blur px-3 py-1 rounded-full border border-brass-400">
-            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-            <span class="text-xs text-wood-100">Online</span>
-        </div>
-    </div>
-    
     <!-- Header -->
     <div class="wood-texture border-b-4 border-brass-400 sticky top-0 z-40 shadow-xl">
         <div class="max-w-7xl mx-auto px-4 py-4">
-            <h1 class="text-2xl md:text-3xl font-display font-bold text-wood-50 text-center drop-shadow-lg">
+            <h1 class="text-2xl font-display font-bold text-wood-50 text-center drop-shadow-lg">
                 🍺 Proloco Santa Bianca
             </h1>
-            <div class="text-center text-wood-200 text-xs mt-1 tracking-wider">
-                Multi-dispositivo • Dati sincronizzati
-            </div>
         </div>
     </div>
     
     <!-- Content -->
     <div class="max-w-7xl mx-auto px-4 py-6 pb-28">
         
-        <!-- CAFFETTERIA -->
-        <div class="space-y-4 mb-8">
-            <div class="flex items-center gap-4 mb-4">
-                <div class="billiard-ball bg-amber-600 text-white font-bold text-lg">1</div>
-                <h2 class="text-2xl font-display font-bold text-wood-100 drop-shadow">CAFFETTERIA</h2>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">☕</div>
-                    <div class="font-bold text-base mb-2">Caffè</div>
-                    <div class="text-xl font-black text-yellow-300">€1.20</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">☕</div>
-                    <div class="font-bold text-base mb-2">Caffè Deca</div>
-                    <div class="text-xl font-black text-yellow-300">€1.20</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🥃</div>
-                    <div class="font-bold text-base mb-2">Caffè Corretto</div>
-                    <div class="text-xl font-black text-yellow-300">€2.00</div>
+        <!-- Banner Report Settimanale -->
+        <div class="bg-gradient-to-r from-green-800 to-green-900 p-4 rounded-xl border-2 border-brass-400 animate-pulse mb-4">
+            <div class="flex items-center justify-between">
+                <div class="text-wood-100">
+                    <div class="font-bold text-lg">📊 Nuovo Report Settimanale!</div>
+                    <div class="text-sm text-wood-300">Clicca per scaricare il report della settimana</div>
+                </div>
+                <button class="felt-btn text-wood-50 px-4 py-2 rounded-lg transition-all">
+                    📥 Scarica
                 </button>
             </div>
         </div>
         
-        <!-- BEVANDE -->
-        <div class="space-y-4 mb-8">
-            <div class="flex items-center gap-4 mb-4">
-                <div class="billiard-ball bg-red-700 text-white font-bold text-lg">3</div>
-                <h2 class="text-2xl font-display font-bold text-wood-100 drop-shadow">BEVANDE</h2>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🍷</div>
-                    <div class="font-bold text-base mb-2 leading-tight">Caraffa 0,5L</div>
-                    <div class="text-xl font-black text-yellow-300">€6.00</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🍷</div>
-                    <div class="font-bold text-base mb-2 leading-tight">Caraffa 1LT</div>
-                    <div class="text-xl font-black text-yellow-300">€11.00</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🍷</div>
-                    <div class="font-bold text-base mb-2">Calice Vino</div>
-                    <div class="text-xl font-black text-yellow-300">€1.50</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🥃</div>
-                    <div class="font-bold text-base mb-2 leading-tight">Liquori</div>
-                    <div class="text-xl font-black text-yellow-300">€2.50</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🥤</div>
-                    <div class="font-bold text-base mb-2">Bibite</div>
-                    <div class="text-xl font-black text-yellow-300">€2.20</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">💧</div>
-                    <div class="font-bold text-base mb-2">Acqua</div>
-                    <div class="text-xl font-black text-yellow-300">€1.00</div>
+        <!-- Download Excel con Password -->
+        <div class="bg-wood-800/80 backdrop-blur p-4 rounded-xl elegant-border mb-4">
+            <h3 class="text-lg font-display font-bold text-wood-100 mb-4">📊 Download Dati Completi</h3>
+            <div class="flex gap-2">
+                <input type="password" 
+                       placeholder="Password"
+                       value=""
+                       class="flex-1 px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none placeholder-wood-500">
+                <button class="wood-btn text-wood-50 px-6 py-3 rounded-lg transition-all font-bold">
+                    📥 Scarica Excel
                 </button>
             </div>
         </div>
         
-        <!-- GELATI -->
-        <div class="space-y-4 mb-8">
-            <div class="flex items-center gap-4 mb-4">
-                <div class="billiard-ball bg-blue-600 text-white font-bold text-lg">2</div>
-                <h2 class="text-2xl font-display font-bold text-wood-100 drop-shadow">GELATI</h2>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🍦</div>
-                    <div class="font-bold text-base mb-2">Cremino</div>
-                    <div class="text-xl font-black text-yellow-300">€1.20</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🍦</div>
-                    <div class="font-bold text-base mb-2">Cucciolone</div>
-                    <div class="text-xl font-black text-yellow-300">€1.50</div>
-                </button>
-                <button class="wood-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🍦</div>
-                    <div class="font-bold text-base mb-2">Magnum</div>
-                    <div class="text-xl font-black text-yellow-300">€2.00</div>
-                </button>
-            </div>
-        </div>
+        <!-- Importa Dati -->
+        <button class="w-full bg-wood-700/50 hover:bg-wood-700 text-wood-300 hover:text-wood-100 py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-wood-600 mb-4">
+            📥 Importa Dati da App Precedente
+        </button>
         
-        <!-- PERSONALIZZATE -->
-        <div class="space-y-4">
-            <div class="flex items-center gap-4 mb-4">
-                <div class="billiard-ball bg-gray-900 text-white font-bold text-lg">8</div>
-                <h2 class="text-2xl font-display font-bold text-wood-100 drop-shadow">PERSONALIZZATE</h2>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <button class="felt-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">🎱</div>
-                    <div class="font-bold text-base mb-2">Bigliardo</div>
-                    <div class="text-xl font-black text-yellow-300">💰 Inserisci</div>
-                </button>
-                <button class="felt-btn text-wood-50 p-5 rounded-xl transition-all active:scale-95">
-                    <div class="text-3xl mb-2">➕</div>
-                    <div class="font-bold text-base mb-2">Extra</div>
-                    <div class="text-xl font-black text-yellow-300">💰 Inserisci</div>
-                </button>
+        <!-- Lista Transazioni -->
+        <div class="bg-wood-800/80 backdrop-blur p-6 rounded-2xl elegant-border">
+            <h3 class="text-xl font-display font-bold text-wood-100 mb-6">📋 Ultime 100 Transazioni</h3>
+            
+            <div class="space-y-2">
+                <!-- Vendita -->
+                <div class="bg-wood-700/50 p-4 rounded-xl flex justify-between items-center border border-wood-600">
+                    <div class="text-wood-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">💰</span>
+                            <div>
+                                <div class="font-bold">Caffè</div>
+                                <div class="text-sm text-wood-400">21/01/2026 - 10:30:00</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-xl font-black text-green-400">+€1.20</div>
+                        <button class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg">🗑️</button>
+                    </div>
+                </div>
+                
+                <!-- Spesa -->
+                <div class="bg-red-900/30 p-4 rounded-xl flex justify-between items-center border border-red-800">
+                    <div class="text-wood-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">💸</span>
+                            <div>
+                                <div class="font-bold">Cialde caffè</div>
+                                <div class="text-sm text-wood-400">21/01/2026 - 09:15:00</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-xl font-black text-red-400">-€25.00</div>
+                        <button class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg">🗑️</button>
+                    </div>
+                </div>
+                
+                <!-- Altra vendita -->
+                <div class="bg-wood-700/50 p-4 rounded-xl flex justify-between items-center border border-wood-600">
+                    <div class="text-wood-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">💰</span>
+                            <div>
+                                <div class="font-bold">Caraffa Vino 1LT</div>
+                                <div class="text-sm text-wood-400">20/01/2026 - 20:45:00</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-xl font-black text-green-400">+€11.00</div>
+                        <button class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg">🗑️</button>
+                    </div>
+                </div>
+                
+                <!-- Bigliardo -->
+                <div class="bg-wood-700/50 p-4 rounded-xl flex justify-between items-center border border-wood-600">
+                    <div class="text-wood-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">💰</span>
+                            <div>
+                                <div class="font-bold">Bigliardo</div>
+                                <div class="text-sm text-wood-400">20/01/2026 - 19:30:00</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-xl font-black text-green-400">+€5.00</div>
+                        <button class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg">🗑️</button>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -172,19 +159,19 @@
     <div class="fixed bottom-0 left-0 right-0 wood-texture border-t-4 border-brass-400 z-40 shadow-2xl">
         <div class="max-w-7xl mx-auto px-2 py-3">
             <div class="grid grid-cols-4 gap-2">
-                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-felt-500 text-wood-50 shadow-lg border-2 border-brass-400">
+                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200">
                     <span class="text-2xl mb-1">🛒</span>
                     <span class="text-xs">Vendita</span>
                 </button>
-                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200 hover:bg-wood-700">
+                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200">
                     <span class="text-2xl mb-1">💸</span>
                     <span class="text-xs">Spese</span>
                 </button>
-                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200 hover:bg-wood-700">
+                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200">
                     <span class="text-2xl mb-1">📊</span>
                     <span class="text-xs">Statistiche</span>
                 </button>
-                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200 hover:bg-wood-700">
+                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-felt-500 text-wood-50 shadow-lg border-2 border-brass-400">
                     <span class="text-2xl mb-1">📋</span>
                     <span class="text-xs">Storico</span>
                 </button>
