@@ -592,27 +592,34 @@
         
         let html = `
             <div class="space-y-4">
-                <div class="bg-wood-800/80 backdrop-blur p-4 rounded-xl elegant-border">
+                <!-- Banner report disponibile -->
+                <div id="reportBanner" class="hidden bg-gradient-to-r from-green-800 to-green-900 p-4 rounded-xl border-2 border-brass-400 animate-pulse">
                     <div class="flex items-center justify-between">
                         <div class="text-wood-100">
-                            <div class="text-sm text-wood-300">Stato connessione:</div>
-                            <div class="font-bold ${state.online ? 'text-green-400' : 'text-red-400'}">
-                                ${state.online ? '🟢 Online - Report automatico attivo' : '🔴 Offline'}
-                            </div>
-                            ${state.ultimoReport ? `<div class="text-xs text-wood-400">Ultimo report: ${new Date(state.ultimoReport).toLocaleString('it-IT')}</div>` : ''}
+                            <div class="font-bold text-lg">📊 Nuovo Report Settimanale!</div>
+                            <div class="text-sm text-wood-300">Clicca per scaricare il report della settimana</div>
                         </div>
-                        ${state.online ? `
-                            <button onclick="inviaReportManuale()" class="felt-btn text-wood-50 px-4 py-2 rounded-lg transition-all text-sm">
-                                📧 Invia Report
-                            </button>
-                        ` : ''}
+                        <button onclick="scaricaReportSettimanale()" class="felt-btn text-wood-50 px-4 py-2 rounded-lg transition-all">
+                            📥 Scarica
+                        </button>
                     </div>
                 </div>
                 
-                <button onclick="downloadExcel()" 
-                        class="w-full felt-btn text-wood-50 py-4 rounded-xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-3">
-                    📊 Scarica Excel Completo
-                </button>
+                <!-- Pulsante Download Excel con Password -->
+                <div class="bg-wood-800/80 backdrop-blur p-4 rounded-xl elegant-border">
+                    <h3 class="text-lg font-display font-bold text-wood-100 mb-4">📊 Download Dati Completi</h3>
+                    <div class="flex gap-2">
+                        <input type="password" 
+                               id="downloadPassword" 
+                               placeholder="Password"
+                               class="flex-1 px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none"
+                               onkeypress="if(event.key==='Enter')verificaPasswordDownload()">
+                        <button onclick="verificaPasswordDownload()" 
+                                class="wood-btn text-wood-50 px-6 py-3 rounded-lg transition-all font-bold">
+                            📥 Scarica Excel
+                        </button>
+                    </div>
+                </div>
                 
                 <button onclick="openImportModal()" 
                         class="w-full bg-wood-700/50 hover:bg-wood-700 text-wood-300 hover:text-wood-100 py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-wood-600">
