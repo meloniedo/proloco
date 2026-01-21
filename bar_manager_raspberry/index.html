@@ -1161,6 +1161,52 @@ copy(JSON.stringify({vendite: JSON.parse(localStorage.getItem('vendite')), spese
         }
     }
     
+    async function downloadExcel() {
+        try {
+            window.open(`${API_BASE}/api/download-excel`, '_blank');
+            showFeedback('📊 Download Excel avviato');
+        } catch (error) {
+            showFeedback('❌ Errore download');
+        }
+    }
+    
+    async function verificaPasswordDownload() {
+        const passwordInput = document.getElementById('downloadPassword');
+        const password = passwordInput?.value;
+        
+        if (!password) {
+            showFeedback('❌ Inserisci la password');
+            return;
+        }
+        
+        try {
+            // Verifica password
+            const verifica = await apiCall('/api/download-excel-password', 'POST', { password });
+            
+            if (verifica.success) {
+                // Password corretta, scarica il file
+                window.open(`${API_BASE}/api/download-excel`, '_blank');
+                showFeedback('📊 Download avviato!');
+                passwordInput.value = '';
+            }
+        } catch (error) {
+            showFeedback('❌ Password errata!');
+        }
+    }
+    
+    async function scaricaReportSettimanale() {
+        try {
+            window.open(`${API_BASE}/api/report-settimanale`, '_blank');
+            showFeedback('📊 Report settimanale scaricato!');
+            
+            // Nascondi il banner
+            const banner = document.getElementById('reportBanner');
+            if (banner) banner.classList.add('hidden');
+        } catch (error) {
+            showFeedback('❌ Errore download report');
+        }
+    }
+    
     async function inviaReportManuale() {
         showFeedback('📧 Invio report in corso...');
         
