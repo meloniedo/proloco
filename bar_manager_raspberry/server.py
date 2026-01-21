@@ -73,6 +73,38 @@ class ResetRequest(BaseModel):
     password: str
     periodo: str
 
+class DownloadRequest(BaseModel):
+    password: str
+
+# ==================== GESTIONE REPORT SETTIMANALE ====================
+
+REPORT_WEEK_FILE = DATA_DIR / "report_settimana_corrente.txt"
+
+def get_lunedi_corrente():
+    """Ritorna il lunedì della settimana corrente"""
+    now = datetime.now()
+    lunedi = now - timedelta(days=now.weekday())
+    return lunedi.replace(hour=0, minute=0, second=0, microsecond=0)
+
+def is_report_inviato_questa_settimana():
+    """Controlla se il report è stato già inviato questa settimana"""
+    if not REPORT_WEEK_FILE.exists():
+        return False
+    
+    try:
+        with open(REPORT_WEEK_FILE) as f:
+            data_str = f.read().strip()
+            data_ultimo = datetime.fromisoformat(data_str)
+            lunedi = get_lunedi_corrente()
+            return data_ultimo >= lunedi
+    except:
+        return False
+
+def segna_report_inviato():
+    """Segna che il report è stato inviato questa settimana"""
+    with open(REPORT_WEEK_FILE, 'w') as f:
+        f.write(datetime.now().isoformat())
+
 # ==================== GESTIONE EXCEL ====================
 
 def init_excel():
