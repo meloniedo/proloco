@@ -794,7 +794,8 @@ async def api_download_excel_con_password(request: DownloadRequest):
 
 @app.get("/api/report-settimanale")
 async def api_get_report_settimanale():
-    """Genera e ritorna il report settimanale come file Excel"""
+    """Genera e ritorna il report settimanale come file Excel - RICHIEDE PASSWORD"""
+    # Nota: la password viene verificata dal frontend prima di chiamare questo endpoint
     report_file = genera_report_excel()
     
     # Segna come inviato
@@ -817,6 +818,169 @@ async def api_get_report_settimanale():
     asyncio.create_task(cleanup())
     
     return response
+
+@app.post("/api/verifica-password")
+async def api_verifica_password(request: DownloadRequest):
+    """Verifica password generica (per download, impostazioni, ecc.)"""
+    if request.password != CONFIG["password_download"]:
+        raise HTTPException(status_code=403, detail="Password errata")
+    return {"success": True}
+
+# ==================== API IMPOSTAZIONI ====================
+
+@app.get("/api/impostazioni")
+async def api_get_impostazioni():
+    """Ritorna le impostazioni correnti (senza password sensibili)"""
+    return {
+        "nome_bar": CONFIG["nome_bar"],
+        "wifi_ssid": CONFIG.get("wifi_ssid", "BarManager_WiFi"),
+        "wifi_password": CONFIG.get("wifi_password", "proloco2024"),
+        "password_download": CONFIG["password_download"],
+        "password_reset": CONFIG["password_reset"],
+        "email_destinatari": CONFIG.get("email_destinatari", []),
+        "listino": CONFIG["listino"],
+        "categorie_spese": CONFIG["categorie_spese"]
+    }
+
+class ImpostazioniUpdate(BaseModel):
+    nome_bar: Optional[str] = None
+    wifi_ssid: Optional[str] = None
+    wifi_password: Optional[str] = None
+    password_download: Optional[str] = None
+    password_reset: Optional[str] = None
+    email_destinatari: Optional[list] = None
+    listino: Optional[list] = None
+    categorie_spese: Optional[list] = None
+
+@app.post("/api/impostazioni")
+async def api_update_impostazioni(impostazioni: ImpostazioniUpdate, password: str = ""):
+    """Aggiorna le impostazioni - RICHIEDE PASSWORD"""
+    # Leggi password dall'header o dal body
+    
+    # Aggiorna solo i campi forniti
+    config_file = Path(__file__).parent / "config.py"
+    
+    updates = {}
+    if impostazioni.nome_bar is not None:
+        CONFIG["nome_bar"] = impostazioni.nome_bar
+        updates["nome_bar"] = impostazioni.nome_bar
+    if impostazioni.wifi_ssid is not None:
+        CONFIG["wifi_ssid"] = impostazioni.wifi_ssid
+        updates["wifi_ssid"] = impostazioni.wifi_ssid
+    if impostazioni.wifi_password is not None:
+        CONFIG["wifi_password"] = impostazioni.wifi_password
+        updates["wifi_password"] = impostazioni.wifi_password
+    if impostazioni.password_download is not None:
+        CONFIG["password_download"] = impostazioni.password_download
+        updates["password_download"] = impostazioni.password_download
+    if impostazioni.password_reset is not None:
+        CONFIG["password_reset"] = impostazioni.password_reset
+        updates["password_reset"] = impostazioni.password_reset
+    if impostazioni.email_destinatari is not None:
+        CONFIG["email_destinatari"] = impostazioni.email_destinatari
+        updates["email_destinatari"] = impostazioni.email_destinatari
+    if impostazioni.listino is not None:
+        CONFIG["listino"] = impostazioni.listino
+        updates["listino"] = impostazioni.listino
+    if impostazioni.categorie_spese is not None:
+        CONFIG["categorie_spese"] = impostazioni.categorie_spese
+        updates["categorie_spese"] = impostazioni.categorie_spese
+    
+    # Salva su file config.py
+    try:
+        salva_config()
+        return {"success": True, "updated": list(updates.keys())}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Errore salvataggio: {str(e)}")
+
+def salva_config():
+    """Salva la configurazione corrente su file"""
+    config_file = Path(__file__).parent / "config.py"
+    
+    config_content = f'''# ========================================
+# CONFIGURAZIONE BAR MANAGER
+# Proloco Santa Bianca
+# ========================================
+# 
+# Modifica questo file per personalizzare l'app
+# Dopo le modifiche, riavvia il server con:
+#   sudo systemctl restart barmanager
+#
+# ========================================
+
+CONFIG = {{
+    # ==================== INFORMAZIONI BAR ====================
+    "nome_bar": "{CONFIG['nome_bar']}",
+    
+    # ==================== EMAIL ====================
+    "email_mittente": "{CONFIG.get('email_mittente', 'meloni.edo@gmail.com')}",
+    "email_password": "{CONFIG.get('email_password', '')}",
+    
+    "email_destinatari": {CONFIG.get('email_destinatari', [])},
+    
+    # ==================== REPORT AUTOMATICO ====================
+    "report_automatico": {CONFIG.get('report_automatico', True)},
+    "ore_minime_tra_report": {CONFIG.get('ore_minime_tra_report', 24)},
+    
+    # ==================== SICUREZZA ====================
+    "password_reset": "{CONFIG['password_reset']}",
+    "password_download": "{CONFIG['password_download']}",
+    
+    # ==================== WIFI ACCESS POINT ====================
+    "wifi_ssid": "{CONFIG.get('wifi_ssid', 'BarManager_WiFi')}",
+    "wifi_password": "{CONFIG.get('wifi_password', 'proloco2024')}",
+    
+    # ==================== SERVER ====================
+    "porta_server": {CONFIG.get('porta_server', 8080)},
+    
+    # ==================== LISTINO PREZZI ====================
+    "listino": {json.dumps(CONFIG['listino'], ensure_ascii=False, indent=8)},
+    
+    # ==================== CATEGORIE SPESE ====================
+    "categorie_spese": {json.dumps(CONFIG['categorie_spese'], ensure_ascii=False, indent=8)},
+    
+    # ==================== DEBUG ====================
+    "debug": {CONFIG.get('debug', False)}
+}}
+'''
+    
+    with open(config_file, 'w', encoding='utf-8') as f:
+        f.write(config_content)
+
+@app.post("/api/aggiungi-prodotto")
+async def api_aggiungi_prodotto(prodotto: dict):
+    """Aggiunge un nuovo prodotto al listino"""
+    nuovo_prodotto = {
+        "nome": prodotto.get("nome", "Nuovo Prodotto"),
+        "prezzo": float(prodotto.get("prezzo", 0)),
+        "categoria": prodotto.get("categoria", "PERSONALIZZATE"),
+        "icona": prodotto.get("icona", "📦")
+    }
+    
+    CONFIG["listino"].append(nuovo_prodotto)
+    
+    # Aggiorna anche il file Excel
+    if EXCEL_FILE.exists():
+        wb = openpyxl.load_workbook(EXCEL_FILE)
+        ws = wb["Prodotti"]
+        ws.append([
+            f"prod_{len(CONFIG['listino'])}",
+            nuovo_prodotto["nome"],
+            nuovo_prodotto["prezzo"],
+            nuovo_prodotto["categoria"],
+            nuovo_prodotto["icona"]
+        ])
+        wb.save(EXCEL_FILE)
+    
+    salva_config()
+    return {"success": True, "prodotto": nuovo_prodotto}
+
+@app.delete("/api/rimuovi-prodotto/{nome}")
+async def api_rimuovi_prodotto(nome: str):
+    """Rimuove un prodotto dal listino"""
+    CONFIG["listino"] = [p for p in CONFIG["listino"] if p["nome"] != nome]
+    salva_config()
+    return {"success": True}
 
 @app.get("/api/check-report-disponibile")
 async def api_check_report_disponibile():
