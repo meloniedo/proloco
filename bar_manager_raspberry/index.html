@@ -1100,66 +1100,7 @@ copy(JSON.stringify({vendite: JSON.parse(localStorage.getItem('vendite')), spese
         }
     }
     
-    async function verificaPasswordDownload() {
-        const password = document.getElementById('downloadPassword')?.value;
-        if (!password) {
-            showFeedback('❌ Inserisci la password');
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${API_BASE}/api/download-excel`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: password })
-            });
-            
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `bar_manager_${new Date().toISOString().split('T')[0]}.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                
-                showFeedback('📊 Download Excel completato');
-                document.getElementById('downloadPassword').value = '';
-            } else {
-                showFeedback('❌ Password errata');
-            }
-        } catch (error) {
-            showFeedback('❌ Errore download');
-        }
-    }
-    
-    async function scaricaReportSettimanale() {
-        try {
-            const response = await fetch(`${API_BASE}/api/report-settimanale`);
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `report_settimanale_${new Date().toISOString().split('T')[0]}.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                
-                showFeedback('📊 Report settimanale scaricato');
-                // Nascondi il banner dopo il download
-                const banner = document.getElementById('reportBanner');
-                if (banner) banner.classList.add('hidden');
-            } else {
-                showFeedback('❌ Report non disponibile');
-            }
-        } catch (error) {
-            showFeedback('❌ Errore download report');
-        }
-    }
+    // Old functions removed - replaced with updated versions above
     
     async function downloadExcel() {
         try {
