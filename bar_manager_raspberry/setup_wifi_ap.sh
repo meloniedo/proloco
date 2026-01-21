@@ -20,22 +20,38 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Configurazione
-WIFI_SSID="BarManager_WiFi"
-WIFI_PASSWORD="proloco2024"
+# Leggi configurazione da config.py
+CONFIG_FILE="/home/pi/bar_manager/config.py"
+
+if [ -f "$CONFIG_FILE" ]; then
+    WIFI_SSID=$(python3 -c "exec(open('$CONFIG_FILE').read()); print(CONFIG.get('wifi_ssid', 'BarManager_WiFi'))")
+    WIFI_PASSWORD=$(python3 -c "exec(open('$CONFIG_FILE').read()); print(CONFIG.get('wifi_password', 'proloco2024'))")
+else
+    WIFI_SSID="BarManager_WiFi"
+    WIFI_PASSWORD="proloco2024"
+fi
+
 IP_ADDRESS="192.168.4.1"
+
+echo -e "${YELLOW}📶 Configurazione rete WiFi:${NC}"
+echo -e "   Nome (SSID): ${GREEN}${WIFI_SSID}${NC}"
+echo -e "   Password:    ${GREEN}${WIFI_PASSWORD}${NC}"
+echo ""
 
 echo -e "${YELLOW}📦 Installazione hostapd e dnsmasq...${NC}"
 apt install -y hostapd dnsmasq
 
 echo -e "${YELLOW}⚙️ Fermata servizi...${NC}"
-systemctl stop hostapd
-systemctl stop dnsmasq
+systemctl stop hostapd 2>/dev/null
+systemctl stop dnsmasq 2>/dev/null
 
 echo -e "${YELLOW}⚙️ Configurazione IP statico per wlan0...${NC}"
 
 # Backup e modifica dhcpcd.conf
-cp /etc/dhcpcd.conf /etc/dhcpcd.conf.backup
+cp /etc/dhcpcd.conf /etc/dhcpcd.conf.backup 2>/dev/null
+
+# Rimuovi vecchia configurazione se presente
+sed -i '/# Configurazione Access Point/,/nohook wpa_supplicant/d' /etc/dhcpcd.conf
 
 cat >> /etc/dhcpcd.conf << EOF
 
@@ -47,7 +63,7 @@ EOF
 
 echo -e "${YELLOW}⚙️ Configurazione dnsmasq (DHCP)...${NC}"
 
-mv /etc/dnsmasq.conf /etc/dnsmasq.conf.backup
+mv /etc/dnsmasq.conf /etc/dnsmasq.conf.backup 2>/dev/null
 
 cat > /etc/dnsmasq.conf << EOF
 interface=wlan0
@@ -102,11 +118,6 @@ echo -e "   1. Connetti il telefono alla rete '${WIFI_SSID}'"
 echo -e "   2. Apri il browser e vai a:"
 echo -e "      ${YELLOW}http://${IP_ADDRESS}:8080${NC}"
 echo -e "      oppure ${YELLOW}http://bar.local:8080${NC}"
-echo ""
-echo -e "${YELLOW}⚠️  Dopo questa configurazione, il Raspberry NON avrà${NC}"
-echo -e "${YELLOW}    più accesso a internet via WiFi.${NC}"
-echo -e "${YELLOW}    Per i report email, collega un cavo Ethernet${NC}"
-echo -e "${YELLOW}    o usa il tuo hotspot mobile.${NC}"
 echo ""
 echo -e "🔄 Riavvia il Raspberry per completare:"
 echo -e "   ${YELLOW}sudo reboot${NC}"
