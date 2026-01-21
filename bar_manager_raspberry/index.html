@@ -858,6 +858,233 @@ copy(JSON.stringify({vendite: JSON.parse(localStorage.getItem('vendite')), spese
         `;
     }
     
+    function renderImpostazioniModal() {
+        if (!state.impostazioniSbloccate) {
+            // Mostra form password
+            return `
+                <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div class="bg-wood-800 rounded-2xl shadow-2xl max-w-md w-full p-8 elegant-border">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4">🔐</div>
+                            <h3 class="text-2xl font-display font-bold text-wood-100 mb-2">Impostazioni</h3>
+                            <p class="text-wood-400">Inserisci la password per accedere</p>
+                        </div>
+                        
+                        <input type="password" 
+                               id="impostazioniPassword" 
+                               placeholder="Password"
+                               class="w-full px-6 py-4 bg-wood-900 text-wood-100 text-center text-xl rounded-xl border border-wood-600 focus:border-brass-400 focus:outline-none mb-4"
+                               onkeypress="if(event.key==='Enter')sbloccaImpostazioni()">
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="closeImpostazioniModal()" 
+                                    class="bg-wood-700 hover:bg-wood-600 text-wood-100 font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                                Annulla
+                            </button>
+                            <button onclick="sbloccaImpostazioni()" 
+                                    class="felt-btn text-wood-50 font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                                🔓 Sblocca
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Mostra pannello impostazioni completo
+        return `
+            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 overflow-y-auto">
+                <div class="bg-wood-800 rounded-2xl shadow-2xl max-w-2xl w-full my-4 elegant-border max-h-[95vh] overflow-hidden flex flex-col">
+                    <!-- Header -->
+                    <div class="p-4 border-b border-wood-600 flex justify-between items-center flex-shrink-0">
+                        <h3 class="text-xl font-display font-bold text-wood-100">⚙️ Impostazioni</h3>
+                        <button onclick="closeImpostazioniModal()" class="text-wood-400 hover:text-wood-100 text-2xl">✕</button>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex border-b border-wood-600 flex-shrink-0 overflow-x-auto">
+                        ${['generale', 'wifi', 'sicurezza', 'listino', 'email'].map(tab => `
+                            <button onclick="changeImpostazioniTab('${tab}')"
+                                    class="px-4 py-3 font-semibold transition-all whitespace-nowrap ${
+                                        state.impostazioniTab === tab 
+                                        ? 'bg-felt-600 text-wood-50 border-b-2 border-brass-400' 
+                                        : 'text-wood-400 hover:text-wood-200 hover:bg-wood-700/50'
+                                    }">
+                                ${tab === 'generale' ? '🏠 Generale' : 
+                                  tab === 'wifi' ? '📶 WiFi' : 
+                                  tab === 'sicurezza' ? '🔐 Sicurezza' : 
+                                  tab === 'listino' ? '📋 Listino' : '📧 Email'}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-4 overflow-y-auto flex-1">
+                        ${renderImpostazioniContent()}
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="p-4 border-t border-wood-600 flex-shrink-0">
+                        <button onclick="salvaImpostazioni()" 
+                                class="w-full felt-btn text-wood-50 font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+                            💾 Salva Modifiche
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderImpostazioniContent() {
+        switch(state.impostazioniTab) {
+            case 'generale':
+                return `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Nome Bar</label>
+                            <input type="text" id="imp_nome_bar" value="${CONFIG.nome_bar}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div class="bg-wood-700/30 p-4 rounded-lg border border-wood-600">
+                            <p class="text-wood-400 text-sm">
+                                ℹ️ Il nome del bar appare nell'intestazione dell'app e nei report.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            
+            case 'wifi':
+                return `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Nome Rete WiFi (SSID)</label>
+                            <input type="text" id="imp_wifi_ssid" value="${CONFIG.wifi_ssid || 'BarManager_WiFi'}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Password WiFi (min 8 caratteri)</label>
+                            <input type="text" id="imp_wifi_password" value="${CONFIG.wifi_password || 'proloco2024'}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div class="bg-yellow-900/30 p-4 rounded-lg border border-yellow-700">
+                            <p class="text-yellow-300 text-sm">
+                                ⚠️ Dopo aver modificato le credenziali WiFi, dovrai riavviare il Raspberry Pi e riconnetterti con le nuove credenziali.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            
+            case 'sicurezza':
+                return `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Password Download/Impostazioni</label>
+                            <input type="text" id="imp_password_download" value="${CONFIG.password_download}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Password Reset Dati</label>
+                            <input type="text" id="imp_password_reset" value="${CONFIG.password_reset}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div class="bg-wood-700/30 p-4 rounded-lg border border-wood-600">
+                            <p class="text-wood-400 text-sm">
+                                ℹ️ La password download protegge l'accesso ai dati Excel e alle impostazioni.<br>
+                                La password reset protegge la cancellazione dei dati.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            
+            case 'listino':
+                return `
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-wood-100 font-bold">Prodotti</h4>
+                            <button onclick="aggiungiProdottoForm()" 
+                                    class="bg-felt-600 hover:bg-felt-500 text-wood-50 px-4 py-2 rounded-lg text-sm transition-all">
+                                ➕ Aggiungi
+                            </button>
+                        </div>
+                        
+                        <div id="listinoProdotti" class="space-y-2 max-h-64 overflow-y-auto">
+                            ${CONFIG.listino.map((p, idx) => `
+                                <div class="bg-wood-700/50 p-3 rounded-lg flex justify-between items-center border border-wood-600">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-2xl">${p.icona}</span>
+                                        <div>
+                                            <div class="text-wood-100 font-semibold">${p.nome}</div>
+                                            <div class="text-wood-400 text-sm">${p.categoria}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-brass-400 font-bold">${p.prezzo > 0 ? '€' + p.prezzo.toFixed(2) : 'Variabile'}</span>
+                                        <button onclick="rimuoviProdotto('${p.nome}')" class="text-red-400 hover:text-red-300 p-1">🗑️</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Form nuovo prodotto (nascosto) -->
+                        <div id="formNuovoProdotto" class="hidden bg-felt-900/50 p-4 rounded-lg border border-felt-600 mt-4">
+                            <h5 class="text-wood-100 font-bold mb-3">Nuovo Prodotto</h5>
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <input type="text" id="nuovo_nome" placeholder="Nome prodotto"
+                                       class="px-3 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 text-sm">
+                                <input type="number" id="nuovo_prezzo" placeholder="Prezzo (0 = variabile)" step="0.10"
+                                       class="px-3 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 text-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <select id="nuovo_categoria" class="px-3 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 text-sm">
+                                    <option value="CAFFETTERIA">CAFFETTERIA</option>
+                                    <option value="BEVANDE">BEVANDE</option>
+                                    <option value="GELATI">GELATI</option>
+                                    <option value="PERSONALIZZATE">PERSONALIZZATE</option>
+                                </select>
+                                <input type="text" id="nuovo_icona" placeholder="Icona (emoji)" value="📦"
+                                       class="px-3 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 text-sm">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="chiudiFormProdotto()" class="flex-1 bg-wood-700 text-wood-300 py-2 rounded-lg text-sm">Annulla</button>
+                                <button onclick="confermaNuovoProdotto()" class="flex-1 bg-felt-600 text-wood-50 py-2 rounded-lg text-sm">Aggiungi</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            
+            case 'email':
+                return `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Email Destinatari Report</label>
+                            <div class="space-y-2" id="emailDestinatari">
+                                ${(CONFIG.email_destinatari || []).map((email, idx) => `
+                                    <div class="flex gap-2">
+                                        <input type="email" value="${email}" 
+                                               onchange="aggiornaEmail(${idx}, this.value)"
+                                               class="flex-1 px-4 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none text-sm">
+                                        <button onclick="rimuoviEmail(${idx})" class="text-red-400 hover:text-red-300 px-3">🗑️</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button onclick="aggiungiEmail()" 
+                                    class="mt-2 text-brass-400 hover:text-brass-300 text-sm">
+                                ➕ Aggiungi email
+                            </button>
+                        </div>
+                        <div class="bg-wood-700/30 p-4 rounded-lg border border-wood-600">
+                            <p class="text-wood-400 text-sm">
+                                ℹ️ Questi indirizzi riceveranno i report automatici quando il Raspberry rileva una connessione internet.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            
+            default:
+                return '';
+        }
+    }
+    
     // ==================== CALCOLO STATISTICHE ====================
     
     function calcolaStatistiche(periodo) {
