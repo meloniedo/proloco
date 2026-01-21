@@ -621,8 +621,15 @@
                     <div class="flex items-center justify-between">
                         <div class="text-wood-100">
                             <div class="font-bold text-lg">📊 Nuovo Report Settimanale!</div>
-                            <div class="text-sm text-wood-300">Clicca per scaricare il report della settimana</div>
+                            <div class="text-sm text-wood-300">Inserisci la password per scaricare</div>
                         </div>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <input type="password" 
+                               id="reportPassword" 
+                               placeholder="Password"
+                               class="flex-1 px-4 py-2 bg-wood-900/50 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none"
+                               onkeypress="if(event.key==='Enter')scaricaReportSettimanale()">
                         <button onclick="scaricaReportSettimanale()" class="felt-btn text-wood-50 px-4 py-2 rounded-lg transition-all">
                             📥 Scarica
                         </button>
