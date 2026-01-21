@@ -43,7 +43,7 @@ CONFIG = {
     "wifi_ssid": "BarManager_WiFi",
     
     # Password WiFi (minimo 8 caratteri)
-    "wifi_password": "proloco2024",
+    "wifi_password": "proloco",
     
     # ==================== SERVER ====================
     # Porta del server (default: 8080)
