@@ -273,6 +273,13 @@
             const status = await apiCall('/api/status');
             state.online = status.online;
             state.ultimoReport = status.ultimo_report;
+            
+            // Controlla se c'è un report settimanale disponibile
+            if (status.report_settimanale_disponibile) {
+                const banner = document.getElementById('reportBanner');
+                if (banner) banner.classList.remove('hidden');
+            }
+            
             updateConnectionIndicator();
         } catch (error) {
             state.online = false;
