@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a472a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bar Manager">
+    
+    <title>Proloco Santa Bianca - Bar Manager</title>
+    
+    <!-- Google Fonts - Font rustico -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Verde panno biliardo
+                        felt: {
+                            50: '#e8f5e9',
+                            100: '#c8e6c9',
+                            200: '#a5d6a7',
+                            300: '#81c784',
+                            400: '#66bb6a',
+                            500: '#1a472a',  // Verde scuro principale
+                            600: '#165c26',
+                            700: '#0d3d19',
+                            800: '#0a2f14',
+                            900: '#06200d',
+                        },
+                        // Legno
+                        wood: {
+                            50: '#fdf8f3',
+                            100: '#f5e6d3',
+                            200: '#e8cdb3',
+                            300: '#d4a574',
+                            400: '#c4915a',
+                            500: '#8b5a2b',  // Marrone legno
+                            600: '#6d4422',
+                            700: '#4a2c17',
+                            800: '#3d2414',
+                            900: '#2d1a0f',
+                        },
+                        // Oro antico
+                        brass: {
+                            400: '#d4af37',
+                            500: '#b8960c',
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'body': ['Source Sans Pro', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- SheetJS per Export Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        body {
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .safe-area-inset-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .animate-bounce {
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Texture legno */
+        .wood-texture {
+            background: linear-gradient(135deg, #8b5a2b 0%, #6d4422 50%, #8b5a2b 100%);
+            background-size: 200% 200%;
+        }
+        
+        /* Texture feltro */
+        .felt-texture {
+            background: radial-gradient(ellipse at center, #1a5c32 0%, #1a472a 50%, #0d3d19 100%);
+        }
+        
+        /* Bordo elegante */
+        .elegant-border {
+            border: 3px solid #d4af37;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.4);
+        }
+        
+        /* Effetto pulsante legno */
+        .wood-btn {
+            background: linear-gradient(180deg, #a67c52 0%, #8b5a2b 50%, #6d4422 100%);
+            box-shadow: 0 4px 0 #4a2c17, 0 6px 20px rgba(0,0,0,0.3);
+            border: 2px solid #d4af37;
+        }
+        
+        .wood-btn:active {
+            box-shadow: 0 2px 0 #4a2c17;
+            transform: translateY(2px);
+        }
+        
+        /* Pulsante feltro verde */
+        .felt-btn {
+            background: linear-gradient(180deg, #2d5a3d 0%, #1a472a 50%, #0d3d19 100%);
+            box-shadow: 0 4px 0 #06200d, 0 6px 20px rgba(0,0,0,0.3);
+            border: 2px solid #d4af37;
+        }
+        
+        .felt-btn:active {
+            box-shadow: 0 2px 0 #06200d;
+            transform: translateY(2px);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .connection-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+        }
+        
+        /* Effetto pallina biliardo per categorie */
+        .billiard-ball {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: inset -3px -3px 8px rgba(0,0,0,0.4), 2px 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="felt-texture min-h-screen">
+    
+    <!-- Indicatore connessione -->
+    <div id="connectionIndicator" class="connection-indicator">
+        <div class="flex items-center gap-2 bg-wood-800/90 backdrop-blur px-3 py-1 rounded-full border border-brass-400">
+            <div id="connectionDot" class="w-2 h-2 rounded-full bg-red-500"></div>
+            <span id="connectionText" class="text-xs text-wood-100">Offline</span>
+        </div>
+    </div>
+    
+    <div id="app"></div>
+
+    <script>
+    // ==================== API CLIENT ====================
+    
+    const API_BASE = window.location.origin;
+    
+    async function apiCall(endpoint, method = 'GET', body = null) {
+        try {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    }
+    
+    // ==================== APP STATE ====================
+    
+    let CONFIG = {
+        nome_bar: "Proloco Santa Bianca",
+        listino: [],
+        categorie_spese: [],
+        password_reset: "5054"
+    };
+    
+    let prodotti = [];
+    let vendite = [];
+    let spese = [];
+    
+    const state = {
+        view: 'vendita',
+        periodo: 'oggi',
+        showKeypad: false,
+        showResetModal: false,
+        showImportModal: false,
+        showImpostazioniModal: false,
+        impostazioniTab: 'generale',
+        impostazioniSbloccate: false,
+        selectedProduct: null,
+        selectedSpesaCategoria: '',
+        customPrice: '',
+        keypadMode: 'vendita',
+        resetPassword: '',
+        feedback: '',
+        loading: false,
+        online: false,
+        ultimoReport: null
+    };
+    
+    // ==================== INIT ====================
+    
+    async function init() {
+        state.loading = true;
+        render();
+        
+        try {
+            const config = await apiCall('/api/config');
+            CONFIG = config;
+            prodotti = await apiCall('/api/prodotti');
+            await refreshData();
+            await checkStatus();
+        } catch (error) {
+            console.error('Init error:', error);
+            showFeedback('❌ Errore connessione al server');
+        }
+        
+        state.loading = false;
+        render();
+        
+        setInterval(refreshData, 5000);
+        setInterval(checkStatus, 10000);
+    }
+    
+    async function refreshData() {
+        try {
+            vendite = await apiCall('/api/vendite');
+            spese = await apiCall('/api/spese');
+            if (state.view === 'statistiche' || state.view === 'storico') {
+                render();
+            }
+        } catch (error) {
+            console.error('Refresh error:', error);
+        }
+    }
+    
+    async function checkStatus() {
+        try {
+            const status = await apiCall('/api/status');
+            state.online = status.online;
+            state.ultimoReport = status.ultimo_report;
+            updateConnectionIndicator();
+            
+            // Controlla se c'è un report settimanale disponibile
+            try {
+                const reportStatus = await apiCall('/api/check-report-disponibile');
+                if (reportStatus.report_disponibile && reportStatus.vendite_settimana > 0) {
+                    const banner = document.getElementById('reportBanner');
+                    if (banner) banner.classList.remove('hidden');
+                }
+            } catch (e) {}
+            
+        } catch (error) {
+            state.online = false;
+            updateConnectionIndicator();
+        }
+    }
+    
+    function updateConnectionIndicator() {
+        const dot = document.getElementById('connectionDot');
+        const text = document.getElementById('connectionText');
+        if (dot && text) {
+            if (state.online) {
+                dot.className = 'w-2 h-2 rounded-full bg-green-400 animate-pulse-slow';
+                text.textContent = 'Online';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-red-500';
+                text.textContent = 'Offline';
+            }
+        }
+    }
+    
+    // ==================== RENDERING ====================
+    
+    function render() {
+        const app = document.getElementById('app');
+        
+        if (state.loading) {
+            app.innerHTML = `
+                <div class="min-h-screen flex items-center justify-center">
+                    <div class="text-center bg-wood-800/80 p-8 rounded-2xl elegant-border">
+                        <div class="text-6xl mb-4">🎱</div>
+                        <div class="text-wood-100 text-xl font-display">Caricamento...</div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        app.innerHTML = `
+            ${renderHeader()}
+            ${renderFeedback()}
+            ${renderContent()}
+            ${renderNavigation()}
+            ${state.showKeypad ? renderKeypad() : ''}
+            ${state.showResetModal ? renderResetModal() : ''}
+            ${state.showImportModal ? renderImportModal() : ''}
+            ${state.showImpostazioniModal ? renderImpostazioniModal() : ''}
+        `;
+    }
+    
+    function renderHeader() {
+        return `
+            <div class="wood-texture border-b-4 border-brass-400 sticky top-0 z-40 shadow-xl">
+                <div class="max-w-7xl mx-auto px-4 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="w-10"></div>
+                        <div class="text-center flex-1">
+                            <h1 class="text-2xl md:text-3xl font-display font-bold text-wood-50 drop-shadow-lg">
+                                🍺 ${CONFIG.nome_bar}
+                            </h1>
+                            <div class="text-wood-200 text-xs mt-1 tracking-wider">
+                                Multi-dispositivo • Dati sincronizzati
+                            </div>
+                        </div>
+                        <button onclick="openImpostazioniModal()" 
+                                class="w-10 h-10 flex items-center justify-center bg-wood-700/50 hover:bg-wood-700 rounded-full text-wood-200 hover:text-brass-400 transition-all border border-wood-600"
+                                title="Impostazioni">
+                            ⚙️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderFeedback() {
+        if (!state.feedback) return '';
+        return `
+            <div class="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+                <div class="bg-wood-100 text-wood-900 px-8 py-4 rounded-2xl shadow-2xl text-xl font-bold border-2 border-brass-400">
+                    ${state.feedback}
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderContent() {
+        return `
+            <div class="max-w-7xl mx-auto px-4 py-6 pb-28">
+                ${state.view === 'vendita' ? renderVendita() : ''}
+                ${state.view === 'spese' ? renderSpese() : ''}
+                ${state.view === 'statistiche' ? renderStatistiche() : ''}
+                ${state.view === 'storico' ? renderStorico() : ''}
+            </div>
+        `;
+    }
+    
+    function renderVendita() {
+        const grouped = {};
+        prodotti.forEach(p => {
+            if (!grouped[p.categoria]) grouped[p.categoria] = [];
+            grouped[p.categoria].push(p);
+        });
+        
+        const categoriaColors = {
+            'CAFFETTERIA': { bg: 'bg-amber-800', ball: 'bg-amber-600' },
+            'BEVANDE': { bg: 'bg-red-900', ball: 'bg-red-700' },
+            'GELATI': { bg: 'bg-blue-800', ball: 'bg-blue-600' },
+            'PERSONALIZZATE': { bg: 'bg-felt-500', ball: 'bg-felt-400' }
+        };
+        
+        const categoriaIcons = {
+            'CAFFETTERIA': '☕',
+            'BEVANDE': '🍷',
+            'GELATI': '🍦',
+            'PERSONALIZZATE': '🎱'
+        };
+        
+        // Numeri palle biliardo per categoria
+        const categoriaBallNum = {
+            'CAFFETTERIA': '1',
+            'BEVANDE': '3',
+            'GELATI': '2',
+            'PERSONALIZZATE': '8'
+        };
+        
+        let html = '<div class="space-y-8">';
+        
+        for (const [categoria, items] of Object.entries(grouped)) {
+            const colors = categoriaColors[categoria] || { bg: 'bg-gray-700', ball: 'bg-gray-500' };
+            
+            html += `
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="billiard-ball ${colors.ball} text-white font-bold text-lg">
+                            ${categoriaBallNum[categoria] || '•'}
+                        </div>
+                        <h2 class="text-2xl font-display font-bold text-wood-100 drop-shadow">${categoria}</h2>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            `;
+            
+            items.forEach(prodotto => {
+                const isPersonalizzato = prodotto.prezzo === 0;
+                html += `
+                    <button onclick="handleProductClick('${prodotto.id}')" 
+                            class="wood-btn text-wood-50 p-5 rounded-xl transition-all duration-200 active:scale-95">
+                        <div class="text-3xl mb-2">${prodotto.icona}</div>
+                        <div class="font-bold text-base mb-2 leading-tight">${prodotto.nome}</div>
+                        <div class="text-xl font-black text-brass-400">
+                            ${isPersonalizzato ? '💰 Inserisci' : `€${prodotto.prezzo.toFixed(2)}`}
+                        </div>
+                    </button>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    function renderSpese() {
+        const ultimeSpoese = spese.slice(0, 10);
+        const categorie = CONFIG.categorie_spese || [];
+        
+        let html = `
+            <div class="space-y-6">
+                <div class="bg-wood-800/80 backdrop-blur p-6 rounded-2xl elegant-border">
+                    <h2 class="text-2xl font-display font-bold text-wood-100 mb-6 text-center">💸 Registra Spese</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        `;
+        
+        categorie.forEach((cat, idx) => {
+            html += `
+                <button onclick="handleSpesaClick('${cat.nome}', '${cat.icona}')"
+                        class="felt-btn text-wood-50 p-6 rounded-xl transition-all active:scale-95">
+                    <div class="text-4xl mb-3">${cat.icona}</div>
+                    <div class="font-bold">${cat.nome}</div>
+                </button>
+            `;
+        });
+        
+        html += `
+                    </div>
+                </div>
+                
+                <div class="bg-wood-800/80 backdrop-blur p-6 rounded-2xl elegant-border">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-display font-bold text-wood-100">📋 Ultime Spese</h3>
+                        <button onclick="refreshData()" class="bg-wood-600 hover:bg-wood-500 text-wood-100 px-4 py-2 rounded-lg transition-all border border-brass-400">
+                            🔄 Aggiorna
+                        </button>
+                    </div>
+        `;
+        
+        if (ultimeSpoese.length === 0) {
+            html += '<div class="text-wood-300 text-center py-8">Nessuna spesa registrata</div>';
+        } else {
+            html += '<div class="space-y-2 max-h-96 overflow-y-auto hide-scrollbar">';
+            ultimeSpoese.forEach(s => {
+                const dt = new Date(s.timestamp);
+                html += `
+                    <div class="bg-wood-700/50 p-4 rounded-xl flex justify-between items-center hover:bg-wood-700 transition-all border border-wood-600">
+                        <div class="text-wood-100">
+                            <div class="font-bold text-lg">${s.categoria_spesa}</div>
+                            <div class="text-sm text-wood-300">
+                                ${dt.toLocaleDateString('it-IT')} - ${dt.toLocaleTimeString('it-IT')}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-black text-red-400">-€${s.importo.toFixed(2)}</div>
+                            <button onclick="deleteSpesa('${s.id}')" class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg transition-all">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+        
+        html += `
+                </div>
+            </div>
+        `;
+        
+        return html;
+    }
+    
+    function renderStatistiche() {
+        const stats = calcolaStatistiche(state.periodo);
+        
+        let html = `
+            <div class="space-y-6">
+                <div class="flex gap-2 justify-center flex-wrap">
+                    ${['oggi', 'settimana', 'mese'].map(p => `
+                        <button onclick="changePeriodo('${p}')"
+                                class="px-6 py-3 rounded-xl font-semibold transition-all ${
+                                    state.periodo === p 
+                                    ? 'wood-btn text-wood-50' 
+                                    : 'bg-wood-700/50 text-wood-200 hover:bg-wood-700 border border-wood-600'
+                                }">
+                            ${p === 'oggi' ? '📅 Oggi' : p === 'settimana' ? '📆 Settimana' : '🗓️ Mese'}
+                        </button>
+                    `).join('')}
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-gradient-to-br from-green-800 to-green-900 p-6 rounded-2xl shadow-2xl text-white elegant-border">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Incasso Totale</h3>
+                            <span class="text-3xl">📈</span>
+                        </div>
+                        <div class="text-4xl font-black text-brass-400">€${stats.totaleIncasso.toFixed(2)}</div>
+                        <div class="text-green-200 mt-2 text-sm">${stats.periodoLabel}</div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-red-900 to-red-950 p-6 rounded-2xl shadow-2xl text-white elegant-border">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Spese Totali</h3>
+                            <span class="text-3xl">📉</span>
+                        </div>
+                        <div class="text-4xl font-black text-red-300">€${stats.totaleSpese.toFixed(2)}</div>
+                        <div class="text-red-200 mt-2 text-sm">${stats.periodoLabel}</div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br ${stats.profittoNetto >= 0 ? 'from-felt-600 to-felt-800' : 'from-orange-800 to-red-900'} p-6 rounded-2xl shadow-2xl text-white elegant-border">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Profitto Netto</h3>
+                            <span class="text-3xl">💰</span>
+                        </div>
+                        <div class="text-4xl font-black text-brass-400">€${stats.profittoNetto.toFixed(2)}</div>
+                        <div class="text-felt-200 mt-2 text-sm">${stats.totaleVendite} vendite</div>
+                    </div>
+                </div>
+                
+                <div class="bg-wood-800/80 backdrop-blur p-6 rounded-2xl elegant-border">
+                    <h3 class="text-xl font-display font-bold text-wood-100 mb-6">📊 Per Categoria</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        ${Object.entries(stats.perCategoria).map(([cat, data]) => `
+                            <div class="bg-wood-700/50 p-5 rounded-xl text-wood-100 border border-wood-600">
+                                <div class="text-lg font-semibold mb-2">${cat}</div>
+                                <div class="text-2xl font-black text-brass-400 mb-1">€${data.incasso.toFixed(2)}</div>
+                                <div class="text-sm text-wood-300">${data.vendite} vendite</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="bg-wood-800/80 backdrop-blur p-6 rounded-2xl elegant-border">
+                    <h3 class="text-xl font-display font-bold text-wood-100 mb-6">🏆 Top 5 Prodotti</h3>
+                    <div class="space-y-3">
+                        ${stats.prodottiPiuVenduti.map((prod, idx) => `
+                            <div class="bg-wood-700/50 p-4 rounded-xl flex justify-between items-center border border-wood-600">
+                                <div class="flex items-center gap-4">
+                                    <div class="billiard-ball bg-brass-500 text-wood-900 font-bold">${idx + 1}</div>
+                                    <div class="text-wood-100">
+                                        <div class="font-bold text-lg">${prod.nome}</div>
+                                        <div class="text-sm text-wood-300">${prod.quantita} vendite</div>
+                                    </div>
+                                </div>
+                                <div class="text-2xl font-black text-brass-400">€${prod.incasso.toFixed(2)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <button onclick="openResetModal()" 
+                        class="w-full bg-red-900 hover:bg-red-800 text-white py-4 rounded-xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-3 border-2 border-red-600">
+                    🗑️ 🔒 Reset Periodo (Password Richiesta)
+                </button>
+            </div>
+        `;
+        
+        return html;
+    }
+    
+    function renderStorico() {
+        const tutteTransazioni = [
+            ...vendite.map(v => ({...v, tipo: 'vendita'})),
+            ...spese.map(s => ({...s, tipo: 'spesa', nome_prodotto: s.categoria_spesa, prezzo: -s.importo}))
+        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 100);
+        
+        let html = `
+            <div class="space-y-4">
+                <!-- Banner report disponibile -->
+                <div id="reportBanner" class="hidden bg-gradient-to-r from-green-800 to-green-900 p-4 rounded-xl border-2 border-brass-400 animate-pulse">
+                    <div class="flex items-center justify-between">
+                        <div class="text-wood-100">
+                            <div class="font-bold text-lg">📊 Nuovo Report Settimanale!</div>
+                            <div class="text-sm text-wood-300">Inserisci la password per scaricare</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <input type="password" 
+                               id="reportPassword" 
+                               placeholder="Password"
+                               class="flex-1 px-4 py-2 bg-wood-900/50 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none"
+                               onkeypress="if(event.key==='Enter')scaricaReportSettimanale()">
+                        <button onclick="scaricaReportSettimanale()" class="felt-btn text-wood-50 px-4 py-2 rounded-lg transition-all">
+                            📥 Scarica
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Pulsante Download Excel con Password -->
+                <div class="bg-wood-800/80 backdrop-blur p-4 rounded-xl elegant-border">
+                    <h3 class="text-lg font-display font-bold text-wood-100 mb-4">📊 Download Dati Completi</h3>
+                    <div class="flex gap-2">
+                        <input type="password" 
+                               id="downloadPassword" 
+                               placeholder="Password"
+                               class="flex-1 px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none"
+                               onkeypress="if(event.key==='Enter')verificaPasswordDownload()">
+                        <button onclick="verificaPasswordDownload()" 
+                                class="wood-btn text-wood-50 px-6 py-3 rounded-lg transition-all font-bold">
+                            📥 Scarica Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="openImportModal()" 
+                        class="w-full bg-wood-700/50 hover:bg-wood-700 text-wood-300 hover:text-wood-100 py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-wood-600">
+                    📥 Importa Dati da App Precedente
+                </button>
+                
+                <div class="bg-wood-800/80 backdrop-blur p-6 rounded-2xl elegant-border">
+                    <h3 class="text-xl font-display font-bold text-wood-100 mb-6">📋 Ultime 100 Transazioni</h3>
+        `;
+        
+        if (tutteTransazioni.length === 0) {
+            html += '<div class="text-wood-300 text-center py-8">Nessuna transazione registrata</div>';
+        } else {
+            html += '<div class="space-y-2 max-h-[600px] overflow-y-auto hide-scrollbar">';
+            tutteTransazioni.forEach(t => {
+                const dt = new Date(t.timestamp);
+                const isSpesa = t.tipo === 'spesa';
+                const bgColor = isSpesa ? 'bg-red-900/30 border-red-800' : 'bg-wood-700/50 border-wood-600';
+                const priceColor = isSpesa ? 'text-red-400' : 'text-green-400';
+                const icon = isSpesa ? '💸' : '💰';
+                
+                html += `
+                    <div class="${bgColor} p-4 rounded-xl flex justify-between items-center hover:bg-wood-700/70 transition-all border">
+                        <div class="text-wood-100">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">${icon}</span>
+                                <div>
+                                    <div class="font-bold">${t.nome_prodotto}</div>
+                                    <div class="text-sm text-wood-400">
+                                        ${dt.toLocaleDateString('it-IT')} - ${dt.toLocaleTimeString('it-IT')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-xl font-black ${priceColor}">
+                                ${isSpesa ? '-' : '+'}€${Math.abs(t.prezzo).toFixed(2)}
+                            </div>
+                            <button onclick="${isSpesa ? `deleteSpesa('${t.id}')` : `deleteVendita('${t.id}')`}" 
+                                    class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg transition-all">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+        
+        html += `
+                </div>
+            </div>
+        `;
+        
+        return html;
+    }
+    
+    function renderNavigation() {
+        return `
+            <div class="fixed bottom-0 left-0 right-0 wood-texture border-t-4 border-brass-400 z-40 safe-area-inset-bottom shadow-2xl">
+                <div class="max-w-7xl mx-auto px-2 py-3">
+                    <div class="grid grid-cols-4 gap-2">
+                        ${['vendita', 'spese', 'statistiche', 'storico'].map(view => `
+                            <button onclick="changeView('${view}')"
+                                    class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold transition-all ${
+                                        state.view === view 
+                                        ? 'bg-felt-500 text-wood-50 shadow-lg border-2 border-brass-400' 
+                                        : 'bg-wood-700/50 text-wood-200 hover:bg-wood-700'
+                                    }">
+                                <span class="text-2xl mb-1">${
+                                    view === 'vendita' ? '🛒' : 
+                                    view === 'spese' ? '💸' : 
+                                    view === 'statistiche' ? '📊' : '📋'
+                                }</span>
+                                <span class="text-xs capitalize">${view}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderKeypad() {
+        return `
+            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-wood-800 rounded-2xl shadow-2xl max-w-md w-full p-6 elegant-border">
+                    <div class="text-center mb-6">
+                        <div class="text-5xl mb-3">${state.selectedProduct?.icona || '💰'}</div>
+                        <h3 class="text-2xl font-display font-bold text-wood-100 mb-2">${state.selectedProduct?.nome || ''}</h3>
+                        <p class="text-wood-400">Inserisci l'importo</p>
+                    </div>
+                    
+                    <div class="bg-felt-700 rounded-xl p-6 mb-6 border-2 border-brass-400">
+                        <div class="text-center">
+                            <div class="text-5xl font-black text-brass-400">€${state.customPrice || '0'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        ${['1','2','3','4','5','6','7','8','9',',','0','←'].map(key => `
+                            <button onclick="handleKeypadPress('${key}')"
+                                    class="wood-btn text-wood-50 text-2xl font-bold p-5 rounded-xl transition-all">
+                                ${key}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="closeKeypad()" 
+                                class="bg-red-800 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all border border-red-600">
+                            ❌ Annulla
+                        </button>
+                        <button onclick="confirmKeypad()" 
+                                class="felt-btn text-wood-50 font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                            ✅ Conferma
+                        </button>
+                    </div>
+                    
+                    <button onclick="clearKeypad()" 
+                            class="w-full mt-3 bg-wood-600 hover:bg-wood-500 text-wood-100 font-bold py-3 px-6 rounded-xl shadow-lg transition-all border border-wood-500">
+                        🗑️ Cancella Tutto
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderResetModal() {
+        return `
+            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-red-950 rounded-2xl shadow-2xl max-w-md w-full p-8 border-2 border-red-700">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl mb-4">⚠️</div>
+                        <h3 class="text-2xl font-display font-bold text-white mb-2">Reset Periodo</h3>
+                        <p class="text-red-200">Elimina dati del periodo: <span class="font-bold">${state.periodo}</span></p>
+                    </div>
+                    
+                    <div class="bg-red-900/50 rounded-xl p-6 mb-6 border border-red-700">
+                        <label class="block text-white font-semibold mb-3 text-center">Inserisci Password</label>
+                        <input type="password" 
+                               id="resetPasswordInput"
+                               value="${state.resetPassword}"
+                               oninput="updateResetPassword(this.value)"
+                               placeholder="Password" 
+                               maxlength="10"
+                               class="w-full px-6 py-4 bg-red-950 text-white text-center text-2xl font-bold rounded-xl border-2 border-red-600 focus:border-red-400 focus:outline-none placeholder-red-400">
+                        <p class="text-xs text-red-300 mt-3 text-center">⚠️ Azione irreversibile!</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="closeResetModal()" 
+                                class="bg-wood-700 hover:bg-wood-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                            Annulla
+                        </button>
+                        <button onclick="confirmReset()" 
+                                class="bg-red-700 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                            🗑️ Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderImportModal() {
+        return `
+            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-wood-800 rounded-2xl shadow-2xl max-w-lg w-full p-8 elegant-border">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl mb-4">📥</div>
+                        <h3 class="text-2xl font-display font-bold text-wood-100 mb-2">Importa Dati</h3>
+                        <p class="text-wood-400">Importa dalla vecchia app</p>
+                    </div>
+                    
+                    <div class="bg-wood-700/50 rounded-xl p-4 mb-6 border border-wood-600">
+                        <p class="text-wood-200 text-sm mb-4">
+                            <strong>Istruzioni:</strong><br>
+                            1. Apri la vecchia app<br>
+                            2. Console browser (F12 → Console)<br>
+                            3. Copia ed esegui:
+                        </p>
+                        <code class="block bg-black/50 p-3 rounded-lg text-green-400 text-xs overflow-x-auto">
+copy(JSON.stringify({vendite: JSON.parse(localStorage.getItem('vendite')), spese: JSON.parse(localStorage.getItem('spese'))}))
+                        </code>
+                        <p class="text-wood-200 text-sm mt-4">4. Incolla qui sotto:</p>
+                    </div>
+                    
+                    <textarea id="importDataInput" 
+                              placeholder='{"vendite": [...], "spese": [...]}'
+                              class="w-full h-32 px-4 py-3 bg-wood-900 text-wood-100 rounded-xl border border-wood-600 focus:border-brass-400 focus:outline-none placeholder-wood-500 text-sm font-mono"></textarea>
+                    
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+                        <button onclick="closeImportModal()" 
+                                class="bg-wood-700 hover:bg-wood-600 text-wood-100 font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                            Annulla
+                        </button>
+                        <button onclick="confirmImport()" 
+                                class="felt-btn text-wood-50 font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                            📥 Importa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderImpostazioniModal() {
+        if (!state.impostazioniSbloccate) {
+            // Mostra form password
+            return `
+                <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div class="bg-wood-800 rounded-2xl shadow-2xl max-w-md w-full p-8 elegant-border">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4">🔐</div>
+                            <h3 class="text-2xl font-display font-bold text-wood-100 mb-2">Impostazioni</h3>
+                            <p class="text-wood-400">Inserisci la password per accedere</p>
+                        </div>
+                        
+                        <input type="password" 
+                               id="impostazioniPassword" 
+                               placeholder="Password"
+                               class="w-full px-6 py-4 bg-wood-900 text-wood-100 text-center text-xl rounded-xl border border-wood-600 focus:border-brass-400 focus:outline-none mb-4"
+                               onkeypress="if(event.key==='Enter')sbloccaImpostazioni()">
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="closeImpostazioniModal()" 
+                                    class="bg-wood-700 hover:bg-wood-600 text-wood-100 font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                                Annulla
+                            </button>
+                            <button onclick="sbloccaImpostazioni()" 
+                                    class="felt-btn text-wood-50 font-bold py-4 px-6 rounded-xl shadow-lg transition-all">
+                                🔓 Sblocca
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Mostra pannello impostazioni completo
+        return `
+            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2 overflow-y-auto">
+                <div class="bg-wood-800 rounded-2xl shadow-2xl max-w-2xl w-full my-4 elegant-border max-h-[95vh] overflow-hidden flex flex-col">
+                    <!-- Header -->
+                    <div class="p-4 border-b border-wood-600 flex justify-between items-center flex-shrink-0">
+                        <h3 class="text-xl font-display font-bold text-wood-100">⚙️ Impostazioni</h3>
+                        <button onclick="closeImpostazioniModal()" class="text-wood-400 hover:text-wood-100 text-2xl">✕</button>
+                    </div>
+                    
+                    <!-- Tabs -->
+                    <div class="flex border-b border-wood-600 flex-shrink-0 overflow-x-auto">
+                        ${['generale', 'wifi', 'sicurezza', 'listino', 'email'].map(tab => `
+                            <button onclick="changeImpostazioniTab('${tab}')"
+                                    class="px-4 py-3 font-semibold transition-all whitespace-nowrap ${
+                                        state.impostazioniTab === tab 
+                                        ? 'bg-felt-600 text-wood-50 border-b-2 border-brass-400' 
+                                        : 'text-wood-400 hover:text-wood-200 hover:bg-wood-700/50'
+                                    }">
+                                ${tab === 'generale' ? '🏠 Generale' : 
+                                  tab === 'wifi' ? '📶 WiFi' : 
+                                  tab === 'sicurezza' ? '🔐 Sicurezza' : 
+                                  tab === 'listino' ? '📋 Listino' : '📧 Email'}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-4 overflow-y-auto flex-1">
+                        ${renderImpostazioniContent()}
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="p-4 border-t border-wood-600 flex-shrink-0">
+                        <button onclick="salvaImpostazioni()" 
+                                class="w-full felt-btn text-wood-50 font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+                            💾 Salva Modifiche
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function renderImpostazioniContent() {
+        switch(state.impostazioniTab) {
+            case 'generale':
+                return `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Nome Bar</label>
+                            <input type="text" id="imp_nome_bar" value="${CONFIG.nome_bar}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div class="bg-wood-700/30 p-4 rounded-lg border border-wood-600">
+                            <p class="text-wood-400 text-sm">
+                                ℹ️ Il nome del bar appare nell'intestazione dell'app e nei report.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            
+            case 'wifi':
+                return `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Nome Rete WiFi (SSID)</label>
+                            <input type="text" id="imp_wifi_ssid" value="${CONFIG.wifi_ssid || 'BarManager_WiFi'}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Password WiFi (min 8 caratteri)</label>
+                            <input type="text" id="imp_wifi_password" value="${CONFIG.wifi_password || 'proloco2024'}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div class="bg-yellow-900/30 p-4 rounded-lg border border-yellow-700">
+                            <p class="text-yellow-300 text-sm">
+                                ⚠️ Dopo aver modificato le credenziali WiFi, dovrai riavviare il Raspberry Pi e riconnetterti con le nuove credenziali.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            
+            case 'sicurezza':
+                return `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Password Download/Impostazioni</label>
+                            <input type="text" id="imp_password_download" value="${CONFIG.password_download}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Password Reset Dati</label>
+                            <input type="text" id="imp_password_reset" value="${CONFIG.password_reset}"
+                                   class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                        </div>
+                        <div class="bg-wood-700/30 p-4 rounded-lg border border-wood-600">
+                            <p class="text-wood-400 text-sm">
+                                ℹ️ La password download protegge l'accesso ai dati Excel e alle impostazioni.<br>
+                                La password reset protegge la cancellazione dei dati.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            
+            case 'listino':
+                return `
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-wood-100 font-bold">Prodotti</h4>
+                            <button onclick="aggiungiProdottoForm()" 
+                                    class="bg-felt-600 hover:bg-felt-500 text-wood-50 px-4 py-2 rounded-lg text-sm transition-all">
+                                ➕ Aggiungi
+                            </button>
+                        </div>
+                        
+                        <div id="listinoProdotti" class="space-y-2 max-h-64 overflow-y-auto">
+                            ${CONFIG.listino.map((p, idx) => `
+                                <div class="bg-wood-700/50 p-3 rounded-lg flex justify-between items-center border border-wood-600">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-2xl">${p.icona}</span>
+                                        <div>
+                                            <div class="text-wood-100 font-semibold">${p.nome}</div>
+                                            <div class="text-wood-400 text-sm">${p.categoria}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-brass-400 font-bold">${p.prezzo > 0 ? '€' + p.prezzo.toFixed(2) : 'Variabile'}</span>
+                                        <button onclick="rimuoviProdotto('${p.nome}')" class="text-red-400 hover:text-red-300 p-1">🗑️</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Form nuovo prodotto (nascosto) -->
+                        <div id="formNuovoProdotto" class="hidden bg-felt-900/50 p-4 rounded-lg border border-felt-600 mt-4">
+                            <h5 class="text-wood-100 font-bold mb-3">Nuovo Prodotto</h5>
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <input type="text" id="nuovo_nome" placeholder="Nome prodotto"
+                                       class="px-3 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 text-sm">
+                                <input type="number" id="nuovo_prezzo" placeholder="Prezzo (0 = variabile)" step="0.10"
+                                       class="px-3 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 text-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <select id="nuovo_categoria" class="px-3 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 text-sm">
+                                    <option value="CAFFETTERIA">CAFFETTERIA</option>
+                                    <option value="BEVANDE">BEVANDE</option>
+                                    <option value="GELATI">GELATI</option>
+                                    <option value="PERSONALIZZATE">PERSONALIZZATE</option>
+                                </select>
+                                <input type="text" id="nuovo_icona" placeholder="Icona (emoji)" value="📦"
+                                       class="px-3 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 text-sm">
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="chiudiFormProdotto()" class="flex-1 bg-wood-700 text-wood-300 py-2 rounded-lg text-sm">Annulla</button>
+                                <button onclick="confermaNuovoProdotto()" class="flex-1 bg-felt-600 text-wood-50 py-2 rounded-lg text-sm">Aggiungi</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            
+            case 'email':
+                return `
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-wood-300 text-sm mb-2">Email Destinatari Report</label>
+                            <div class="space-y-2" id="emailDestinatari">
+                                ${(CONFIG.email_destinatari || []).map((email, idx) => `
+                                    <div class="flex gap-2">
+                                        <input type="email" value="${email}" 
+                                               onchange="aggiornaEmail(${idx}, this.value)"
+                                               class="flex-1 px-4 py-2 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none text-sm">
+                                        <button onclick="rimuoviEmail(${idx})" class="text-red-400 hover:text-red-300 px-3">🗑️</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button onclick="aggiungiEmail()" 
+                                    class="mt-2 text-brass-400 hover:text-brass-300 text-sm">
+                                ➕ Aggiungi email
+                            </button>
+                        </div>
+                        <div class="bg-wood-700/30 p-4 rounded-lg border border-wood-600">
+                            <p class="text-wood-400 text-sm">
+                                ℹ️ Questi indirizzi riceveranno i report automatici quando il Raspberry rileva una connessione internet.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            
+            default:
+                return '';
+        }
+    }
+    
+    // ==================== CALCOLO STATISTICHE ====================
+    
+    function calcolaStatistiche(periodo) {
+        const now = new Date();
+        let dataInizio;
+        
+        if (periodo === 'oggi') {
+            dataInizio = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        } else if (periodo === 'settimana') {
+            dataInizio = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        } else {
+            dataInizio = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        }
+        
+        const venditePeriodo = vendite.filter(v => new Date(v.timestamp) >= dataInizio);
+        const spesePeriodo = spese.filter(s => new Date(s.timestamp) >= dataInizio);
+        
+        const totaleVendite = venditePeriodo.length;
+        const totaleIncasso = venditePeriodo.reduce((sum, v) => sum + v.prezzo, 0);
+        const totaleSpese = spesePeriodo.reduce((sum, s) => sum + s.importo, 0);
+        const profittoNetto = totaleIncasso - totaleSpese;
+        
+        const perCategoria = {};
+        venditePeriodo.forEach(v => {
+            if (!perCategoria[v.categoria]) {
+                perCategoria[v.categoria] = {vendite: 0, incasso: 0};
+            }
+            perCategoria[v.categoria].vendite++;
+            perCategoria[v.categoria].incasso += v.prezzo;
+        });
+        
+        const prodottiCount = {};
+        venditePeriodo.forEach(v => {
+            if (!prodottiCount[v.nome_prodotto]) {
+                prodottiCount[v.nome_prodotto] = {nome: v.nome_prodotto, quantita: 0, incasso: 0};
+            }
+            prodottiCount[v.nome_prodotto].quantita++;
+            prodottiCount[v.nome_prodotto].incasso += v.prezzo;
+        });
+        
+        const prodottiPiuVenduti = Object.values(prodottiCount)
+            .sort((a, b) => b.quantita - a.quantita)
+            .slice(0, 5);
+        
+        return {
+            totaleVendite,
+            totaleIncasso,
+            totaleSpese,
+            profittoNetto,
+            perCategoria,
+            prodottiPiuVenduti,
+            periodoLabel: periodo === 'oggi' ? 'Oggi' : periodo === 'settimana' ? 'Ultimi 7 giorni' : 'Ultimi 30 giorni'
+        };
+    }
+    
+    // ==================== EVENT HANDLERS ====================
+    
+    function changeView(view) {
+        state.view = view;
+        render();
+        window.scrollTo(0, 0);
+    }
+    
+    function changePeriodo(periodo) {
+        state.periodo = periodo;
+        render();
+    }
+    
+    function handleProductClick(prodottoId) {
+        const prodotto = prodotti.find(p => p.id === prodottoId);
+        if (!prodotto) return;
+        
+        if (prodotto.prezzo === 0 || prodotto.categoria === 'PERSONALIZZATE') {
+            state.selectedProduct = prodotto;
+            state.customPrice = '';
+            state.keypadMode = 'vendita';
+            state.showKeypad = true;
+            render();
+        } else {
+            registraVendita(prodotto, prodotto.prezzo);
+        }
+    }
+    
+    function handleSpesaClick(categoria, icona) {
+        state.selectedSpesaCategoria = categoria;
+        state.selectedProduct = {nome: categoria, icona: icona};
+        state.customPrice = '';
+        state.keypadMode = 'spesa';
+        state.showKeypad = true;
+        render();
+    }
+    
+    function handleKeypadPress(key) {
+        if (key === '←') {
+            state.customPrice = state.customPrice.slice(0, -1);
+        } else if (key === ',') {
+            if (!state.customPrice.includes(',')) {
+                state.customPrice += ',';
+            }
+        } else {
+            if (state.customPrice.includes(',')) {
+                const parts = state.customPrice.split(',');
+                if (parts[1] && parts[1].length >= 2) return;
+            }
+            state.customPrice += key;
+        }
+        render();
+    }
+    
+    function closeKeypad() {
+        state.showKeypad = false;
+        state.customPrice = '';
+        state.selectedProduct = null;
+        render();
+    }
+    
+    function clearKeypad() {
+        state.customPrice = '';
+        render();
+    }
+    
+    async function confirmKeypad() {
+        const prezzo = parseFloat(state.customPrice.replace(',', '.'));
+        if (isNaN(prezzo) || prezzo <= 0) {
+            showFeedback('❌ Inserisci un importo valido!');
+            return;
+        }
+        
+        state.showKeypad = false;
+        
+        if (state.keypadMode === 'vendita') {
+            await registraVendita(state.selectedProduct, prezzo);
+        } else if (state.keypadMode === 'spesa') {
+            await registraSpesa(state.selectedSpesaCategoria, prezzo);
+        }
+        
+        state.customPrice = '';
+        state.selectedProduct = null;
+        render();
+    }
+    
+    async function registraVendita(prodotto, prezzo) {
+        try {
+            await apiCall('/api/vendite', 'POST', {
+                prodotto_id: prodotto.id,
+                nome_prodotto: prodotto.nome,
+                prezzo: prezzo,
+                categoria: prodotto.categoria
+            });
+            
+            showFeedback(`✅ ${prodotto.nome} - €${prezzo.toFixed(2)}`);
+            await refreshData();
+        } catch (error) {
+            showFeedback('❌ Errore registrazione vendita');
+        }
+    }
+    
+    async function registraSpesa(categoria, importo) {
+        try {
+            await apiCall('/api/spese', 'POST', {
+                categoria_spesa: categoria,
+                importo: importo,
+                note: ''
+            });
+            
+            showFeedback(`✅ Spesa: ${categoria} - €${importo.toFixed(2)}`);
+            await refreshData();
+        } catch (error) {
+            showFeedback('❌ Errore registrazione spesa');
+        }
+    }
+    
+    async function deleteVendita(id) {
+        if (!confirm('Eliminare questa vendita?')) return;
+        
+        try {
+            await apiCall(`/api/vendite/${id}`, 'DELETE');
+            showFeedback('✅ Vendita eliminata');
+            await refreshData();
+            render();
+        } catch (error) {
+            showFeedback('❌ Errore eliminazione');
+        }
+    }
+    
+    async function deleteSpesa(id) {
+        if (!confirm('Eliminare questa spesa?')) return;
+        
+        try {
+            await apiCall(`/api/spese/${id}`, 'DELETE');
+            showFeedback('✅ Spesa eliminata');
+            await refreshData();
+            render();
+        } catch (error) {
+            showFeedback('❌ Errore eliminazione');
+        }
+    }
+    
+    function openResetModal() {
+        state.showResetModal = true;
+        state.resetPassword = '';
+        render();
+    }
+    
+    function closeResetModal() {
+        state.showResetModal = false;
+        state.resetPassword = '';
+        render();
+    }
+    
+    function updateResetPassword(value) {
+        state.resetPassword = value;
+    }
+    
+    async function confirmReset() {
+        try {
+            await apiCall('/api/reset', 'POST', {
+                password: state.resetPassword,
+                periodo: state.periodo
+            });
+            
+            state.showResetModal = false;
+            state.resetPassword = '';
+            showFeedback('✅ Reset completato!');
+            await refreshData();
+            render();
+        } catch (error) {
+            showFeedback('❌ Password errata!');
+        }
+    }
+    
+    function openImportModal() {
+        state.showImportModal = true;
+        render();
+    }
+    
+    function closeImportModal() {
+        state.showImportModal = false;
+        render();
+    }
+    
+    async function confirmImport() {
+        const input = document.getElementById('importDataInput');
+        const jsonText = input?.value?.trim();
+        
+        if (!jsonText) {
+            showFeedback('❌ Inserisci i dati da importare');
+            return;
+        }
+        
+        try {
+            const data = JSON.parse(jsonText);
+            const result = await apiCall('/api/import-dati', 'POST', data);
+            
+            state.showImportModal = false;
+            showFeedback(`✅ Importati: ${result.vendite_importate} vendite, ${result.spese_importate} spese`);
+            await refreshData();
+            render();
+        } catch (error) {
+            showFeedback('❌ Errore formato JSON');
+        }
+    }
+    
+    // Old functions removed - replaced with updated versions above
+    
+    async function downloadExcel() {
+        try {
+            window.open(`${API_BASE}/api/download-excel`, '_blank');
+            showFeedback('📊 Download Excel avviato');
+        } catch (error) {
+            showFeedback('❌ Errore download');
+        }
+    }
+    
+    async function verificaPasswordDownload() {
+        const passwordInput = document.getElementById('downloadPassword');
+        const password = passwordInput?.value;
+        
+        if (!password) {
+            showFeedback('❌ Inserisci la password');
+            return;
+        }
+        
+        try {
+            // Verifica password
+            const verifica = await apiCall('/api/download-excel-password', 'POST', { password });
+            
+            if (verifica.success) {
+                // Password corretta, scarica il file
+                window.open(`${API_BASE}/api/download-excel`, '_blank');
+                showFeedback('📊 Download avviato!');
+                passwordInput.value = '';
+            }
+        } catch (error) {
+            showFeedback('❌ Password errata!');
+        }
+    }
+    
+    async function scaricaReportSettimanale() {
+        const passwordInput = document.getElementById('reportPassword');
+        const password = passwordInput?.value;
+        
+        if (!password) {
+            showFeedback('❌ Inserisci la password');
+            return;
+        }
+        
+        try {
+            // Verifica password
+            await apiCall('/api/verifica-password', 'POST', { password });
+            
+            // Password corretta, scarica
+            window.open(`${API_BASE}/api/report-settimanale`, '_blank');
+            showFeedback('📊 Report settimanale scaricato!');
+            
+            // Nascondi il banner
+            const banner = document.getElementById('reportBanner');
+            if (banner) banner.classList.add('hidden');
+            passwordInput.value = '';
+        } catch (error) {
+            showFeedback('❌ Password errata!');
+        }
+    }
+    
+    async function inviaReportManuale() {
+        showFeedback('📧 Invio report in corso...');
+        
+        try {
+            await apiCall('/api/invia-report', 'POST');
+            showFeedback('✅ Report inviato via email!');
+            await checkStatus();
+        } catch (error) {
+            showFeedback('❌ Errore invio email');
+        }
+    }
+    
+    function showFeedback(message) {
+        state.feedback = message;
+        render();
+        setTimeout(() => {
+            state.feedback = '';
+            render();
+        }, 2500);
+    }
+    
+    // ==================== IMPOSTAZIONI ====================
+    
+    function openImpostazioniModal() {
+        state.showImpostazioniModal = true;
+        state.impostazioniSbloccate = false;
+        state.impostazioniTab = 'generale';
+        render();
+    }
+    
+    function closeImpostazioniModal() {
+        state.showImpostazioniModal = false;
+        state.impostazioniSbloccate = false;
+        render();
+    }
+    
+    async function sbloccaImpostazioni() {
+        const password = document.getElementById('impostazioniPassword')?.value;
+        
+        if (!password) {
+            showFeedback('❌ Inserisci la password');
+            return;
+        }
+        
+        try {
+            await apiCall('/api/verifica-password', 'POST', { password });
+            
+            // Carica impostazioni aggiornate
+            const imp = await apiCall('/api/impostazioni');
+            CONFIG.wifi_ssid = imp.wifi_ssid;
+            CONFIG.wifi_password = imp.wifi_password;
+            CONFIG.password_download = imp.password_download;
+            CONFIG.password_reset = imp.password_reset;
+            CONFIG.email_destinatari = imp.email_destinatari;
+            
+            state.impostazioniSbloccate = true;
+            render();
+        } catch (error) {
+            showFeedback('❌ Password errata!');
+        }
+    }
+    
+    function changeImpostazioniTab(tab) {
+        state.impostazioniTab = tab;
+        render();
+    }
+    
+    async function salvaImpostazioni() {
+        const updates = {};
+        
+        // Raccogli valori dai form in base al tab corrente
+        const nome_bar = document.getElementById('imp_nome_bar')?.value;
+        const wifi_ssid = document.getElementById('imp_wifi_ssid')?.value;
+        const wifi_password = document.getElementById('imp_wifi_password')?.value;
+        const password_download = document.getElementById('imp_password_download')?.value;
+        const password_reset = document.getElementById('imp_password_reset')?.value;
+        
+        if (nome_bar) updates.nome_bar = nome_bar;
+        if (wifi_ssid) updates.wifi_ssid = wifi_ssid;
+        if (wifi_password) updates.wifi_password = wifi_password;
+        if (password_download) updates.password_download = password_download;
+        if (password_reset) updates.password_reset = password_reset;
+        
+        // Email destinatari
+        if (CONFIG.email_destinatari) {
+            updates.email_destinatari = CONFIG.email_destinatari;
+        }
+        
+        try {
+            await apiCall('/api/impostazioni', 'POST', updates);
+            
+            // Aggiorna CONFIG locale
+            Object.assign(CONFIG, updates);
+            
+            showFeedback('✅ Impostazioni salvate!');
+            
+            // Se WiFi modificato, avvisa
+            if (updates.wifi_ssid || updates.wifi_password) {
+                setTimeout(() => {
+                    alert('⚠️ Hai modificato le credenziali WiFi.\n\nPer applicare le modifiche:\n1. Accedi al Raspberry via SSH o monitor\n2. Esegui: sudo bash setup_wifi_ap.sh\n3. Riavvia: sudo reboot');
+                }, 500);
+            }
+            
+        } catch (error) {
+            showFeedback('❌ Errore salvataggio');
+        }
+    }
+    
+    // Gestione listino
+    function aggiungiProdottoForm() {
+        document.getElementById('formNuovoProdotto')?.classList.remove('hidden');
+    }
+    
+    function chiudiFormProdotto() {
+        document.getElementById('formNuovoProdotto')?.classList.add('hidden');
+    }
+    
+    async function confermaNuovoProdotto() {
+        const nome = document.getElementById('nuovo_nome')?.value;
+        const prezzo = parseFloat(document.getElementById('nuovo_prezzo')?.value) || 0;
+        const categoria = document.getElementById('nuovo_categoria')?.value;
+        const icona = document.getElementById('nuovo_icona')?.value || '📦';
+        
+        if (!nome) {
+            showFeedback('❌ Inserisci il nome');
+            return;
+        }
+        
+        try {
+            await apiCall('/api/aggiungi-prodotto', 'POST', { nome, prezzo, categoria, icona });
+            
+            CONFIG.listino.push({ nome, prezzo, categoria, icona });
+            prodotti = await apiCall('/api/prodotti');
+            
+            showFeedback('✅ Prodotto aggiunto!');
+            chiudiFormProdotto();
+            render();
+        } catch (error) {
+            showFeedback('❌ Errore aggiunta prodotto');
+        }
+    }
+    
+    async function rimuoviProdotto(nome) {
+        if (!confirm(`Rimuovere "${nome}" dal listino?`)) return;
+        
+        try {
+            await apiCall(`/api/rimuovi-prodotto/${encodeURIComponent(nome)}`, 'DELETE');
+            
+            CONFIG.listino = CONFIG.listino.filter(p => p.nome !== nome);
+            prodotti = await apiCall('/api/prodotti');
+            
+            showFeedback('✅ Prodotto rimosso');
+            render();
+        } catch (error) {
+            showFeedback('❌ Errore rimozione');
+        }
+    }
+    
+    // Gestione email
+    function aggiungiEmail() {
+        if (!CONFIG.email_destinatari) CONFIG.email_destinatari = [];
+        CONFIG.email_destinatari.push('');
+        render();
+    }
+    
+    function rimuoviEmail(idx) {
+        CONFIG.email_destinatari.splice(idx, 1);
+        render();
+    }
+    
+    function aggiornaEmail(idx, value) {
+        CONFIG.email_destinatari[idx] = value;
+    }
+    
+    // ==================== INIT ====================
+    
+    init();
+    </script>
+</body>
+</html>
