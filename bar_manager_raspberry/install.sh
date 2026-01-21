@@ -22,6 +22,41 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# ==================== AVVIO AUTOMATICO RASPBERRY ====================
+echo -e "${YELLOW}⚡ Configurazione avvio automatico Raspberry Pi...${NC}"
+
+# Configura boot automatico quando riceve corrente (via config.txt)
+if ! grep -q "# Bar Manager Auto Boot" /boot/config.txt 2>/dev/null && ! grep -q "# Bar Manager Auto Boot" /boot/firmware/config.txt 2>/dev/null; then
+    # Prova prima /boot/firmware/config.txt (Raspberry Pi OS più recente)
+    if [ -f /boot/firmware/config.txt ]; then
+        CONFIG_FILE="/boot/firmware/config.txt"
+    else
+        CONFIG_FILE="/boot/config.txt"
+    fi
+    
+    echo "" >> $CONFIG_FILE
+    echo "# Bar Manager Auto Boot" >> $CONFIG_FILE
+    echo "# Avvio automatico quando riceve corrente" >> $CONFIG_FILE
+    echo "initial_turbo=30" >> $CONFIG_FILE
+    
+    echo -e "${GREEN}✅ Config boot aggiornato${NC}"
+fi
+
+# Disabilita splash screen e riduci tempo boot
+if [ -f /boot/cmdline.txt ]; then
+    CMDLINE_FILE="/boot/cmdline.txt"
+elif [ -f /boot/firmware/cmdline.txt ]; then
+    CMDLINE_FILE="/boot/firmware/cmdline.txt"
+fi
+
+if [ -n "$CMDLINE_FILE" ]; then
+    # Aggiungi quiet e splash per boot più veloce
+    if ! grep -q "quiet" $CMDLINE_FILE; then
+        sed -i 's/$/ quiet splash/' $CMDLINE_FILE
+        echo -e "${GREEN}✅ Boot velocizzato${NC}"
+    fi
+fi
+
 echo -e "${YELLOW}📦 Aggiornamento sistema...${NC}"
 apt update && apt upgrade -y
 
