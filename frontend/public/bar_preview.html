@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bar Manager - Sezione Storico</title>
+    <title>Bar Manager - Impostazioni</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,7 @@
             theme: {
                 extend: {
                     colors: {
-                        felt: { 500: '#1a472a', 600: '#165c26', 700: '#0d3d19', 800: '#0a2f14' },
+                        felt: { 500: '#1a472a', 600: '#165c26', 700: '#0d3d19', 800: '#0a2f14', 900: '#072610' },
                         wood: { 50: '#fdf8f3', 100: '#f5e6d3', 200: '#e8cdb3', 300: '#d4a574', 500: '#8b5a2b', 600: '#6d4422', 700: '#4a2c17', 800: '#3d2414', 900: '#2d1a0f' },
                         brass: { 400: '#d4af37', 500: '#b8960c' }
                     }
@@ -26,154 +26,77 @@
         .wood-texture { background: linear-gradient(135deg, #8b5a2b 0%, #6d4422 50%, #8b5a2b 100%); }
         .felt-texture { background: radial-gradient(ellipse at center, #1a5c32 0%, #1a472a 50%, #0d3d19 100%); }
         .elegant-border { border: 3px solid #d4af37; box-shadow: inset 0 0 20px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.4); }
-        .wood-btn { background: linear-gradient(180deg, #a67c52 0%, #8b5a2b 50%, #6d4422 100%); box-shadow: 0 4px 0 #4a2c17; border: 2px solid #d4af37; }
-        .felt-btn { background: linear-gradient(180deg, #2d5a3d 0%, #1a472a 50%, #0d3d19 100%); box-shadow: 0 4px 0 #06200d; border: 2px solid #d4af37; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
-        .animate-pulse { animation: pulse 2s ease-in-out infinite; }
+        .felt-btn { background: linear-gradient(180deg, #2d5a3d 0%, #1a472a 50%, #0d3d19 100%); border: 2px solid #d4af37; }
     </style>
 </head>
 <body class="felt-texture min-h-screen">
     
-    <!-- Header -->
+    <!-- Header con rotellina -->
     <div class="wood-texture border-b-4 border-brass-400 sticky top-0 z-40 shadow-xl">
         <div class="max-w-7xl mx-auto px-4 py-4">
-            <h1 class="text-2xl font-display font-bold text-wood-50 text-center drop-shadow-lg">
-                🍺 Proloco Santa Bianca
-            </h1>
-        </div>
-    </div>
-    
-    <!-- Content -->
-    <div class="max-w-7xl mx-auto px-4 py-6 pb-28">
-        
-        <!-- Banner Report Settimanale -->
-        <div class="bg-gradient-to-r from-green-800 to-green-900 p-4 rounded-xl border-2 border-brass-400 animate-pulse mb-4">
             <div class="flex items-center justify-between">
-                <div class="text-wood-100">
-                    <div class="font-bold text-lg">📊 Nuovo Report Settimanale!</div>
-                    <div class="text-sm text-wood-300">Clicca per scaricare il report della settimana</div>
+                <div class="w-10"></div>
+                <div class="text-center flex-1">
+                    <h1 class="text-2xl font-display font-bold text-wood-50 drop-shadow-lg">
+                        🍺 Proloco Santa Bianca
+                    </h1>
+                    <div class="text-wood-200 text-xs mt-1">Multi-dispositivo • Dati sincronizzati</div>
                 </div>
-                <button class="felt-btn text-wood-50 px-4 py-2 rounded-lg transition-all">
-                    📥 Scarica
+                <button class="w-10 h-10 flex items-center justify-center bg-wood-700/50 hover:bg-wood-700 rounded-full text-wood-200 hover:text-brass-400 transition-all border border-wood-600">
+                    ⚙️
                 </button>
             </div>
         </div>
-        
-        <!-- Download Excel con Password -->
-        <div class="bg-wood-800/80 backdrop-blur p-4 rounded-xl elegant-border mb-4">
-            <h3 class="text-lg font-display font-bold text-wood-100 mb-4">📊 Download Dati Completi</h3>
-            <div class="flex gap-2">
-                <input type="password" 
-                       placeholder="Password"
-                       value=""
-                       class="flex-1 px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none placeholder-wood-500">
-                <button class="wood-btn text-wood-50 px-6 py-3 rounded-lg transition-all font-bold">
-                    📥 Scarica Excel
-                </button>
-            </div>
-        </div>
-        
-        <!-- Importa Dati -->
-        <button class="w-full bg-wood-700/50 hover:bg-wood-700 text-wood-300 hover:text-wood-100 py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-wood-600 mb-4">
-            📥 Importa Dati da App Precedente
-        </button>
-        
-        <!-- Lista Transazioni -->
-        <div class="bg-wood-800/80 backdrop-blur p-6 rounded-2xl elegant-border">
-            <h3 class="text-xl font-display font-bold text-wood-100 mb-6">📋 Ultime 100 Transazioni</h3>
-            
-            <div class="space-y-2">
-                <!-- Vendita -->
-                <div class="bg-wood-700/50 p-4 rounded-xl flex justify-between items-center border border-wood-600">
-                    <div class="text-wood-100">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">💰</span>
-                            <div>
-                                <div class="font-bold">Caffè</div>
-                                <div class="text-sm text-wood-400">21/01/2026 - 10:30:00</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-xl font-black text-green-400">+€1.20</div>
-                        <button class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg">🗑️</button>
-                    </div>
-                </div>
-                
-                <!-- Spesa -->
-                <div class="bg-red-900/30 p-4 rounded-xl flex justify-between items-center border border-red-800">
-                    <div class="text-wood-100">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">💸</span>
-                            <div>
-                                <div class="font-bold">Cialde caffè</div>
-                                <div class="text-sm text-wood-400">21/01/2026 - 09:15:00</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-xl font-black text-red-400">-€25.00</div>
-                        <button class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg">🗑️</button>
-                    </div>
-                </div>
-                
-                <!-- Altra vendita -->
-                <div class="bg-wood-700/50 p-4 rounded-xl flex justify-between items-center border border-wood-600">
-                    <div class="text-wood-100">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">💰</span>
-                            <div>
-                                <div class="font-bold">Caraffa Vino 1LT</div>
-                                <div class="text-sm text-wood-400">20/01/2026 - 20:45:00</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-xl font-black text-green-400">+€11.00</div>
-                        <button class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg">🗑️</button>
-                    </div>
-                </div>
-                
-                <!-- Bigliardo -->
-                <div class="bg-wood-700/50 p-4 rounded-xl flex justify-between items-center border border-wood-600">
-                    <div class="text-wood-100">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">💰</span>
-                            <div>
-                                <div class="font-bold">Bigliardo</div>
-                                <div class="text-sm text-wood-400">20/01/2026 - 19:30:00</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <div class="text-xl font-black text-green-400">+€5.00</div>
-                        <button class="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/30 rounded-lg">🗑️</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
     </div>
     
-    <!-- Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 wood-texture border-t-4 border-brass-400 z-40 shadow-2xl">
-        <div class="max-w-7xl mx-auto px-2 py-3">
-            <div class="grid grid-cols-4 gap-2">
-                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200">
-                    <span class="text-2xl mb-1">🛒</span>
-                    <span class="text-xs">Vendita</span>
+    <!-- Modal Impostazioni -->
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-2">
+        <div class="bg-wood-800 rounded-2xl shadow-2xl max-w-2xl w-full elegant-border max-h-[95vh] overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b border-wood-600 flex justify-between items-center">
+                <h3 class="text-xl font-display font-bold text-wood-100">⚙️ Impostazioni</h3>
+                <button class="text-wood-400 hover:text-wood-100 text-2xl">✕</button>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-wood-600 overflow-x-auto">
+                <button class="px-4 py-3 font-semibold bg-felt-600 text-wood-50 border-b-2 border-brass-400 whitespace-nowrap">
+                    🏠 Generale
                 </button>
-                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200">
-                    <span class="text-2xl mb-1">💸</span>
-                    <span class="text-xs">Spese</span>
+                <button class="px-4 py-3 font-semibold text-wood-400 hover:text-wood-200 hover:bg-wood-700/50 whitespace-nowrap">
+                    📶 WiFi
                 </button>
-                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-wood-700/50 text-wood-200">
-                    <span class="text-2xl mb-1">📊</span>
-                    <span class="text-xs">Statistiche</span>
+                <button class="px-4 py-3 font-semibold text-wood-400 hover:text-wood-200 hover:bg-wood-700/50 whitespace-nowrap">
+                    🔐 Sicurezza
                 </button>
-                <button class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold bg-felt-500 text-wood-50 shadow-lg border-2 border-brass-400">
-                    <span class="text-2xl mb-1">📋</span>
-                    <span class="text-xs">Storico</span>
+                <button class="px-4 py-3 font-semibold text-wood-400 hover:text-wood-200 hover:bg-wood-700/50 whitespace-nowrap">
+                    📋 Listino
+                </button>
+                <button class="px-4 py-3 font-semibold text-wood-400 hover:text-wood-200 hover:bg-wood-700/50 whitespace-nowrap">
+                    📧 Email
+                </button>
+            </div>
+            
+            <!-- Content - Tab Generale -->
+            <div class="p-4 overflow-y-auto flex-1">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-wood-300 text-sm mb-2">Nome Bar</label>
+                        <input type="text" value="Proloco Santa Bianca"
+                               class="w-full px-4 py-3 bg-wood-900 text-wood-100 rounded-lg border border-wood-600 focus:border-brass-400 focus:outline-none">
+                    </div>
+                    <div class="bg-wood-700/30 p-4 rounded-lg border border-wood-600">
+                        <p class="text-wood-400 text-sm">
+                            ℹ️ Il nome del bar appare nell'intestazione dell'app e nei report.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="p-4 border-t border-wood-600">
+                <button class="w-full felt-btn text-wood-50 font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+                    💾 Salva Modifiche
                 </button>
             </div>
         </div>
