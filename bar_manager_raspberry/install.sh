@@ -99,6 +99,30 @@ systemctl start barmanager
 echo -e "${YELLOW}🔥 Configurazione firewall...${NC}"
 ufw allow 8080/tcp 2>/dev/null || true
 
+# ==================== WATCHDOG - Riavvio automatico se si blocca ====================
+echo -e "${YELLOW}🐕 Configurazione watchdog (riavvio automatico se si blocca)...${NC}"
+
+# Abilita watchdog hardware
+if ! grep -q "dtparam=watchdog=on" /boot/config.txt 2>/dev/null && ! grep -q "dtparam=watchdog=on" /boot/firmware/config.txt 2>/dev/null; then
+    if [ -f /boot/firmware/config.txt ]; then
+        echo "dtparam=watchdog=on" >> /boot/firmware/config.txt
+    else
+        echo "dtparam=watchdog=on" >> /boot/config.txt
+    fi
+fi
+
+# Installa e configura watchdog
+apt install -y watchdog
+
+cat > /etc/watchdog.conf << 'WATCHDOGEOF'
+watchdog-device = /dev/watchdog
+watchdog-timeout = 15
+max-load-1 = 24
+WATCHDOGEOF
+
+systemctl enable watchdog
+systemctl start watchdog 2>/dev/null || true
+
 # Ottieni IP
 IP=$(hostname -I | awk '{print $1}')
 
