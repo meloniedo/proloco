@@ -42,6 +42,25 @@ if ! grep -q "# Bar Manager Auto Boot" /boot/config.txt 2>/dev/null && ! grep -q
     echo -e "${GREEN}✅ Config boot aggiornato${NC}"
 fi
 
+# ==================== AUTO-LOGIN SENZA SCHERMO ====================
+echo -e "${YELLOW}🔓 Configurazione auto-login (senza monitor/tastiera)...${NC}"
+
+# Configura auto-login per l'utente pi via raspi-config (metodo non interattivo)
+raspi-config nonint do_boot_behaviour B2 2>/dev/null || {
+    # Fallback: configurazione manuale auto-login
+    mkdir -p /etc/systemd/system/getty@tty1.service.d/
+    cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf << 'AUTOLOGINEOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin pi --noclear %I $TERM
+AUTOLOGINEOF
+    
+    # Disabilita anche il login grafico se presente
+    systemctl set-default multi-user.target 2>/dev/null || true
+}
+
+echo -e "${GREEN}✅ Auto-login configurato per utente 'pi'${NC}"
+
 # Disabilita splash screen e riduci tempo boot
 if [ -f /boot/cmdline.txt ]; then
     CMDLINE_FILE="/boot/cmdline.txt"
