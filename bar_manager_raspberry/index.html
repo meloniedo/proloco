@@ -273,14 +273,17 @@
             const status = await apiCall('/api/status');
             state.online = status.online;
             state.ultimoReport = status.ultimo_report;
+            updateConnectionIndicator();
             
             // Controlla se c'è un report settimanale disponibile
-            if (status.report_settimanale_disponibile) {
-                const banner = document.getElementById('reportBanner');
-                if (banner) banner.classList.remove('hidden');
-            }
+            try {
+                const reportStatus = await apiCall('/api/check-report-disponibile');
+                if (reportStatus.report_disponibile && reportStatus.vendite_settimana > 0) {
+                    const banner = document.getElementById('reportBanner');
+                    if (banner) banner.classList.remove('hidden');
+                }
+            } catch (e) {}
             
-            updateConnectionIndicator();
         } catch (error) {
             state.online = false;
             updateConnectionIndicator();
