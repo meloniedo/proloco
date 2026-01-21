@@ -1157,15 +1157,28 @@ copy(JSON.stringify({vendite: JSON.parse(localStorage.getItem('vendite')), spese
     }
     
     async function scaricaReportSettimanale() {
+        const passwordInput = document.getElementById('reportPassword');
+        const password = passwordInput?.value;
+        
+        if (!password) {
+            showFeedback('❌ Inserisci la password');
+            return;
+        }
+        
         try {
+            // Verifica password
+            await apiCall('/api/verifica-password', 'POST', { password });
+            
+            // Password corretta, scarica
             window.open(`${API_BASE}/api/report-settimanale`, '_blank');
             showFeedback('📊 Report settimanale scaricato!');
             
             // Nascondi il banner
             const banner = document.getElementById('reportBanner');
             if (banner) banner.classList.add('hidden');
+            passwordInput.value = '';
         } catch (error) {
-            showFeedback('❌ Errore download report');
+            showFeedback('❌ Password errata!');
         }
     }
     
