@@ -784,6 +784,56 @@ async def api_download_excel():
         filename=f"storico_bar_{datetime.now().strftime('%Y%m%d')}.xlsx"
     )
 
+@app.post("/api/download-excel-password")
+async def api_download_excel_con_password(request: DownloadRequest):
+    """Verifica password per download Excel"""
+    if request.password != CONFIG["password_download"]:
+        raise HTTPException(status_code=403, detail="Password errata")
+    
+    return {"success": True, "message": "Password corretta"}
+
+@app.get("/api/report-settimanale")
+async def api_get_report_settimanale():
+    """Genera e ritorna il report settimanale come file Excel"""
+    report_file = genera_report_excel()
+    
+    # Segna come inviato
+    segna_report_inviato()
+    
+    response = FileResponse(
+        report_file,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=f"report_settimanale_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    )
+    
+    # Programma eliminazione file dopo invio
+    import asyncio
+    async def cleanup():
+        await asyncio.sleep(5)
+        try:
+            report_file.unlink()
+        except:
+            pass
+    asyncio.create_task(cleanup())
+    
+    return response
+
+@app.get("/api/check-report-disponibile")
+async def api_check_report_disponibile():
+    """Controlla se c'è un report da scaricare (non inviato questa settimana)"""
+    report_disponibile = not is_report_inviato_questa_settimana()
+    
+    # Conta quante vendite ci sono questa settimana
+    lunedi = get_lunedi_corrente()
+    vendite_settimana = len([v for v in get_vendite() 
+                            if datetime.fromisoformat(v["timestamp"].replace("Z", "")) >= lunedi])
+    
+    return {
+        "report_disponibile": report_disponibile,
+        "vendite_settimana": vendite_settimana,
+        "messaggio": "Nuovo report settimanale disponibile!" if report_disponibile and vendite_settimana > 0 else None
+    }
+
 @app.post("/api/import-dati")
 async def api_import_dati(dati: dict):
     """Importa dati da vecchia app (vendite e spese)"""
