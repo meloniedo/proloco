@@ -35,6 +35,16 @@ CONFIG = {
     # ==================== SICUREZZA ====================
     "password_reset": "5054",
     
+    # Password per download Excel (può essere uguale o diversa)
+    "password_download": "5054",
+    
+    # ==================== WIFI ACCESS POINT ====================
+    # Nome rete WiFi del Raspberry
+    "wifi_ssid": "BarManager_WiFi",
+    
+    # Password WiFi (minimo 8 caratteri)
+    "wifi_password": "proloco2024",
+    
     # ==================== SERVER ====================
     # Porta del server (default: 8080)
     "porta_server": 8080,
