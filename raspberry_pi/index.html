@@ -503,11 +503,13 @@
             { id: 'impostazioni', icon: '⚙️' }
         ];
         return `
-            <div class="nav-wood fixed bottom-0 left-0 right-0 z-40" style="padding-bottom: env(safe-area-inset-bottom);">
-                <div class="flex flex-row justify-around items-center py-2 px-2">
+            <div class="nav-wood" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; padding-bottom: env(safe-area-inset-bottom);">
+                <div style="display: flex; flex-direction: row; justify-content: space-around; align-items: center; padding: 8px;">
                     ${items.map(i => `
-                        <button onclick="changeView('${i.id}')" class="flex items-center justify-center w-14 h-14 rounded-full transition-all ${state.view === i.id ? 'btn-wood-active scale-110' : 'btn-wood-inactive'}">
-                            <span class="text-2xl">${i.icon}</span>
+                        <button onclick="changeView('${i.id}')" 
+                            style="display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; flex: 1; max-width: 70px; margin: 0 4px;"
+                            class="${state.view === i.id ? 'btn-wood-active' : 'btn-wood-inactive'}">
+                            <span style="font-size: 24px;">${i.icon}</span>
                         </button>
                     `).join('')}
                 </div>
