@@ -234,45 +234,95 @@ const Keypad = ({ selectedProduct, customPrice, setCustomPrice, onClose, onConfi
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="card-felt rounded-3xl shadow-2xl max-w-md w-full p-6 border-4 border-amber-800">
-        <div className="text-center mb-6">
-          <div className="text-5xl mb-3">{selectedProduct?.icona || '💰'}</div>
-          <h3 className="text-2xl font-bold text-amber-100 mb-2">{selectedProduct?.nome || ''}</h3>
-          <p className="text-amber-200/70">Inserisci l'importo</p>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.9)',
+      zIndex: 50,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '16px'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '320px',
+        background: 'linear-gradient(135deg, #1a4d2e 0%, #0d3320 50%, #1a4d2e 100%)',
+        borderRadius: '16px',
+        padding: '20px',
+        border: '4px solid #92400e'
+      }}>
+        <div style={{textAlign: 'center', marginBottom: '16px'}}>
+          <div style={{fontSize: '48px', marginBottom: '8px'}}>{selectedProduct?.icona || '💰'}</div>
+          <h3 style={{fontSize: '22px', fontWeight: 'bold', color: '#fef3c7', marginBottom: '8px'}}>{selectedProduct?.nome || ''}</h3>
+          <p style={{color: 'rgba(254,243,199,0.7)'}}>Inserisci l'importo</p>
         </div>
         
-        <div className="bg-amber-900/50 rounded-2xl p-6 mb-6 border-2 border-amber-700">
-          <div className="text-center">
-            <div className="text-5xl font-black text-amber-100">€{customPrice || '0'}</div>
-          </div>
+        <div style={{
+          background: 'rgba(120,53,15,0.9)',
+          borderRadius: '16px',
+          padding: '20px',
+          marginBottom: '16px',
+          border: '2px solid #b45309'
+        }}>
+          <div style={{fontSize: '48px', fontWeight: '900', color: '#fef3c7', textAlign: 'center'}}>€{customPrice || '0'}</div>
         </div>
         
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px'}}>
           {['1','2','3','4','5','6','7','8','9',',','0','←'].map(key => (
             <button
               key={key}
               onClick={() => handleKeyPress(key)}
               data-testid={`keypad-${key}`}
-              className="btn-wood text-amber-100 text-3xl font-bold p-6 rounded-2xl shadow-lg active:scale-95 transform transition-all"
+              style={{
+                background: 'linear-gradient(180deg, #8B4513 0%, #654321 100%)',
+                color: '#fef3c7',
+                fontSize: '28px',
+                fontWeight: 'bold',
+                padding: '18px',
+                borderRadius: '12px',
+                border: '2px solid #a0522d',
+                cursor: 'pointer'
+              }}
             >
               {key}
             </button>
           ))}
         </div>
         
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px'}}>
           <button 
             onClick={onClose}
             data-testid="keypad-cancel"
-            className="bg-red-800 hover:bg-red-700 text-amber-100 font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all text-lg border-2 border-red-600"
+            style={{
+              background: '#991b1b',
+              color: '#fef3c7',
+              fontWeight: 'bold',
+              padding: '14px',
+              borderRadius: '12px',
+              border: '2px solid #dc2626',
+              fontSize: '16px',
+              cursor: 'pointer'
+            }}
           >
             ❌ Annulla
           </button>
           <button 
             onClick={onConfirm}
             data-testid="keypad-confirm"
-            className="bg-green-800 hover:bg-green-700 text-amber-100 font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all text-lg border-2 border-green-600"
+            style={{
+              background: '#166534',
+              color: '#fef3c7',
+              fontWeight: 'bold',
+              padding: '14px',
+              borderRadius: '12px',
+              border: '2px solid #22c55e',
+              fontSize: '16px',
+              cursor: 'pointer'
+            }}
           >
             ✅ Conferma
           </button>
@@ -281,7 +331,16 @@ const Keypad = ({ selectedProduct, customPrice, setCustomPrice, onClose, onConfi
         <button 
           onClick={onClear}
           data-testid="keypad-clear"
-          className="w-full mt-3 bg-amber-700 hover:bg-amber-600 text-amber-100 font-bold py-3 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all border-2 border-amber-600"
+          style={{
+            width: '100%',
+            background: '#b45309',
+            color: '#fef3c7',
+            fontWeight: 'bold',
+            padding: '12px',
+            borderRadius: '12px',
+            border: '2px solid #d97706',
+            cursor: 'pointer'
+          }}
         >
           🗑️ Cancella Tutto
         </button>
