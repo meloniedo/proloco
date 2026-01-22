@@ -34,7 +34,7 @@ fi
 echo ""
 echo -e "${CYAN}[1/5] Installazione pacchetti...${NC}"
 apt update
-apt install -y apache2 php php-mysql php-json mariadb-server mariadb-client hostapd dnsmasq
+apt install -y apache2 php php-mysql php-json php-zip php-xml php-mbstring mariadb-server mariadb-client hostapd dnsmasq
 echo -e "${GREEN}✓ Pacchetti installati${NC}"
 
 # ===== FASE 2: DATABASE =====
