@@ -519,23 +519,23 @@
 
     function renderKeypad() {
         return `
-            <div class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" style="padding: 16px;">
-                <div class="rounded-2xl p-4 border-4 border-amber-800" style="width: 100%; max-width: 320px; margin: auto; background: linear-gradient(135deg, #1a4d2e 0%, #0d3320 50%, #1a4d2e 100%);">
-                    <div class="text-center mb-4">
-                        <div class="text-4xl mb-2">${state.selectedProduct?.icona || '💰'}</div>
-                        <h3 class="text-xl font-bold text-amber-100">${state.selectedProduct?.nome || ''}</h3>
+            <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px;">
+                <div style="width: 100%; max-width: 320px; margin: auto; background: linear-gradient(135deg, #1a4d2e 0%, #0d3320 50%, #1a4d2e 100%); border-radius: 16px; padding: 16px; border: 4px solid #92400e;">
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <div style="font-size: 40px; margin-bottom: 8px;">${state.selectedProduct?.icona || '💰'}</div>
+                        <h3 style="font-size: 20px; font-weight: bold; color: #fef3c7;">${state.selectedProduct?.nome || ''}</h3>
                     </div>
-                    <div class="bg-amber-900/80 rounded-xl p-4 mb-4 border-2 border-amber-700">
-                        <div class="text-4xl font-black text-amber-100 text-center">€${state.customPrice || '0'}</div>
+                    <div style="background: rgba(120,53,15,0.9); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 2px solid #b45309;">
+                        <div style="font-size: 36px; font-weight: 900; color: #fef3c7; text-align: center;">€${state.customPrice || '0'}</div>
                     </div>
-                    <div class="grid grid-cols-3 gap-2 mb-4">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
                         ${['1','2','3','4','5','6','7','8','9',',','0','←'].map(k => `
-                            <button onclick="handleKeypadPress('${k}')" class="btn-wood text-amber-100 text-2xl font-bold py-4 rounded-xl active:scale-95">${k}</button>
+                            <button onclick="handleKeypadPress('${k}')" style="background: linear-gradient(180deg, #8B4513 0%, #654321 100%); color: #fef3c7; font-size: 24px; font-weight: bold; padding: 16px; border-radius: 12px; border: 2px solid #a0522d; cursor: pointer;">${k}</button>
                         `).join('')}
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="closeKeypad()" class="bg-red-800 text-amber-100 font-bold py-3 rounded-xl active:scale-95 border-2 border-red-600 text-lg">❌ Annulla</button>
-                        <button onclick="confirmKeypad()" class="bg-green-800 text-amber-100 font-bold py-3 rounded-xl active:scale-95 border-2 border-green-600 text-lg">✅ OK</button>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        <button onclick="closeKeypad()" style="background: #991b1b; color: #fef3c7; font-weight: bold; padding: 12px; border-radius: 12px; border: 2px solid #dc2626; font-size: 18px; cursor: pointer;">❌ Annulla</button>
+                        <button onclick="confirmKeypad()" style="background: #166534; color: #fef3c7; font-weight: bold; padding: 12px; border-radius: 12px; border: 2px solid #22c55e; font-size: 18px; cursor: pointer;">✅ OK</button>
                     </div>
                 </div>
             </div>
