@@ -25,6 +25,9 @@
     <!-- CSS locale -->
     <link rel="stylesheet" href="css/style.css">
     
+    <!-- SheetJS per leggere file Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         body { 
             font-family: Georgia, 'Times New Roman', serif; 
@@ -428,6 +431,26 @@
                        style="display: flex; text-decoration: none;">
                         📥 Scarica Backup (Excel)
                     </a>
+                </div>
+                
+                <!-- IMPORTA BACKUP -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-amber-100">📤 Importa Backup</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded-full bg-orange-500"></span>
+                            <span class="text-sm text-orange-300">Ripristina dati</span>
+                        </div>
+                    </div>
+                    <div class="bg-orange-900/30 p-3 rounded-lg mb-3 border border-orange-700">
+                        <div class="text-orange-200 text-sm">
+                            📂 Carica un file Excel (.xlsx) di backup per ripristinare vendite e spese
+                        </div>
+                    </div>
+                    <input type="file" id="importBackupFile" accept=".xlsx,.xls" style="display:none;" onchange="handleImportBackup(event)">
+                    <button onclick="document.getElementById('importBackupFile').click()" class="w-full bg-orange-700 hover:bg-orange-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-orange-500 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        📤 Seleziona File Excel
+                    </button>
                 </div>
                 
                 <!-- GESTIONE LISTINO -->
