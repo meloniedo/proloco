@@ -162,7 +162,18 @@ const Header = ({ reportPendente, giorniPassati }) => {
 const Feedback = ({ message }) => {
   if (!message) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{pointerEvents: 'none'}}>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999,
+      pointerEvents: 'none'
+    }}>
       <div className="bg-amber-100 text-amber-900 px-10 py-6 rounded-3xl shadow-2xl text-2xl font-black border-4 border-amber-800 animate-bounce text-center mx-4" style={{maxWidth: '300px'}}>
         {message}
       </div>
