@@ -1,140 +1,193 @@
 # Proloco Santa Bianca - Bar Manager
-## Per Raspberry Pi 3A+
+## Per Raspberry Pi 3A+ come Hotspot WiFi
 
-### Requisiti
-- Raspberry Pi 3A+ con Raspberry Pi OS
-- Connessione WiFi locale
-- Accesso SSH (opzionale ma consigliato)
+### Cosa fa
+- Il Raspberry Pi crea una **rete WiFi autonoma** (non ha bisogno di internet)
+- Connettendoti alla rete WiFi con il telefono, puoi usare l'app
+- L'app si installa come "webapp" a schermo intero sul telefono
 
-### Installazione Rapida
+---
 
-1. **Abilita SSH sul Raspberry Pi** (se non già fatto):
-   - Crea un file vuoto chiamato `ssh` nella partizione boot della SD card
-   - Oppure: `sudo systemctl enable ssh && sudo systemctl start ssh`
+## 🚀 Installazione
 
-2. **Connettiti al Raspberry Pi dal tuo PC**:
+### Passo 1: Prepara la SD Card
+1. Scarica e installa [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+2. Scrivi **Raspberry Pi OS Lite (32-bit)** sulla SD card
+3. Prima di espellere, crea un file vuoto chiamato `ssh` nella partizione boot
+
+### Passo 2: Primo avvio e connessione
+1. Inserisci la SD nel Raspberry Pi
+2. Collegalo con cavo Ethernet al router (solo per installazione)
+3. Accendi il Raspberry
+4. Trova il suo IP (controlla sul router o usa `ping raspberrypi.local`)
+5. Connettiti via SSH:
 ```bash
-ssh pi@192.168.1.18
+ssh pi@<IP_DEL_RASPBERRY>
+# Password default: raspberry
 ```
-Password predefinita: `raspberry` (cambiala dopo il primo accesso!)
 
-3. **Scarica i file dell'app** (dal tuo PC, trasferisci la cartella raspberry_pi):
+### Passo 3: Trasferisci i file
+Dal tuo PC, trasferisci la cartella:
 ```bash
-scp -r ./raspberry_pi pi@192.168.1.18:/home/pi/
+scp -r ./raspberry_pi pi@<IP_DEL_RASPBERRY>:/home/pi/
 ```
 
-4. **Esegui lo script di installazione** (sul Raspberry Pi):
+### Passo 4: Esegui l'installazione
+Sul Raspberry Pi (via SSH):
 ```bash
 cd /home/pi/raspberry_pi
 sudo chmod +x install.sh
 sudo ./install.sh
 ```
 
-5. **Accedi all'app** dal browser:
-   - `http://192.168.1.18/proloco/`
-
----
-
-### Struttura File
-
-```
-raspberry_pi/
-├── index.html          # App principale (HTML + JavaScript)
-├── css/
-│   └── style.css       # Stili (locale, no CDN)
-├── api/
-│   ├── prodotti.php    # API prodotti
-│   ├── vendite.php     # API vendite  
-│   ├── spese.php       # API spese
-│   ├── statistiche.php # API statistiche
-│   ├── export.php      # Export CSV/Excel
-│   ├── import.php      # Import backup
-│   └── reset.php       # Reset periodo
-├── includes/
-│   └── config.php      # Configurazione DB
-├── database.sql        # Schema database MySQL
-├── install.sh          # Script installazione automatica
-└── README.md           # Questa guida
+### Passo 5: Riavvia
+```bash
+sudo reboot
 ```
 
 ---
 
-### Sistema di Backup
+## 📱 Come Usare
 
-#### Export (Scarica backup)
-1. Vai su **Storico**
-2. Clicca **"Scarica Backup CSV/Excel"**
-3. Si scarica un file `.csv` con tutte vendite e spese
+### Connessione
+1. **Cerca la rete WiFi** sul telefono: `ProlocoBar`
+2. **Password WiFi**: `proloco2024`
+3. **Apri il browser** e vai su: `http://192.168.4.1`
 
-#### Import (Ripristina backup)  
-1. Vai su **Storico**
-2. Clicca **"Importa Dati da Backup"**
-3. Seleziona il file `.csv` precedentemente salvato
-4. I dati vengono aggiunti al database
+### Installare come App (schermo intero)
 
-**Nota**: L'import aggiunge i dati, non li sostituisce. Per un ripristino completo, prima resetta i dati.
+**Su iPhone:**
+1. Apri Safari e vai su `http://192.168.4.1`
+2. Tocca l'icona "Condividi" (quadrato con freccia)
+3. Scorri e tocca "Aggiungi a schermata Home"
+4. Tocca "Aggiungi"
+
+**Su Android:**
+1. Apri Chrome e vai su `http://192.168.4.1`
+2. Tocca i tre puntini in alto a destra
+3. Tocca "Aggiungi a schermata Home"
+4. Tocca "Aggiungi"
+
+L'app si aprirà a **schermo intero** senza barre del browser!
 
 ---
 
-### Credenziali
+## ⚙️ Configurazione
+
+### Credenziali predefinite
 
 | Elemento | Valore |
 |----------|--------|
+| Nome WiFi (SSID) | `ProlocoBar` |
+| Password WiFi | `proloco2024` |
+| IP Raspberry | `192.168.4.1` |
 | User MySQL | `edo` |
 | Password MySQL | `5054` |
-| Database | `proloco_bar` |
 | Password Reset App | `5054` |
+
+### Modificare nome/password WiFi
+Modifica il file `/etc/hostapd/hostapd.conf`:
+```bash
+sudo nano /etc/hostapd/hostapd.conf
+```
+Cambia `ssid=` e `wpa_passphrase=`, poi riavvia:
+```bash
+sudo reboot
+```
 
 ---
 
-### Comandi Utili
+## 💾 Backup e Ripristino
 
+### Esportare i dati
+1. Vai su **Storico** nell'app
+2. Tocca **"Scarica Backup"**
+3. Si scarica un file `.csv`
+
+### Importare i dati
+1. Vai su **Storico** nell'app
+2. Tocca **"Importa Backup"**
+3. Seleziona il file `.csv`
+
+### Backup completo database
 ```bash
-# Riavvia Apache
-sudo systemctl restart apache2
-
-# Vedi log errori
-sudo tail -f /var/log/apache2/proloco_error.log
-
-# Accedi a MySQL
-mysql -u edo -p5054 proloco_bar
-
-# Backup database completo
 mysqldump -u edo -p5054 proloco_bar > backup_$(date +%Y%m%d).sql
+```
 
-# Ripristina database
+### Ripristino completo database
+```bash
 mysql -u edo -p5054 proloco_bar < backup_file.sql
 ```
 
 ---
 
-### Personalizzazione
+## 🔧 Comandi Utili
 
-Modifica `includes/config.php` per:
-- Cambiare credenziali database
-- Aggiungere categorie spese
+```bash
+# Stato servizi
+sudo systemctl status hostapd
+sudo systemctl status dnsmasq
+sudo systemctl status apache2
 
-Modifica il database direttamente per:
-- Aggiungere/modificare prodotti
-- Cambiare prezzi
+# Riavviare l'hotspot
+sudo systemctl restart hostapd
+sudo systemctl restart dnsmasq
+
+# Vedere log errori
+sudo tail -f /var/log/apache2/proloco_error.log
+
+# Riavviare tutto
+sudo reboot
+```
 
 ---
 
-### Troubleshooting
+## ❓ Problemi Comuni
 
-**L'app non si apre?**
+### La rete WiFi non appare
 ```bash
-sudo systemctl status apache2
-sudo tail -20 /var/log/apache2/error.log
+sudo rfkill unblock wlan
+sudo systemctl restart hostapd
 ```
 
-**Errore database?**
+### Non riesco a connettermi al 192.168.4.1
+1. Verifica di essere connesso alla rete `ProlocoBar`
+2. Disattiva i "dati mobili" sul telefono
+3. Prova a ricaricare la pagina
+
+### L'app non si carica
 ```bash
-mysql -u edo -p5054 -e "SHOW DATABASES;"
+sudo systemctl restart apache2
+sudo tail -20 /var/log/apache2/proloco_error.log
 ```
 
-**Permessi file?**
-```bash
-sudo chown -R www-data:www-data /var/www/html/proloco
-sudo chmod -R 755 /var/www/html/proloco
+---
+
+## 📂 Struttura File
+
 ```
+/var/www/html/proloco/
+├── index.html          # App principale (PWA)
+├── manifest.json       # Manifest per installazione app
+├── sw.js              # Service Worker
+├── css/
+│   └── style.css      # Stili
+├── api/
+│   ├── prodotti.php
+│   ├── vendite.php
+│   ├── spese.php
+│   ├── statistiche.php
+│   ├── export.php
+│   ├── import.php
+│   └── reset.php
+├── includes/
+│   └── config.php     # Config database
+└── icons/
+    └── *.png          # Icone app
+```
+
+---
+
+## 🎯 Prossimi Passi
+- Aggiungere pulsante Impostazioni
+- Configurare invio email report
