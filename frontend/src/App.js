@@ -829,6 +829,41 @@ const ImpostazioniView = ({ showFeedback, refresh, setRefresh }) => {
         </p>
       </div>
       
+      {/* IMPORTA BACKUP */}
+      <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-amber-100">📤 Importa Backup</h3>
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-orange-500"></span>
+            <span className="text-sm text-orange-300">Ripristina dati</span>
+          </div>
+        </div>
+        <div className="bg-orange-900/30 p-3 rounded-lg mb-3 border border-orange-700">
+          <p className="text-orange-200 text-sm">
+            📂 Carica un file Excel (.xlsx) di backup per ripristinare vendite e spese
+          </p>
+        </div>
+        <input 
+          type="file" 
+          id="importBackupFileReact" 
+          accept=".xlsx,.xls" 
+          style={{display: 'none'}} 
+          onChange={(e) => {
+            showFeedback('📤 Funzione attiva sul Raspberry Pi');
+            e.target.value = '';
+          }}
+        />
+        <button 
+          className="w-full bg-orange-700 hover:bg-orange-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-orange-500 flex items-center justify-center gap-2"
+          onClick={() => document.getElementById('importBackupFileReact').click()}
+        >
+          📤 Seleziona File Excel
+        </button>
+        <p className="text-amber-200/50 text-xs mt-2 text-center">
+          (Sul Raspberry: importa vendite e spese)
+        </p>
+      </div>
+      
       {/* GESTIONE LISTINO */}
       <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
         <div className="flex justify-between items-center mb-4">
