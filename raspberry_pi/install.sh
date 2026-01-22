@@ -110,18 +110,28 @@ a2enmod rewrite
 systemctl restart apache2
 systemctl enable apache2
 
-# Crea cartella logs
+# Crea cartelle necessarie
 mkdir -p ${WEB_DIR}/logs
-chown www-data:www-data ${WEB_DIR}/logs
+mkdir -p ${WEB_DIR}/backups
+chown -R www-data:www-data ${WEB_DIR}/logs
+chown -R www-data:www-data ${WEB_DIR}/backups
 
-# Rendi eseguibile lo script cron
+# Rendi eseguibili gli script cron
 chmod +x ${WEB_DIR}/cron_sync.php
+chmod +x ${WEB_DIR}/cron_backup.php
 
 # Configura CRON per sincronizzazione automatica STORICO.txt ogni minuto
 echo "# Sincronizzazione STORICO.txt ogni minuto" > /etc/cron.d/proloco_sync
 echo "* * * * * www-data /usr/bin/php ${WEB_DIR}/cron_sync.php > /dev/null 2>&1" >> /etc/cron.d/proloco_sync
 chmod 644 /etc/cron.d/proloco_sync
+
+# Configura CRON per backup automatico (controlla ogni minuto se è l'ora programmata)
+echo "# Backup automatico programmato" > /etc/cron.d/proloco_backup
+echo "* * * * * www-data /usr/bin/php ${WEB_DIR}/cron_backup.php > /dev/null 2>&1" >> /etc/cron.d/proloco_backup
+chmod 644 /etc/cron.d/proloco_backup
+
 systemctl restart cron
+
 
 echo -e "${GREEN}✓ App web OK${NC}"
 echo -e "${GREEN}✓ Cron sync automatico attivo (ogni minuto)${NC}"
