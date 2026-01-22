@@ -58,6 +58,7 @@ INSERT INTO prodotti (nome, prezzo, categoria, icona) VALUES
 ('Caraffa di Vino 0,5L', 6.00, 'BEVANDE', '🍷'),
 ('Caraffa di Vino 1LT', 11.00, 'BEVANDE', '🍷'),
 ('Calice di Vino', 1.50, 'BEVANDE', '🍷'),
+('Sguazzone', 1.00, 'BEVANDE', '🍷'),
 ('Liquori, Grappe, Vodka e Amari', 2.50, 'BEVANDE', '🥃'),
 ('Bibite in Lattina', 2.20, 'BEVANDE', '🥤'),
 ('Bottiglietta d''Acqua', 1.00, 'BEVANDE', '💧'),
