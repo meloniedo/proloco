@@ -34,10 +34,14 @@
         }
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-        html, body { height: 100%; overflow: hidden; }
-        #app { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        html { height: -webkit-fill-available; }
-        body { min-height: 100vh; min-height: -webkit-fill-available; }
+        html { height: 100%; }
+        body { min-height: 100vh; overflow-x: hidden; }
+        #app { 
+            min-height: 100vh; 
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 100px;
+        }
         
         /* Modal input styling */
         .modal-input {
