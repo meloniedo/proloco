@@ -188,13 +188,13 @@ const Navigation = ({ view, setView }) => {
               key={item.id}
               onClick={() => setView(item.id)}
               data-testid={`nav-${item.id}`}
-              className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold transition-all ${
+              className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl font-semibold transition-all ${
                 view === item.id 
                   ? 'btn-wood-active shadow-lg' 
                   : 'btn-wood-inactive hover:bg-amber-800/50'
               }`}
             >
-              <span className="text-2xl mb-1">{item.icon}</span>
+              <span className="text-xl mb-1">{item.icon}</span>
               <span className="text-xs capitalize">{item.label}</span>
             </button>
           ))}
