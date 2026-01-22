@@ -518,12 +518,12 @@
     function renderKeypad() {
         return `
             <div class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" style="padding: 16px;">
-                <div class="card-felt rounded-2xl p-4 border-4 border-amber-800" style="width: 100%; max-width: 320px; margin: auto;">
+                <div class="rounded-2xl p-4 border-4 border-amber-800" style="width: 100%; max-width: 320px; margin: auto; background: linear-gradient(135deg, #1a4d2e 0%, #0d3320 50%, #1a4d2e 100%);">
                     <div class="text-center mb-4">
                         <div class="text-4xl mb-2">${state.selectedProduct?.icona || '💰'}</div>
                         <h3 class="text-xl font-bold text-amber-100">${state.selectedProduct?.nome || ''}</h3>
                     </div>
-                    <div class="bg-amber-900/50 rounded-xl p-4 mb-4 border-2 border-amber-700">
+                    <div class="bg-amber-900/80 rounded-xl p-4 mb-4 border-2 border-amber-700">
                         <div class="text-4xl font-black text-amber-100 text-center">€${state.customPrice || '0'}</div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 mb-4">
