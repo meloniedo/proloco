@@ -191,20 +191,26 @@ const Navigation = ({ view, setView }) => {
   ];
   
   return (
-    <div className="nav-wood fixed bottom-0 left-0 right-0 z-40" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
-      <div className="flex justify-around items-center py-2 px-2">
+    <div className="nav-wood" style={{position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 40, paddingBottom: 'env(safe-area-inset-bottom)'}}>
+      <div style={{display: 'flex', flexDirection: 'row', width: '100%', padding: '8px 4px'}}>
         {navItems.map(item => (
           <button
             key={item.id}
             onClick={() => setView(item.id)}
             data-testid={`nav-${item.id}`}
-            className={`flex items-center justify-center w-14 h-14 rounded-full transition-all ${
-              view === item.id 
-                ? 'btn-wood-active shadow-lg scale-110' 
-                : 'btn-wood-inactive hover:bg-amber-800/50'
-            }`}
+            style={{
+              width: '20%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '60px',
+              borderRadius: '12px',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+            className={view === item.id ? 'btn-wood-active' : 'btn-wood-inactive'}
           >
-            <span className="text-2xl">{item.icon}</span>
+            <span style={{fontSize: '28px'}}>{item.icon}</span>
           </button>
         ))}
       </div>
