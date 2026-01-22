@@ -45,11 +45,11 @@ CREATE TABLE IF NOT EXISTS configurazione (
 ) ENGINE=InnoDB;
 
 -- ========================================
--- DATI INIZIALI
+-- DATI INIZIALI (solo se tabella vuota)
 -- ========================================
 
--- Prodotti di default
-INSERT INTO prodotti (nome, prezzo, categoria, icona) VALUES
+-- Prodotti di default (INSERT IGNORE evita duplicati)
+INSERT IGNORE INTO prodotti (nome, prezzo, categoria, icona) VALUES
 -- CAFFETTERIA
 ('Caffè', 1.20, 'CAFFETTERIA', '☕'),
 ('Caffè Deca', 1.20, 'CAFFETTERIA', '☕'),
