@@ -3,6 +3,8 @@
 // ========================================
 // CRON SYNC - Sincronizza STORICO.txt con DB
 // Eseguito automaticamente ogni minuto
+// 1. Cancella dal DB i record rimossi dal txt
+// 2. Aggiorna il txt con tutti i record del DB
 // ========================================
 
 // Percorso assoluto
@@ -24,14 +26,19 @@ function logMsg($msg) {
     file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
 }
 
-// Esegui sincronizzazione
+// PASSO 1: Sincronizza cancellazioni (txt -> db)
 $result = sincronizzaStoricoConDB();
 
 if ($result['success']) {
     if ($result['vendite_cancellate'] > 0 || $result['spese_cancellate'] > 0) {
         logMsg("SYNC: Rimossi {$result['vendite_cancellate']} vendite, {$result['spese_cancellate']} spese");
     }
-    // Non logga se non ci sono modifiche (per non riempire il log)
 } else {
-    logMsg("ERRORE: " . $result['error']);
+    logMsg("ERRORE SYNC: " . $result['error']);
+}
+
+// PASSO 2: Aggiorna il file txt con i dati del DB (db -> txt)
+$updated = aggiornaStoricoTxt();
+if (!$updated) {
+    logMsg("ERRORE: Impossibile aggiornare STORICO.txt");
 }
