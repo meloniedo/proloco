@@ -59,6 +59,40 @@ rm -f ${WEB_DIR}/install.sh
 chown -R www-data:www-data ${WEB_DIR}
 chmod -R 755 ${WEB_DIR}
 
+# Aggiungi www-data al gruppo per accesso USB
+usermod -a -G plugdev www-data 2>/dev/null || true
+usermod -a -G disk www-data 2>/dev/null || true
+
+# Installa udisks2 per montaggio automatico USB
+apt install -y udisks2 2>/dev/null || true
+
+# Crea regola udev per montare USB con permessi corretti
+cat > /etc/udev/rules.d/99-usb-mount.rules << 'UDEVRULE'
+# Auto-mount USB con permessi per www-data
+ACTION=="add", KERNEL=="sd[a-z][0-9]", TAG+="systemd", ENV{SYSTEMD_WANTS}="usb-mount@%k.service"
+UDEVRULE
+
+# Crea servizio systemd per mount USB
+cat > /etc/systemd/system/usb-mount@.service << 'USBSERVICE'
+[Unit]
+Description=Mount USB Drive %i
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c 'mkdir -p /media/usb_%i && mount -o uid=33,gid=33,umask=000 /dev/%i /media/usb_%i'
+ExecStop=/bin/bash -c 'umount /media/usb_%i && rmdir /media/usb_%i'
+[Install]
+WantedBy=multi-user.target
+USBSERVICE
+
+# Ricarica udev
+udevadm control --reload-rules 2>/dev/null || true
+
+# Crea directory media con permessi corretti
+mkdir -p /media/pi
+chmod 777 /media/pi
+chown www-data:www-data /media/pi
+
 # Apache
 cat > /etc/apache2/sites-available/proloco.conf << EOF
 <VirtualHost *:80>
