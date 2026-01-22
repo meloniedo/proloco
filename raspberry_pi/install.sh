@@ -109,7 +109,22 @@ a2ensite proloco.conf
 a2enmod rewrite
 systemctl restart apache2
 systemctl enable apache2
+
+# Crea cartella logs
+mkdir -p ${WEB_DIR}/logs
+chown www-data:www-data ${WEB_DIR}/logs
+
+# Rendi eseguibile lo script cron
+chmod +x ${WEB_DIR}/cron_sync.php
+
+# Configura CRON per sincronizzazione automatica STORICO.txt ogni minuto
+echo "# Sincronizzazione STORICO.txt ogni minuto" > /etc/cron.d/proloco_sync
+echo "* * * * * www-data /usr/bin/php ${WEB_DIR}/cron_sync.php > /dev/null 2>&1" >> /etc/cron.d/proloco_sync
+chmod 644 /etc/cron.d/proloco_sync
+systemctl restart cron
+
 echo -e "${GREEN}✓ App web OK${NC}"
+echo -e "${GREEN}✓ Cron sync automatico attivo (ogni minuto)${NC}"
 
 # ===== FASE 4: CONFIGURAZIONE HOTSPOT =====
 echo ""
