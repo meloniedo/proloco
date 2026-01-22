@@ -212,15 +212,15 @@ function doBackup() {
         }
     }
     
-    // Nome file con data
-    $date = date('Y-m-d');
-    $time = date('H-i-s');
+    // Nome file con data nel formato storico_DD-MM-YYYY_HH-MM.xls
+    $date = date('d-m-Y');
+    $time = date('H-i');
     
     // Controlla backup esistenti oggi
-    $existingBackups = glob($backupDir . "/backup_{$date}*.xls");
+    $existingBackups = glob($backupDir . "/storico_{$date}*.xls");
     $backupNum = count($existingBackups) + 1;
     
-    $filename = "backup_{$date}";
+    $filename = "storico_{$date}_{$time}";
     if ($backupNum > 1) {
         $filename .= "_n{$backupNum}";
     }
