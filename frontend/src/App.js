@@ -868,16 +868,27 @@ const ImpostazioniView = ({ showFeedback, refresh, setRefresh }) => {
       
       {/* BACKUP USB - Solo info demo */}
       <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
-        <h3 className="text-lg font-bold text-amber-100 mb-3">💾 Backup su USB</h3>
-        <div className="bg-amber-900/30 p-3 rounded-lg border border-amber-700">
-          <p className="text-amber-200/70 text-sm">
-            Sul Raspberry Pi: inserisci una chiavetta USB e premi il pulsante backup.
-            Il backup verrà salvato automaticamente sulla chiavetta.
-          </p>
-          <p className="text-amber-200/50 text-xs mt-2">
-            (Questa funzione è disponibile solo sul Raspberry Pi)
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-amber-100">💾 Backup su USB</h3>
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-red-500 animate-pulse"></span>
+            <span className="text-sm text-red-300">USB Non Trovata</span>
+          </div>
+        </div>
+        <div className="bg-red-900/30 p-3 rounded-lg mb-3 border border-red-700">
+          <p className="text-red-200 text-sm">
+            ⚠️ Inserisci una chiavetta USB per abilitare il backup
           </p>
         </div>
+        <button 
+          className="w-full bg-amber-800 hover:bg-amber-700 text-amber-100 py-3 rounded-xl font-bold border-2 border-amber-600 flex items-center justify-center gap-2 opacity-70"
+          onClick={() => showFeedback('🔌 Questa funzione è attiva solo sul Raspberry Pi')}
+        >
+          🔄 Controlla USB
+        </button>
+        <p className="text-amber-200/50 text-xs mt-2 text-center">
+          (Backup USB disponibile solo sul Raspberry Pi)
+        </p>
       </div>
       
       {/* GESTIONE LISTINO */}
