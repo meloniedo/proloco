@@ -962,6 +962,13 @@ function App() {
             refresh={refresh}
           />
         )}
+        {view === 'impostazioni' && (
+          <ImpostazioniView 
+            showFeedback={showFeedback}
+            refresh={refresh}
+            setRefresh={setRefresh}
+          />
+        )}
       </div>
       
       <Navigation view={view} setView={setView} />
