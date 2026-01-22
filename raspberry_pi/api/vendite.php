@@ -3,6 +3,7 @@
 // API VENDITE
 // ========================================
 require_once '../includes/config.php';
+require_once '../includes/storico_txt.php';
 jsonHeaders();
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -34,6 +35,8 @@ switch ($method) {
         ]);
         
         if ($result) {
+            // Aggiorna STORICO.txt
+            aggiornaStoricoTxt();
             jsonResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
         } else {
             jsonResponse(['error' => 'Errore salvataggio'], 500);
@@ -50,6 +53,9 @@ switch ($method) {
         $pdo = getDB();
         $stmt = $pdo->prepare("DELETE FROM vendite WHERE id = ?");
         $result = $stmt->execute([$id]);
+        
+        // Aggiorna STORICO.txt
+        aggiornaStoricoTxt();
         
         jsonResponse(['success' => $result]);
         break;
