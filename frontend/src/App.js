@@ -1023,7 +1023,7 @@ function App() {
   
   const showFeedback = (message) => {
     setFeedback(message);
-    setTimeout(() => setFeedback(''), 2000);
+    setTimeout(() => setFeedback(''), 3000);
   };
   
   const handleProductClick = (prodotto) => {
