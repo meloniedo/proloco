@@ -86,7 +86,7 @@ function formatBytes($bytes) {
     return round($bytes / 1024, 2) . ' KB';
 }
 
-// Genera file Excel semplice (formato XML che Excel apre)
+// Genera file Excel XML compatibile con importazione
 function generateExcelXML($vendite, $spese, $prodotti) {
     $totaleVendite = 0;
     $totaleSpese = 0;
@@ -100,33 +100,18 @@ function generateExcelXML($vendite, $spese, $prodotti) {
  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
  
 <Styles>
- <Style ss:ID="Header"><Font ss:Bold="1" ss:Size="12"/><Interior ss:Color="#8B4513" ss:Pattern="Solid"/><Font ss:Color="#FFFFFF"/></Style>
+ <Style ss:ID="Header"><Font ss:Bold="1" ss:Size="11"/><Interior ss:Color="#8B4513" ss:Pattern="Solid"/><Font ss:Color="#FFFFFF"/></Style>
  <Style ss:ID="Title"><Font ss:Bold="1" ss:Size="14"/></Style>
- <Style ss:ID="Money"><NumberFormat ss:Format="€#,##0.00"/></Style>
- <Style ss:ID="Date"><NumberFormat ss:Format="DD/MM/YYYY HH:MM"/></Style>
+ <Style ss:ID="Money"><NumberFormat ss:Format="#,##0.00"/></Style>
  <Style ss:ID="Green"><Font ss:Color="#008000" ss:Bold="1"/></Style>
  <Style ss:ID="Red"><Font ss:Color="#FF0000" ss:Bold="1"/></Style>
 </Styles>
 
-<Worksheet ss:Name="Riepilogo">
- <Table>
-  <Row><Cell ss:StyleID="Title"><Data ss:Type="String">PROLOCO SANTA BIANCA - RIEPILOGO</Data></Cell></Row>
-  <Row><Cell><Data ss:Type="String">Data backup: ' . date('d/m/Y H:i:s') . '</Data></Cell></Row>
-  <Row></Row>
-  <Row><Cell ss:StyleID="Header"><Data ss:Type="String">Voce</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Valore</Data></Cell></Row>
-  <Row><Cell><Data ss:Type="String">Totale Vendite</Data></Cell><Cell><Data ss:Type="Number">' . count($vendite) . '</Data></Cell></Row>
-  <Row><Cell><Data ss:Type="String">Totale Spese</Data></Cell><Cell><Data ss:Type="Number">' . count($spese) . '</Data></Cell></Row>
-  <Row><Cell><Data ss:Type="String">Incasso Totale</Data></Cell><Cell ss:StyleID="Green"><Data ss:Type="Number">' . $totaleVendite . '</Data></Cell></Row>
-  <Row><Cell><Data ss:Type="String">Spese Totali</Data></Cell><Cell ss:StyleID="Red"><Data ss:Type="Number">' . $totaleSpese . '</Data></Cell></Row>
-  <Row><Cell ss:StyleID="Title"><Data ss:Type="String">PROFITTO NETTO</Data></Cell><Cell ss:StyleID="' . ($totaleVendite - $totaleSpese >= 0 ? 'Green' : 'Red') . '"><Data ss:Type="Number">' . ($totaleVendite - $totaleSpese) . '</Data></Cell></Row>
- </Table>
-</Worksheet>
-
-<Worksheet ss:Name="Vendite">
+<Worksheet ss:Name="VENDITE">
  <Table>
   <Row>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">ID</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Data</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Ora</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Prodotto</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Categoria</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Importo €</Data></Cell>
@@ -136,8 +121,8 @@ function generateExcelXML($vendite, $spese, $prodotti) {
         $dt = new DateTime($v['timestamp']);
         $xml .= '
   <Row>
-   <Cell><Data ss:Type="Number">' . $v['id'] . '</Data></Cell>
-   <Cell><Data ss:Type="String">' . $dt->format('d/m/Y H:i') . '</Data></Cell>
+   <Cell><Data ss:Type="String">' . $dt->format('d/m/Y') . '</Data></Cell>
+   <Cell><Data ss:Type="String">' . $dt->format('H:i:s') . '</Data></Cell>
    <Cell><Data ss:Type="String">' . htmlspecialchars($v['nome_prodotto']) . '</Data></Cell>
    <Cell><Data ss:Type="String">' . htmlspecialchars($v['categoria'] ?? '') . '</Data></Cell>
    <Cell ss:StyleID="Money"><Data ss:Type="Number">' . $v['prezzo'] . '</Data></Cell>
@@ -146,16 +131,17 @@ function generateExcelXML($vendite, $spese, $prodotti) {
     
     $xml .= '
   <Row></Row>
-  <Row><Cell></Cell><Cell></Cell><Cell></Cell><Cell ss:StyleID="Title"><Data ss:Type="String">TOTALE:</Data></Cell><Cell ss:StyleID="Green"><Data ss:Type="Number">' . $totaleVendite . '</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">Totale Vendite:</Data></Cell><Cell></Cell><Cell></Cell><Cell></Cell><Cell ss:StyleID="Green"><Data ss:Type="Number">' . $totaleVendite . '</Data></Cell></Row>
  </Table>
 </Worksheet>
 
-<Worksheet ss:Name="Spese">
+<Worksheet ss:Name="SPESE">
  <Table>
   <Row>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">ID</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Data</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Ora</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Categoria</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Spesa</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Note</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Importo €</Data></Cell>
   </Row>';
@@ -164,9 +150,10 @@ function generateExcelXML($vendite, $spese, $prodotti) {
         $dt = new DateTime($s['timestamp']);
         $xml .= '
   <Row>
-   <Cell><Data ss:Type="Number">' . $s['id'] . '</Data></Cell>
-   <Cell><Data ss:Type="String">' . $dt->format('d/m/Y H:i') . '</Data></Cell>
+   <Cell><Data ss:Type="String">' . $dt->format('d/m/Y') . '</Data></Cell>
+   <Cell><Data ss:Type="String">' . $dt->format('H:i:s') . '</Data></Cell>
    <Cell><Data ss:Type="String">' . htmlspecialchars($s['categoria_spesa']) . '</Data></Cell>
+   <Cell><Data ss:Type="String"></Data></Cell>
    <Cell><Data ss:Type="String">' . htmlspecialchars($s['note'] ?? '') . '</Data></Cell>
    <Cell ss:StyleID="Money"><Data ss:Type="Number">' . $s['importo'] . '</Data></Cell>
   </Row>';
@@ -174,32 +161,28 @@ function generateExcelXML($vendite, $spese, $prodotti) {
     
     $xml .= '
   <Row></Row>
-  <Row><Cell></Cell><Cell></Cell><Cell></Cell><Cell ss:StyleID="Title"><Data ss:Type="String">TOTALE:</Data></Cell><Cell ss:StyleID="Red"><Data ss:Type="Number">' . $totaleSpese . '</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">Totale Spese:</Data></Cell><Cell></Cell><Cell></Cell><Cell></Cell><Cell></Cell><Cell ss:StyleID="Red"><Data ss:Type="Number">' . $totaleSpese . '</Data></Cell></Row>
  </Table>
 </Worksheet>
 
-<Worksheet ss:Name="Listino">
+<Worksheet ss:Name="RIEPILOGO MENSILE">
  <Table>
   <Row>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">ID</Data></Cell>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">Nome</Data></Cell>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">Prezzo €</Data></Cell>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">Categoria</Data></Cell>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">Icona</Data></Cell>
-  </Row>';
-  
-    foreach ($prodotti as $p) {
-        $xml .= '
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Descrizione</Data></Cell>
+   <Cell ss:StyleID="Header"><Data ss:Type="String">Importo €</Data></Cell>
+  </Row>
   <Row>
-   <Cell><Data ss:Type="Number">' . $p['id'] . '</Data></Cell>
-   <Cell><Data ss:Type="String">' . htmlspecialchars($p['nome']) . '</Data></Cell>
-   <Cell ss:StyleID="Money"><Data ss:Type="Number">' . $p['prezzo'] . '</Data></Cell>
-   <Cell><Data ss:Type="String">' . htmlspecialchars($p['categoria']) . '</Data></Cell>
-   <Cell><Data ss:Type="String">' . $p['icona'] . '</Data></Cell>
-  </Row>';
-    }
-    
-    $xml .= '
+   <Cell><Data ss:Type="String">Incassi Totali</Data></Cell>
+   <Cell ss:StyleID="Green"><Data ss:Type="Number">' . $totaleVendite . '</Data></Cell>
+  </Row>
+  <Row>
+   <Cell><Data ss:Type="String">Spese Totali</Data></Cell>
+   <Cell ss:StyleID="Red"><Data ss:Type="Number">' . $totaleSpese . '</Data></Cell>
+  </Row>
+  <Row>
+   <Cell ss:StyleID="Title"><Data ss:Type="String">PROFITTO NETTO</Data></Cell>
+   <Cell ss:StyleID="' . ($totaleVendite - $totaleSpese >= 0 ? 'Green' : 'Red') . '"><Data ss:Type="Number">' . ($totaleVendite - $totaleSpese) . '</Data></Cell>
+  </Row>
  </Table>
 </Worksheet>
 
