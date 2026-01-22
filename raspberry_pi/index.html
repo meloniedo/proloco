@@ -331,31 +331,31 @@
     async function renderStorico() {
         const vendite = await API.getVendite();
         const spese = await API.getSpese();
+        
         const trans = [...vendite.map(v => ({...v, tipo: 'vendita', prezzo: parseFloat(v.prezzo)})),
                        ...spese.map(s => ({...s, tipo: 'spesa', nome_prodotto: s.categoria_spesa, prezzo: -parseFloat(s.importo)}))
-        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
+        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 100);
 
         return `
             <div class="space-y-3">
-                <a href="api/export.php" class="w-full bg-green-800 text-amber-100 py-3 rounded-xl font-bold flex items-center justify-center gap-2 border-2 border-green-600" style="display:flex;text-decoration:none;">
-                    📊 Scarica CSV
-                </a>
-                <label class="w-full bg-amber-900/50 text-amber-200 py-2 rounded-lg text-sm flex items-center justify-center gap-2 border border-amber-700 cursor-pointer">
-                    📥 Importa CSV <input type="file" accept=".csv" onchange="handleImport(event)" style="display:none;">
-                </label>
-                <div class="card-felt p-3 rounded-xl border-4 border-amber-800">
-                    <h3 class="text-lg font-bold text-amber-100 mb-3">📋 Transazioni</h3>
-                    ${trans.length === 0 ? '<div class="text-amber-200/50 text-center py-4">Nessuna</div>' :
-                    `<div class="space-y-2 max-h-80 overflow-y-auto">${trans.map(t => {
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <h3 class="text-lg font-bold text-amber-100 mb-3">📋 Ultime 100 Transazioni</h3>
+                    ${trans.length === 0 ? '<div class="text-amber-200/50 text-center py-8">Nessuna transazione</div>' :
+                    `<div class="space-y-2 max-h-96 overflow-y-auto hide-scrollbar">${trans.map(t => {
                         const dt = new Date(t.timestamp);
                         const isS = t.tipo === 'spesa';
-                        return `<div class="${isS ? 'bg-red-900/30' : 'bg-amber-900/30'} p-2 rounded-lg flex justify-between items-center border ${isS ? 'border-red-700/50' : 'border-amber-700/50'}">
+                        return `<div class="${isS ? 'bg-red-900/30 border-red-700/50' : 'bg-amber-900/30 border-amber-700/50'} p-3 rounded-lg flex justify-between items-center border">
                             <div class="${isS ? 'text-red-200' : 'text-amber-100'}">
-                                <div class="font-bold text-sm">${t.nome_prodotto}</div>
-                                <div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')}</div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl">${isS ? '💸' : '💰'}</span>
+                                    <div>
+                                        <div class="font-bold text-sm">${t.nome_prodotto}</div>
+                                        <div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')} ${dt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1">
-                                <span class="font-black ${isS ? 'text-red-400' : 'text-green-400'}">${isS ? '-' : '+'}€${Math.abs(t.prezzo).toFixed(2)}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg font-black ${isS ? 'text-red-400' : 'text-green-400'}">${isS ? '-' : '+'}€${Math.abs(t.prezzo).toFixed(2)}</span>
                                 <button onclick="${isS ? `deleteSpesa(${t.id})` : `deleteVendita(${t.id})`}" class="text-red-400 p-1 text-sm">🗑️</button>
                             </div>
                         </div>`;
