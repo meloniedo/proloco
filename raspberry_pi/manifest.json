@@ -1,62 +1,31 @@
 {
     "name": "Proloco Santa Bianca - Bar Manager",
-    "short_name": "Bar Manager",
+    "short_name": "Bar Proloco",
     "description": "App gestione bar e vendite - Proloco Santa Bianca",
-    "start_url": "/",
+    "start_url": "./index.html",
+    "scope": "./",
+    "id": "proloco-bar-manager",
     "display": "standalone",
+    "display_override": ["standalone", "fullscreen"],
     "orientation": "portrait",
     "background_color": "#1a4d2e",
-    "theme_color": "#8B4513",
+    "theme_color": "#1a4d2e",
     "icons": [
         {
-            "src": "icons/icon-72.png",
-            "sizes": "72x72",
-            "type": "image/png",
-            "purpose": "any maskable"
+            "src": "icons/icon-512.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
         },
         {
-            "src": "icons/icon-96.png",
-            "sizes": "96x96",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "icons/icon-128.png",
-            "sizes": "128x128",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "icons/icon-144.png",
-            "sizes": "144x144",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "icons/icon-152.png",
-            "sizes": "152x152",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "icons/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "icons/icon-384.png",
-            "sizes": "384x384",
-            "type": "image/png",
-            "purpose": "any maskable"
-        },
-        {
-            "src": "icons/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
+            "src": "icons/icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
         }
     ],
     "categories": ["business", "productivity"],
-    "lang": "it"
+    "lang": "it",
+    "dir": "ltr",
+    "prefer_related_applications": false
 }
