@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1a4d2e"/>
+  <rect x="8" y="8" width="496" height="496" fill="none" stroke="#8B4513" stroke-width="16"/>
+  <text x="256" y="200" font-family="Georgia, serif" font-size="120" font-weight="bold" fill="#fef3c7" text-anchor="middle">PROLOCO</text>
+  <text x="256" y="340" font-family="Georgia, serif" font-size="80" fill="#fef3c7" text-anchor="middle">Santa Bianca</text>
+  <text x="256" y="440" font-family="Georgia, serif" font-size="60" fill="#d4a76a" text-anchor="middle">🍷 BAR 🍷</text>
+</svg>
