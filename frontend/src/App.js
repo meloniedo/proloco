@@ -174,8 +174,9 @@ const Navigation = ({ view, setView }) => {
   const navItems = [
     { id: 'vendita', icon: '🛒', label: 'Vendita' },
     { id: 'spese', icon: '💸', label: 'Spese' },
-    { id: 'statistiche', icon: '📊', label: 'Statistiche' },
-    { id: 'storico', icon: '📋', label: 'Storico' }
+    { id: 'statistiche', icon: '📊', label: 'Stats' },
+    { id: 'storico', icon: '📋', label: 'Storico' },
+    { id: 'impostazioni', icon: '⚙️', label: 'Imposta.' }
   ];
   
   return (
