@@ -124,13 +124,13 @@ killall wpa_supplicant 2>/dev/null || true
 rfkill unblock wlan 2>/dev/null || true
 systemctl unmask hostapd 2>/dev/null || true
 
-# Disabilita servizi che interferiscono
-systemctl disable wpa_supplicant 2>/dev/null || true
-systemctl mask wpa_supplicant 2>/dev/null || true
+# Disabilita servizi che interferiscono (MA NON MASCHERARLI!)
+sudo systemctl disable wpa_supplicant 2>/dev/null
+# NON usare mask - rende impossibile riattivare NetworkManager!
 if systemctl is-enabled NetworkManager 2>/dev/null; then
     systemctl stop NetworkManager
     systemctl disable NetworkManager
-    systemctl mask NetworkManager
+    # RIMOSSO: systemctl mask NetworkManager - causava blocco permanente
 fi
 
 # Configura IP statico - METODO DIRETTO (più affidabile)
