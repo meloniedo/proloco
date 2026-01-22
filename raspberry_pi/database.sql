@@ -79,4 +79,7 @@ INSERT INTO configurazione (chiave, valore) VALUES
 ('invio_resoconto_automatico', 'true'),
 ('giorno_invio_report', '1'),
 ('ora_invio_report', '8'),
-('giorni_minimo_tra_report', '7');
+('giorni_minimo_tra_report', '7'),
+('backup_giorni', '0'),
+('backup_ora', '23:59')
+ON DUPLICATE KEY UPDATE chiave=chiave;
