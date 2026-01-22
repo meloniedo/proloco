@@ -711,11 +711,20 @@
     
     async function doUSBBackup() {
         showFeedback('💾 Backup in corso...');
-        const r = await API.doUSBBackup();
-        if (r.success) {
-            showFeedback(`✅ Backup OK! ${r.filename}`);
-        } else {
-            showFeedback('❌ ' + (r.error || 'Errore'));
+        try {
+            const r = await API.doUSBBackup();
+            if (r.success) {
+                // Mostra popup successo con dettagli
+                alert(`✅ BACKUP COMPLETATO!\n\n📁 File: ${r.filename}\n💰 Vendite: ${r.vendite}\n💸 Spese: ${r.spese}\n📊 Incasso: €${r.totale_incasso.toFixed(2)}\n📉 Spese: €${r.totale_spese.toFixed(2)}\n💵 Profitto: €${r.profitto.toFixed(2)}`);
+                showFeedback(`✅ Backup salvato!`);
+            } else {
+                // Mostra popup errore con dettagli
+                alert(`❌ ERRORE BACKUP\n\n${r.error || 'Errore sconosciuto'}\n\nControlla che la chiavetta USB sia inserita correttamente e riprova.`);
+                showFeedback('❌ Errore backup');
+            }
+        } catch(e) {
+            alert(`❌ ERRORE CONNESSIONE\n\nImpossibile comunicare con il server.\n\nDettaglio: ${e.message}`);
+            showFeedback('❌ Errore');
         }
         render();
     }
