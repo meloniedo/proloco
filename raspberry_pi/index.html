@@ -878,6 +878,110 @@
         }
     }
     
+    // ===== BACKUP AUTOMATICO =====
+    
+    // Carica impostazioni backup quando si apre la pagina impostazioni
+    async function loadBackupSettings() {
+        try {
+            const response = await fetch('api/backup_settings.php');
+            const data = await response.json();
+            
+            // Imposta checkbox giorni
+            const giorni = data.giorni ? data.giorni.split(',') : ['0'];
+            for (let i = 0; i <= 6; i++) {
+                const cb = document.getElementById('backup-day-' + i);
+                if (cb) cb.checked = giorni.includes(String(i));
+            }
+            
+            // Imposta ora
+            const timeInput = document.getElementById('backup-time');
+            if (timeInput) timeInput.value = data.ora || '23:59';
+            
+            // Mostra avviso se backup necessario
+            const alertDiv = document.getElementById('backup-alert');
+            if (alertDiv) {
+                alertDiv.style.display = data.backup_necessario ? 'block' : 'none';
+            }
+            
+            // Mostra status
+            const statusDiv = document.getElementById('backup-status');
+            if (statusDiv) {
+                const giorniNomi = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+                const giorniSelezionati = giorni.map(g => giorniNomi[parseInt(g)]).join(', ');
+                statusDiv.innerHTML = `✓ Backup programmato: <strong>${giorniSelezionati}</strong> alle <strong>${data.ora || '23:59'}</strong>`;
+                
+                if (data.ultimo_backup) {
+                    statusDiv.innerHTML += `<br>Ultimo backup: ${data.ultimo_backup}`;
+                }
+            }
+            
+        } catch (e) {
+            console.error('Errore caricamento impostazioni backup:', e);
+        }
+    }
+    
+    // Salva impostazioni backup
+    async function saveBackupSettings() {
+        const giorni = [];
+        for (let i = 0; i <= 6; i++) {
+            const cb = document.getElementById('backup-day-' + i);
+            if (cb && cb.checked) giorni.push(i);
+        }
+        
+        const timeInput = document.getElementById('backup-time');
+        const ora = timeInput ? timeInput.value : '23:59';
+        
+        try {
+            await fetch('api/backup_settings.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ giorni, ora })
+            });
+            
+            // Aggiorna status
+            const statusDiv = document.getElementById('backup-status');
+            if (statusDiv && giorni.length > 0) {
+                const giorniNomi = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+                const giorniSelezionati = giorni.map(g => giorniNomi[g]).join(', ');
+                statusDiv.innerHTML = `✓ Salvato! Backup: <strong>${giorniSelezionati}</strong> alle <strong>${ora}</strong>`;
+            } else if (statusDiv) {
+                statusDiv.innerHTML = '⚠️ Nessun giorno selezionato - backup disabilitato';
+            }
+            
+            showFeedback('✅ Impostazioni salvate');
+        } catch (e) {
+            showFeedback('❌ Errore salvataggio');
+        }
+    }
+    
+    // Reset avviso backup
+    async function resetBackupAlert() {
+        try {
+            await fetch('api/backup_settings.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reset_avviso: true })
+            });
+            
+            const alertDiv = document.getElementById('backup-alert');
+            if (alertDiv) alertDiv.style.display = 'none';
+            
+            showFeedback('✓ Avviso rimosso');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
+    // Carica impostazioni backup quando si va nelle impostazioni
+    const originalChangeView = changeView;
+    changeView = async function(view) {
+        state.view = view;
+        await render();
+        if (view === 'impostazioni') {
+            setTimeout(loadBackupSettings, 100);
+        }
+    };
+    
     function showFeedback(msg) {
         state.feedback = msg; render();
         setTimeout(() => { state.feedback = ''; render(); }, 2500);
