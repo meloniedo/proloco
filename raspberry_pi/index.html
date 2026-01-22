@@ -454,6 +454,65 @@
                     </button>
                 </div>
                 
+                <!-- BACKUP AUTOMATICO -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800" id="backup-auto-section">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-amber-100">🕐 Backup Automatico</h3>
+                    </div>
+                    
+                    <!-- Avviso backup necessario -->
+                    <div id="backup-alert" style="display:none;" class="bg-red-900/50 p-3 rounded-lg mb-3 border-2 border-red-500 animate-pulse">
+                        <div class="text-red-100 font-bold flex items-center gap-2">
+                            ⚠️ BACKUP NECESSARIO!
+                        </div>
+                        <div class="text-red-200 text-sm mt-1">
+                            Il backup automatico non è riuscito. Effettua un backup manuale.
+                        </div>
+                        <button onclick="resetBackupAlert()" class="mt-2 bg-red-700 text-white px-3 py-1 rounded text-sm">
+                            ✓ Ho capito
+                        </button>
+                    </div>
+                    
+                    <div class="bg-purple-900/30 p-3 rounded-lg mb-3 border border-purple-700">
+                        <div class="text-purple-200 text-sm mb-2">
+                            📅 Seleziona i giorni per il backup automatico:
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
+                                <input type="checkbox" id="backup-day-0" value="0" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Dom
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
+                                <input type="checkbox" id="backup-day-1" value="1" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Lun
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
+                                <input type="checkbox" id="backup-day-2" value="2" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Mar
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
+                                <input type="checkbox" id="backup-day-3" value="3" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Mer
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
+                                <input type="checkbox" id="backup-day-4" value="4" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Gio
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
+                                <input type="checkbox" id="backup-day-5" value="5" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Ven
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
+                                <input type="checkbox" id="backup-day-6" value="6" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Sab
+                            </label>
+                        </div>
+                        
+                        <div class="text-purple-200 text-sm mt-3 mb-2">
+                            🕐 Ora del backup:
+                        </div>
+                        <input type="time" id="backup-time" value="23:59" onchange="saveBackupSettings()" 
+                            style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #7c3aed; background: rgba(0,0,0,0.3); color: #fef3c7; font-size: 18px;">
+                    </div>
+                    
+                    <div id="backup-status" class="text-amber-200/70 text-sm text-center">
+                        Caricamento impostazioni...
+                    </div>
+                </div>
+                
                 <!-- GESTIONE LISTINO -->
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
                     <div class="flex justify-between items-center mb-3">
