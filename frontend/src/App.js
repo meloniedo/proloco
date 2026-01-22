@@ -866,7 +866,7 @@ const ImpostazioniView = ({ showFeedback, refresh, setRefresh }) => {
     <div className="space-y-4" data-testid="impostazioni-view">
       <h2 className="text-xl font-bold text-amber-100 text-center">⚙️ Impostazioni</h2>
       
-      {/* BACKUP USB - Solo info demo */}
+      {/* BACKUP USB */}
       <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-bold text-amber-100">💾 Backup su USB</h3>
@@ -881,13 +881,35 @@ const ImpostazioniView = ({ showFeedback, refresh, setRefresh }) => {
           </p>
         </div>
         <button 
-          className="w-full bg-amber-800 hover:bg-amber-700 text-amber-100 py-3 rounded-xl font-bold border-2 border-amber-600 flex items-center justify-center gap-2 opacity-70"
-          onClick={() => showFeedback('🔌 Questa funzione è attiva solo sul Raspberry Pi')}
+          className="w-full bg-amber-800 text-amber-100 py-3 rounded-xl font-bold border-2 border-amber-600 flex items-center justify-center gap-2 opacity-70"
+          onClick={() => showFeedback('🔌 Funzione attiva solo sul Raspberry Pi')}
         >
           🔄 Controlla USB
         </button>
+      </div>
+      
+      {/* BACKUP WIFI */}
+      <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-amber-100">📶 Backup WiFi</h3>
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-green-500"></span>
+            <span className="text-sm text-green-300">Sempre disponibile</span>
+          </div>
+        </div>
+        <div className="bg-blue-900/30 p-3 rounded-lg mb-3 border border-blue-700">
+          <p className="text-blue-200 text-sm">
+            📱 Scarica il backup direttamente sul telefono via WiFi
+          </p>
+        </div>
+        <button 
+          className="w-full bg-blue-700 hover:bg-blue-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-blue-500 flex items-center justify-center gap-2"
+          onClick={() => showFeedback('📥 Download backup (demo)')}
+        >
+          📥 Scarica Backup (Excel)
+        </button>
         <p className="text-amber-200/50 text-xs mt-2 text-center">
-          (Backup USB disponibile solo sul Raspberry Pi)
+          (Sul Raspberry: scarica file .xls)
         </p>
       </div>
       
