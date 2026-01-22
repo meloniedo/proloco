@@ -4,43 +4,71 @@
 // ========================================
 require_once '../includes/config.php';
 
-// Possibili mount point per USB
-$USB_PATHS = [
-    '/media/usb_backup',
-    '/media/usb0',
-    '/media/usb1',
-    '/media/usb',
-    '/mnt/usb',
-    '/media/pi'
-];
-
-// Trova chiavetta USB montata
+// Trova chiavetta USB montata su Raspberry Pi
 function findUSB() {
-    global $USB_PATHS;
+    $usbPath = null;
     
-    // Prima controlla i mount point predefiniti
-    foreach ($USB_PATHS as $path) {
-        if (is_dir($path) && is_writable($path)) {
-            // Verifica che non sia vuoto (indicherebbe mount attivo)
-            $files = @scandir($path);
-            if ($files && count($files) > 2) { // più di . e ..
-                return $path;
-            }
-            // Verifica spazio disponibile
-            $freeSpace = @disk_free_space($path);
-            if ($freeSpace !== false && $freeSpace > 1048576) { // > 1MB
-                return $path;
+    // Metodo 1: Usa 'lsblk' per trovare dispositivi USB montati
+    $lsblk = @shell_exec('lsblk -o NAME,MOUNTPOINT,SIZE,TYPE -J 2>/dev/null');
+    if ($lsblk) {
+        $data = json_decode($lsblk, true);
+        if (isset($data['blockdevices'])) {
+            foreach ($data['blockdevices'] as $device) {
+                // Cerca partizioni montate
+                if (isset($device['children'])) {
+                    foreach ($device['children'] as $part) {
+                        if (!empty($part['mountpoint']) && 
+                            strpos($part['mountpoint'], '/media') === 0 &&
+                            $part['mountpoint'] !== '/media') {
+                            $mp = $part['mountpoint'];
+                            if (is_dir($mp) && is_writable($mp)) {
+                                return $mp;
+                            }
+                        }
+                    }
+                }
+                // Dispositivo senza partizioni
+                if (!empty($device['mountpoint']) && 
+                    strpos($device['mountpoint'], '/media') === 0) {
+                    $mp = $device['mountpoint'];
+                    if (is_dir($mp) && is_writable($mp)) {
+                        return $mp;
+                    }
+                }
             }
         }
     }
     
-    // Cerca mount point dinamici in /media
+    // Metodo 2: Cerca in /media/pi/* (Raspberry Pi OS)
+    $piMedia = '/media/pi';
+    if (is_dir($piMedia)) {
+        $dirs = @scandir($piMedia);
+        if ($dirs) {
+            foreach ($dirs as $dir) {
+                if ($dir === '.' || $dir === '..') continue;
+                $fullPath = $piMedia . '/' . $dir;
+                if (is_dir($fullPath)) {
+                    // Verifica che sia scrivibile
+                    if (is_writable($fullPath)) {
+                        return $fullPath;
+                    }
+                    // Prova a renderlo scrivibile
+                    @exec("sudo chmod 777 '$fullPath' 2>/dev/null");
+                    if (is_writable($fullPath)) {
+                        return $fullPath;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Metodo 3: Cerca in /media/* generici
     $mediaDir = '/media';
     if (is_dir($mediaDir)) {
         $dirs = @scandir($mediaDir);
         if ($dirs) {
             foreach ($dirs as $dir) {
-                if ($dir === '.' || $dir === '..') continue;
+                if ($dir === '.' || $dir === '..' || $dir === 'pi') continue;
                 $fullPath = $mediaDir . '/' . $dir;
                 if (is_dir($fullPath) && is_writable($fullPath)) {
                     $freeSpace = @disk_free_space($fullPath);
@@ -52,12 +80,50 @@ function findUSB() {
         }
     }
     
+    // Metodo 4: Cerca in /mnt/*
+    $mntDir = '/mnt';
+    if (is_dir($mntDir)) {
+        $dirs = @scandir($mntDir);
+        if ($dirs) {
+            foreach ($dirs as $dir) {
+                if ($dir === '.' || $dir === '..') continue;
+                $fullPath = $mntDir . '/' . $dir;
+                if (is_dir($fullPath) && is_writable($fullPath)) {
+                    $freeSpace = @disk_free_space($fullPath);
+                    if ($freeSpace !== false && $freeSpace > 1048576) {
+                        return $fullPath;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Metodo 5: Usa 'mount' per trovare dispositivi rimovibili
+    $mount = @shell_exec('mount | grep -E "/media|/mnt" 2>/dev/null');
+    if ($mount) {
+        $lines = explode("\n", trim($mount));
+        foreach ($lines as $line) {
+            if (preg_match('/on\s+(\S+)\s+type/', $line, $matches)) {
+                $mp = $matches[1];
+                if (is_dir($mp) && is_writable($mp) && $mp !== '/media' && $mp !== '/mnt') {
+                    return $mp;
+                }
+            }
+        }
+    }
+    
     return null;
 }
 
-// Verifica stato USB
+// Verifica stato USB con info dettagliate
 function checkUSBStatus() {
     $usbPath = findUSB();
+    
+    // Debug info
+    $debugInfo = [];
+    $debugInfo['media_pi_exists'] = is_dir('/media/pi');
+    $debugInfo['media_pi_contents'] = is_dir('/media/pi') ? @scandir('/media/pi') : [];
+    $debugInfo['media_contents'] = is_dir('/media') ? @scandir('/media') : [];
     
     if ($usbPath) {
         $freeSpace = @disk_free_space($usbPath);
@@ -69,13 +135,17 @@ function checkUSBStatus() {
             'free_space' => $freeSpace ? round($freeSpace / 1024 / 1024, 2) : 0,
             'total_space' => $totalSpace ? round($totalSpace / 1024 / 1024, 2) : 0,
             'free_space_formatted' => formatBytes($freeSpace ?: 0),
-            'total_space_formatted' => formatBytes($totalSpace ?: 0)
+            'total_space_formatted' => formatBytes($totalSpace ?: 0),
+            'writable' => is_writable($usbPath),
+            'debug' => $debugInfo
         ];
     }
     
     return [
         'connected' => false,
-        'error' => 'Nessuna chiavetta USB rilevata. Inserisci una chiavetta USB e riprova.'
+        'error' => 'Nessuna chiavetta USB rilevata.',
+        'suggerimento' => 'Inserisci la chiavetta USB nel Raspberry Pi e riprova.',
+        'debug' => $debugInfo
     ];
 }
 
