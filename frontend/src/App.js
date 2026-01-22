@@ -162,8 +162,8 @@ const Header = ({ reportPendente, giorniPassati }) => {
 const Feedback = ({ message }) => {
   if (!message) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-      <div className="bg-amber-100 text-amber-900 px-12 py-8 rounded-3xl shadow-2xl text-3xl font-black border-4 border-amber-800 animate-bounce text-center max-w-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{pointerEvents: 'none'}}>
+      <div className="bg-amber-100 text-amber-900 px-10 py-6 rounded-3xl shadow-2xl text-2xl font-black border-4 border-amber-800 animate-bounce text-center mx-4" style={{maxWidth: '300px'}}>
         {message}
       </div>
     </div>
