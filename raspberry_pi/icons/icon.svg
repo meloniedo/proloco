@@ -1,0 +1,30 @@
+<!-- SVG Icon - Salva come icon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Sfondo legno -->
+  <rect width="512" height="512" fill="#8B4513"/>
+  
+  <!-- Bordo scuro -->
+  <rect width="512" height="16" fill="#4A2C10"/>
+  <rect y="496" width="512" height="16" fill="#4A2C10"/>
+  <rect width="16" height="512" fill="#4A2C10"/>
+  <rect x="496" width="16" height="512" fill="#4A2C10"/>
+  
+  <!-- Cerchio sfondo -->
+  <circle cx="256" cy="256" r="180" fill="#FEF3C7"/>
+  
+  <!-- Tazza caffè -->
+  <ellipse cx="256" cy="280" rx="100" ry="80" fill="#6B4423"/>
+  <ellipse cx="256" cy="240" rx="100" ry="40" fill="#8B5A2B"/>
+  
+  <!-- Manico -->
+  <path d="M 356 240 Q 420 240 420 300 Q 420 360 356 360" 
+        fill="none" stroke="#6B4423" stroke-width="24" stroke-linecap="round"/>
+  
+  <!-- Vapore -->
+  <path d="M 200 160 Q 190 140 200 120 Q 210 100 200 80" 
+        fill="none" stroke="#FEF3C7" stroke-width="12" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 256 150 Q 246 130 256 110 Q 266 90 256 70" 
+        fill="none" stroke="#FEF3C7" stroke-width="12" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 312 160 Q 302 140 312 120 Q 322 100 312 80" 
+        fill="none" stroke="#FEF3C7" stroke-width="12" stroke-linecap="round" opacity="0.8"/>
+</svg>
