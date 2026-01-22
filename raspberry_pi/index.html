@@ -2,22 +2,72 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#8B4513">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Bar Manager">
+    <meta name="application-name" content="Bar Manager">
+    <meta name="msapplication-TileColor" content="#8B4513">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="icons/icon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-152.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72.png">
+    
+    <!-- Apple Splash Screens -->
+    <link rel="apple-touch-startup-image" href="icons/icon-512.png">
     
     <title>Proloco Santa Bianca - Bar Manager</title>
-    
-    <!-- Font locale -->
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&display=swap" rel="stylesheet">
     
     <!-- CSS locale -->
     <link rel="stylesheet" href="css/style.css">
     
     <style>
-        body { font-family: 'Crimson Text', Georgia, serif; }
+        /* Font fallback senza Google Fonts (offline) */
+        body { 
+            font-family: Georgia, 'Times New Roman', serif; 
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        /* Supporto notch iPhone */
+        .safe-top { padding-top: env(safe-area-inset-top); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        
+        /* Fullscreen mode */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        #app {
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Nascondi barra indirizzi su scroll */
+        html {
+            height: -webkit-fill-available;
+        }
+        body {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+        }
     </style>
 </head>
 <body class="bg-felt min-h-screen">
@@ -25,6 +75,15 @@
     <div id="app"></div>
 
     <script>
+    // ==================== REGISTRAZIONE SERVICE WORKER ====================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('SW registrato'))
+                .catch(err => console.log('SW errore:', err));
+        });
+    }
+
     // ==================== CONFIGURAZIONE ====================
     const CONFIG = {
         nome_bar: "Proloco Santa Bianca",
@@ -42,20 +101,37 @@
     // ==================== API FUNCTIONS ====================
     const API = {
         async getProdotti() {
-            const res = await fetch('api/prodotti.php');
-            return res.json();
+            try {
+                const res = await fetch('api/prodotti.php');
+                return res.json();
+            } catch(e) {
+                console.error('Errore getProdotti:', e);
+                return [];
+            }
         },
         async getVendite() {
-            const res = await fetch('api/vendite.php');
-            return res.json();
+            try {
+                const res = await fetch('api/vendite.php');
+                return res.json();
+            } catch(e) {
+                return [];
+            }
         },
         async getSpese() {
-            const res = await fetch('api/spese.php');
-            return res.json();
+            try {
+                const res = await fetch('api/spese.php');
+                return res.json();
+            } catch(e) {
+                return [];
+            }
         },
         async getStatistiche(periodo = 'oggi') {
-            const res = await fetch(`api/statistiche.php?periodo=${periodo}`);
-            return res.json();
+            try {
+                const res = await fetch(`api/statistiche.php?periodo=${periodo}`);
+                return res.json();
+            } catch(e) {
+                return {totaleVendite: 0, totaleIncasso: 0, totaleSpese: 0, profittoNetto: 0, perCategoria: {}, prodottiPiuVenduti: []};
+            }
         },
         async addVendita(vendita) {
             const res = await fetch('api/vendite.php', {
@@ -122,7 +198,7 @@
 
     function renderHeader() {
         return `
-            <div class="header-wood sticky top-0 z-40">
+            <div class="header-wood sticky top-0 z-40 safe-top">
                 <div class="max-w-7xl mx-auto px-4 py-4">
                     <div class="flex items-center justify-center gap-3">
                         <h1 class="text-2xl md:text-3xl font-bold text-amber-100 text-center drop-shadow-lg" style="font-family: Georgia, serif;">
@@ -140,7 +216,7 @@
     function renderFeedback() {
         if (!state.feedback) return '';
         return `
-            <div class="fixed top-32 left-1/2 transform -translate-x-1/2 z-50 animate-bounce" style="transform: translateX(-50%);">
+            <div class="fixed top-32 left-1/2 z-50 animate-bounce" style="transform: translateX(-50%);">
                 <div class="bg-amber-100 text-amber-900 px-8 py-4 rounded-2xl shadow-2xl text-xl font-bold border-4 border-amber-800">
                     ${state.feedback}
                 </div>
@@ -195,14 +271,14 @@
                         </div>
                         <h2 class="text-2xl font-bold text-amber-100 drop-shadow-lg" style="font-family: Georgia, serif;">${categoria}</h2>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 gap-4">
             `;
             
             items.forEach(prodotto => {
                 const prezzo = parseFloat(prodotto.prezzo);
                 html += `
                     <button onclick="handleProductClick(${prodotto.id})" 
-                            class="${categoriaColors[prodotto.categoria]} text-amber-100 p-6 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all active:scale-95 border-2 border-amber-900/30">
+                            class="${categoriaColors[prodotto.categoria]} text-amber-100 p-6 rounded-2xl shadow-xl active:scale-95 transition-transform border-2 border-amber-900/30">
                         <div class="text-4xl mb-3">${prodotto.icona}</div>
                         <div class="font-bold text-lg mb-2 leading-tight">${prodotto.nome}</div>
                         <div class="text-2xl font-black">
@@ -227,15 +303,15 @@
             <div class="space-y-6">
                 <div class="card-felt p-6 rounded-3xl border-4 border-amber-800">
                     <h2 class="text-2xl font-bold text-amber-100 mb-6 text-center" style="font-family: Georgia, serif;">💸 Registra Spese</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 gap-4">
         `;
         
         CONFIG.categorie_spese.forEach(cat => {
             html += `
                 <button onclick="handleSpesaClick('${cat.nome}', '${cat.icona}')"
-                        class="${cat.colore} text-amber-100 p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all active:scale-95 border-2 border-amber-900/30">
-                    <div class="text-5xl mb-3">${cat.icona}</div>
-                    <div class="font-bold text-lg">${cat.nome}</div>
+                        class="${cat.colore} text-amber-100 p-6 rounded-2xl shadow-xl active:scale-95 transition-transform border-2 border-amber-900/30">
+                    <div class="text-4xl mb-2">${cat.icona}</div>
+                    <div class="font-bold text-sm">${cat.nome}</div>
                 </button>
             `;
         });
@@ -243,8 +319,8 @@
         html += `</div></div>
             <div class="card-felt p-6 rounded-3xl border-4 border-amber-800">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-amber-100" style="font-family: Georgia, serif;">📋 Ultime Spese</h3>
-                    <button onclick="render()" class="btn-wood text-amber-100 px-4 py-2 rounded-xl">🔄 Aggiorna</button>
+                    <h3 class="text-xl font-bold text-amber-100" style="font-family: Georgia, serif;">📋 Ultime Spese</h3>
+                    <button onclick="render()" class="btn-wood text-amber-100 px-4 py-2 rounded-xl text-sm">🔄</button>
                 </div>
         `;
         
@@ -255,14 +331,14 @@
             ultime.forEach(s => {
                 const dt = new Date(s.timestamp);
                 html += `
-                    <div class="bg-amber-900/30 p-4 rounded-xl flex justify-between items-center hover:bg-amber-900/50 transition-all border border-amber-800/50">
+                    <div class="bg-amber-900/30 p-4 rounded-xl flex justify-between items-center border border-amber-800/50">
                         <div class="text-amber-100">
-                            <div class="font-bold text-lg">${s.categoria_spesa}</div>
-                            <div class="text-sm opacity-75">${dt.toLocaleDateString('it-IT')} - ${dt.toLocaleTimeString('it-IT')}</div>
+                            <div class="font-bold">${s.categoria_spesa}</div>
+                            <div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')} ${dt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</div>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <div class="text-2xl font-black text-red-400">-€${parseFloat(s.importo).toFixed(2)}</div>
-                            <button onclick="deleteSpesa(${s.id})" class="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/20 rounded-lg transition-all">🗑️</button>
+                        <div class="flex items-center gap-2">
+                            <div class="text-xl font-black text-red-400">-€${parseFloat(s.importo).toFixed(2)}</div>
+                            <button onclick="deleteSpesa(${s.id})" class="text-red-400 p-2">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -283,79 +359,64 @@
                     ${['oggi', 'settimana', 'mese'].map(p => `
                         <button onclick="changePeriodo('${p}')"
                                 class="px-3 py-2 rounded-xl font-semibold transition-all text-sm ${
-                                    state.periodo === p ? 'btn-wood-active shadow-lg' : 'btn-wood-inactive hover:bg-amber-800/50'
+                                    state.periodo === p ? 'btn-wood-active shadow-lg' : 'btn-wood-inactive'
                                 }">
                             ${p === 'oggi' ? '📅 Oggi' : p === 'settimana' ? '📆 Sett.' : '🗓️ Mese'}
                         </button>
                     `).join('')}
                 </div>
                 
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="stat-card-green p-8 rounded-3xl shadow-2xl text-amber-100 border-4 border-green-900">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-semibold">Incasso Totale</h3>
-                            <span class="text-3xl">📈</span>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="stat-card-green p-6 rounded-2xl shadow-xl text-amber-100 border-4 border-green-900">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold">Incasso</h3>
+                            <span class="text-2xl">📈</span>
                         </div>
-                        <div class="text-5xl font-black">€${stats.totaleIncasso.toFixed(2)}</div>
-                        <div class="text-green-200 opacity-75 mt-2">${state.periodo === 'oggi' ? 'Oggi' : state.periodo === 'settimana' ? 'Ultimi 7 giorni' : 'Ultimi 30 giorni'}</div>
+                        <div class="text-4xl font-black">€${stats.totaleIncasso.toFixed(2)}</div>
                     </div>
                     
-                    <div class="stat-card-red p-8 rounded-3xl shadow-2xl text-amber-100 border-4 border-red-900">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-semibold">Spese Totali</h3>
-                            <span class="text-3xl">📉</span>
+                    <div class="stat-card-red p-6 rounded-2xl shadow-xl text-amber-100 border-4 border-red-900">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold">Spese</h3>
+                            <span class="text-2xl">📉</span>
                         </div>
-                        <div class="text-5xl font-black">€${stats.totaleSpese.toFixed(2)}</div>
-                        <div class="text-red-200 opacity-75 mt-2">${state.periodo === 'oggi' ? 'Oggi' : state.periodo === 'settimana' ? 'Ultimi 7 giorni' : 'Ultimi 30 giorni'}</div>
+                        <div class="text-4xl font-black">€${stats.totaleSpese.toFixed(2)}</div>
                     </div>
                     
-                    <div class="${stats.profittoNetto >= 0 ? 'stat-card-blue border-blue-900' : 'stat-card-orange border-orange-900'} p-8 rounded-3xl shadow-2xl text-amber-100 border-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-semibold">Profitto Netto</h3>
-                            <span class="text-3xl">💰</span>
+                    <div class="${stats.profittoNetto >= 0 ? 'stat-card-blue border-blue-900' : 'stat-card-orange border-orange-900'} p-6 rounded-2xl shadow-xl text-amber-100 border-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold">Profitto Netto</h3>
+                            <span class="text-2xl">💰</span>
                         </div>
-                        <div class="text-5xl font-black">€${stats.profittoNetto.toFixed(2)}</div>
-                        <div class="text-blue-200 opacity-75 mt-2">${stats.totaleVendite} vendite</div>
+                        <div class="text-4xl font-black">€${stats.profittoNetto.toFixed(2)}</div>
+                        <div class="text-sm opacity-75">${stats.totaleVendite} vendite</div>
                     </div>
                 </div>
                 
                 <div class="card-felt p-6 rounded-3xl border-4 border-amber-800">
-                    <h3 class="text-2xl font-bold text-amber-100 mb-6" style="font-family: Georgia, serif;">📊 Per Categoria</h3>
-                    <div class="grid md:grid-cols-3 gap-4">
-                        ${Object.entries(stats.perCategoria || {}).map(([cat, data]) => `
-                            <div class="bg-amber-800/50 p-6 rounded-2xl text-amber-100 border-2 border-amber-700">
-                                <div class="text-lg font-semibold mb-2">${cat}</div>
-                                <div class="text-3xl font-black mb-1">€${data.incasso.toFixed(2)}</div>
-                                <div class="text-sm opacity-75">${data.vendite} vendite</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="card-felt p-6 rounded-3xl border-4 border-amber-800">
-                    <h3 class="text-2xl font-bold text-amber-100 mb-6" style="font-family: Georgia, serif;">🏆 Top 5 Prodotti</h3>
-                    <div class="space-y-3">
+                    <h3 class="text-xl font-bold text-amber-100 mb-4" style="font-family: Georgia, serif;">🏆 Top 5</h3>
+                    <div class="space-y-2">
                         ${stats.prodottiPiuVenduti && stats.prodottiPiuVenduti.length > 0 ? 
                             stats.prodottiPiuVenduti.map((prod, idx) => `
-                                <div class="bg-amber-900/30 p-4 rounded-xl flex justify-between items-center border border-amber-800/50">
-                                    <div class="flex items-center gap-4">
-                                        <div class="text-3xl font-black text-yellow-400">#${idx + 1}</div>
+                                <div class="bg-amber-900/30 p-3 rounded-xl flex justify-between items-center border border-amber-800/50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="text-2xl font-black text-yellow-400">#${idx + 1}</div>
                                         <div class="text-amber-100">
-                                            <div class="font-bold text-lg">${prod.nome}</div>
-                                            <div class="text-sm opacity-75">${prod.quantita} vendite</div>
+                                            <div class="font-bold">${prod.nome}</div>
+                                            <div class="text-xs opacity-75">${prod.quantita} vendite</div>
                                         </div>
                                     </div>
-                                    <div class="text-2xl font-black text-amber-100">€${prod.incasso.toFixed(2)}</div>
+                                    <div class="text-xl font-black text-amber-100">€${prod.incasso.toFixed(2)}</div>
                                 </div>
                             `).join('') : 
-                            '<div class="text-amber-200 opacity-50 text-center py-4">Nessuna vendita nel periodo</div>'
+                            '<div class="text-amber-200 opacity-50 text-center py-4">Nessuna vendita</div>'
                         }
                     </div>
                 </div>
                 
                 <button onclick="openResetModal()" 
-                        class="w-full btn-wood text-amber-100 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3 border-2 border-red-700">
-                    🗑️ 🔒 Reset Periodo (Password Richiesta)
+                        class="w-full btn-wood text-amber-100 py-4 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2 border-2 border-red-700">
+                    🗑️ 🔒 Reset Periodo
                 </button>
             </div>
         `;
@@ -370,52 +431,49 @@
         const tutteTransazioni = [
             ...vendite.map(v => ({...v, tipo: 'vendita', prezzo: parseFloat(v.prezzo)})),
             ...spese.map(s => ({...s, tipo: 'spesa', nome_prodotto: s.categoria_spesa, prezzo: -parseFloat(s.importo)}))
-        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 100);
+        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 50);
 
         let html = `
             <div class="space-y-4">
                 <a href="api/export.php" 
-                   class="w-full bg-green-800 hover:bg-green-700 text-amber-100 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all flex items-center justify-center gap-3 border-2 border-green-600"
+                   class="w-full bg-green-800 text-amber-100 py-4 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2 border-2 border-green-600"
                    style="display: flex; text-decoration: none;">
-                    📊 Scarica Backup CSV/Excel
+                    📊 Scarica Backup
                 </a>
                 
-                <label class="w-full bg-amber-900/50 hover:bg-amber-900/70 text-amber-200 hover:text-amber-100 py-2 rounded-xl text-sm transition-all flex items-center justify-center gap-2 border border-amber-700 cursor-pointer">
-                    📥 Importa Dati da Backup
+                <label class="w-full bg-amber-900/50 text-amber-200 py-3 rounded-xl text-sm flex items-center justify-center gap-2 border border-amber-700 cursor-pointer">
+                    📥 Importa Backup
                     <input type="file" accept=".csv" onchange="handleImport(event)" style="display: none;">
                 </label>
                 
-                <div class="card-felt p-6 rounded-3xl border-4 border-amber-800">
-                    <h3 class="text-2xl font-bold text-amber-100 mb-6" style="font-family: Georgia, serif;">📋 Ultime 100 Transazioni</h3>
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <h3 class="text-xl font-bold text-amber-100 mb-4" style="font-family: Georgia, serif;">📋 Ultime Transazioni</h3>
         `;
         
         if (tutteTransazioni.length === 0) {
-            html += '<div class="text-amber-200 opacity-75 text-center py-8">Nessuna transazione registrata</div>';
+            html += '<div class="text-amber-200 opacity-75 text-center py-8">Nessuna transazione</div>';
         } else {
-            html += '<div class="space-y-2 max-h-96 overflow-y-auto hide-scrollbar" style="max-height: 600px;">';
+            html += '<div class="space-y-2 max-h-96 overflow-y-auto hide-scrollbar">';
             tutteTransazioni.forEach(t => {
                 const dt = new Date(t.timestamp);
                 const isSpesa = t.tipo === 'spesa';
                 
                 html += `
-                    <div class="${isSpesa ? 'bg-red-900/30 border-red-700/50' : 'bg-amber-900/30 border-amber-700/50'} p-4 rounded-xl flex justify-between items-center hover:bg-amber-900/50 transition-all border">
+                    <div class="${isSpesa ? 'bg-red-900/30 border-red-700/50' : 'bg-amber-900/30 border-amber-700/50'} p-3 rounded-xl flex justify-between items-center border">
                         <div class="${isSpesa ? 'text-red-200' : 'text-amber-100'}">
                             <div class="flex items-center gap-2">
-                                <span class="text-2xl">${isSpesa ? '💸' : '💰'}</span>
+                                <span class="text-xl">${isSpesa ? '💸' : '💰'}</span>
                                 <div>
-                                    <div class="font-bold text-lg">${t.nome_prodotto}</div>
-                                    <div class="text-sm opacity-75">${dt.toLocaleDateString('it-IT')} - ${dt.toLocaleTimeString('it-IT')}</div>
+                                    <div class="font-bold">${t.nome_prodotto}</div>
+                                    <div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')} ${dt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <div class="text-2xl font-black ${isSpesa ? 'text-red-400' : 'text-green-400'}">
+                        <div class="flex items-center gap-2">
+                            <div class="text-xl font-black ${isSpesa ? 'text-red-400' : 'text-green-400'}">
                                 ${isSpesa ? '-' : '+'}€${Math.abs(t.prezzo).toFixed(2)}
                             </div>
-                            <button onclick="${isSpesa ? `deleteSpesa(${t.id})` : `deleteVendita(${t.id})`}" 
-                                    class="text-red-400 hover:text-red-300 p-2 hover:bg-red-500/20 rounded-lg transition-all">
-                                🗑️
-                            </button>
+                            <button onclick="${isSpesa ? `deleteSpesa(${t.id})` : `deleteVendita(${t.id})`}" class="text-red-400 p-1">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -431,23 +489,23 @@
         const navItems = [
             { id: 'vendita', icon: '🛒', label: 'Vendita' },
             { id: 'spese', icon: '💸', label: 'Spese' },
-            { id: 'statistiche', icon: '📊', label: 'Statistiche' },
+            { id: 'statistiche', icon: '📊', label: 'Stats' },
             { id: 'storico', icon: '📋', label: 'Storico' }
         ];
         
         return `
-            <div class="nav-wood fixed bottom-0 left-0 right-0 z-40 pb-safe">
-                <div class="max-w-7xl mx-auto px-2 py-3">
+            <div class="nav-wood fixed bottom-0 left-0 right-0 z-40 safe-bottom">
+                <div class="max-w-7xl mx-auto px-2 py-2">
                     <div class="grid grid-cols-4 gap-2">
                         ${navItems.map(item => `
                             <button onclick="changeView('${item.id}')"
                                     class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold transition-all ${
                                         state.view === item.id 
                                         ? 'btn-wood-active shadow-lg' 
-                                        : 'btn-wood-inactive hover:bg-amber-800/50'
+                                        : 'btn-wood-inactive'
                                     }">
                                 <span class="text-2xl mb-1">${item.icon}</span>
-                                <span class="text-xs capitalize">${item.label}</span>
+                                <span class="text-xs">${item.label}</span>
                             </button>
                         `).join('')}
                     </div>
@@ -458,44 +516,38 @@
 
     function renderKeypad() {
         return `
-            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div class="card-felt rounded-3xl shadow-2xl max-w-md w-full p-6 border-4 border-amber-800">
-                    <div class="text-center mb-6">
-                        <div class="text-5xl mb-3">${state.selectedProduct?.icona || '💰'}</div>
-                        <h3 class="text-2xl font-bold text-amber-100 mb-2">${state.selectedProduct?.nome || ''}</h3>
-                        <p class="text-amber-200 opacity-75">Inserisci l'importo</p>
+            <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                <div class="card-felt rounded-3xl shadow-2xl w-full max-w-sm p-4 border-4 border-amber-800">
+                    <div class="text-center mb-4">
+                        <div class="text-4xl mb-2">${state.selectedProduct?.icona || '💰'}</div>
+                        <h3 class="text-xl font-bold text-amber-100">${state.selectedProduct?.nome || ''}</h3>
                     </div>
                     
-                    <div class="bg-amber-900/50 rounded-2xl p-6 mb-6 border-2 border-amber-700">
+                    <div class="bg-amber-900/50 rounded-xl p-4 mb-4 border-2 border-amber-700">
                         <div class="text-center">
-                            <div class="text-5xl font-black text-amber-100">€${state.customPrice || '0'}</div>
+                            <div class="text-4xl font-black text-amber-100">€${state.customPrice || '0'}</div>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="grid grid-cols-3 gap-2 mb-4">
                         ${['1','2','3','4','5','6','7','8','9',',','0','←'].map(key => `
                             <button onclick="handleKeypadPress('${key}')"
-                                    class="btn-wood text-amber-100 text-3xl font-bold p-6 rounded-2xl shadow-lg active:scale-95 transform transition-all">
+                                    class="btn-wood text-amber-100 text-2xl font-bold p-4 rounded-xl active:scale-95">
                                 ${key}
                             </button>
                         `).join('')}
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-2">
                         <button onclick="closeKeypad()" 
-                                class="bg-red-800 hover:bg-red-700 text-amber-100 font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all text-lg border-2 border-red-600">
+                                class="bg-red-800 text-amber-100 font-bold py-3 rounded-xl active:scale-95 border-2 border-red-600">
                             ❌ Annulla
                         </button>
                         <button onclick="confirmKeypad()" 
-                                class="bg-green-800 hover:bg-green-700 text-amber-100 font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all text-lg border-2 border-green-600">
-                            ✅ Conferma
+                                class="bg-green-800 text-amber-100 font-bold py-3 rounded-xl active:scale-95 border-2 border-green-600">
+                            ✅ OK
                         </button>
                     </div>
-                    
-                    <button onclick="clearKeypad()" 
-                            class="w-full mt-3 bg-amber-700 hover:bg-amber-600 text-amber-100 font-bold py-3 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all border-2 border-amber-600">
-                        🗑️ Cancella Tutto
-                    </button>
                 </div>
             </div>
         `;
@@ -503,34 +555,31 @@
 
     function renderResetModal() {
         return `
-            <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div style="background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);" class="rounded-3xl shadow-2xl max-w-md w-full p-8 border-4 border-red-500">
-                    <div class="text-center mb-6">
-                        <div class="text-6xl mb-4">⚠️</div>
-                        <h3 class="text-3xl font-bold text-white mb-2">Reset Periodo</h3>
-                        <p class="text-red-200">Elimina tutti i dati del periodo: <span class="font-bold">${state.periodo}</span></p>
+            <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                <div style="background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);" class="rounded-3xl shadow-2xl w-full max-w-sm p-6 border-4 border-red-500">
+                    <div class="text-center mb-4">
+                        <div class="text-5xl mb-2">⚠️</div>
+                        <h3 class="text-2xl font-bold text-white">Reset ${state.periodo}</h3>
                     </div>
                     
-                    <div style="background: rgba(255,255,255,0.1);" class="rounded-2xl p-6 mb-6 border-2 border-red-400">
-                        <label class="block text-white font-semibold mb-3 text-center">Inserisci Password</label>
+                    <div style="background: rgba(255,255,255,0.1);" class="rounded-xl p-4 mb-4 border-2 border-red-400">
                         <input type="password" 
                                id="resetPasswordInput"
                                value="${state.resetPassword}"
                                oninput="updateResetPassword(this.value)"
                                placeholder="Password" 
                                maxlength="4"
-                               class="w-full px-6 py-4 text-white text-center text-2xl font-bold rounded-xl border-2 border-white/30 focus:border-white focus:outline-none"
+                               class="w-full px-4 py-3 text-white text-center text-xl font-bold rounded-xl border-2 border-white/30 focus:outline-none"
                                style="background: rgba(255,255,255,0.2);">
-                        <p class="text-xs text-red-200 mt-3 text-center">⚠️ Questa azione è irreversibile!</p>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-2">
                         <button onclick="closeResetModal()" 
-                                class="bg-stone-600 hover:bg-stone-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all">
+                                class="bg-stone-600 text-white font-bold py-3 rounded-xl active:scale-95">
                             Annulla
                         </button>
                         <button onclick="confirmReset()" 
-                                class="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-2xl shadow-lg active:scale-95 transform transition-all">
+                                class="bg-red-600 text-white font-bold py-3 rounded-xl active:scale-95">
                             🗑️ Reset
                         </button>
                     </div>
@@ -540,14 +589,12 @@
     }
 
     // ==================== EVENT HANDLERS ====================
-    function attachEventListeners() {
-        // Event listeners sono gestiti inline
-    }
+    function attachEventListeners() {}
 
     function changeView(view) {
         state.view = view;
         render();
-        window.scrollTo(0, 0);
+        document.getElementById('app').scrollTop = 0;
     }
 
     function changePeriodo(periodo) {
@@ -603,11 +650,6 @@
         render();
     }
 
-    function clearKeypad() {
-        state.customPrice = '';
-        render();
-    }
-
     async function confirmKeypad() {
         const prezzo = parseFloat(state.customPrice.replace(',', '.'));
         if (isNaN(prezzo) || prezzo <= 0) {
@@ -637,9 +679,9 @@
         
         const result = await API.addVendita(vendita);
         if (result.success) {
-            showFeedback(`✅ ${prodotto.nome} - €${prezzo.toFixed(2)}`);
+            showFeedback(`✅ ${prodotto.nome} €${prezzo.toFixed(2)}`);
         } else {
-            showFeedback('❌ Errore salvataggio');
+            showFeedback('❌ Errore');
         }
         render();
     }
@@ -653,22 +695,22 @@
         
         const result = await API.addSpesa(spesa);
         if (result.success) {
-            showFeedback(`✅ Spesa: ${categoria} - €${importo.toFixed(2)}`);
+            showFeedback(`✅ ${categoria} €${importo.toFixed(2)}`);
         } else {
-            showFeedback('❌ Errore salvataggio');
+            showFeedback('❌ Errore');
         }
         render();
     }
 
     async function deleteVendita(id) {
-        if (!confirm('Eliminare questa vendita?')) return;
+        if (!confirm('Eliminare?')) return;
         await API.deleteVendita(id);
         showFeedback('✅ Eliminata');
         render();
     }
 
     async function deleteSpesa(id) {
-        if (!confirm('Eliminare questa spesa?')) return;
+        if (!confirm('Eliminare?')) return;
         await API.deleteSpesa(id);
         showFeedback('✅ Eliminata');
         render();
@@ -696,16 +738,16 @@
             return;
         }
         
-        if (!confirm(`Eliminare TUTTI i dati del periodo "${state.periodo}"?`)) return;
+        if (!confirm(`Eliminare dati "${state.periodo}"?`)) return;
         
         const result = await API.resetPeriodo(state.periodo, state.resetPassword);
         
         if (result.success) {
             state.showResetModal = false;
             state.resetPassword = '';
-            showFeedback('✅ Reset completato!');
+            showFeedback('✅ Reset OK!');
         } else {
-            showFeedback('❌ ' + (result.error || 'Errore reset'));
+            showFeedback('❌ Errore');
         }
         render();
     }
@@ -720,20 +762,17 @@
         formData.append('file', file);
         
         try {
-            const res = await fetch('api/import.php', {
-                method: 'POST',
-                body: formData
-            });
+            const res = await fetch('api/import.php', {method: 'POST', body: formData});
             const result = await res.json();
             
             if (result.success) {
-                showFeedback(`✅ Importati: ${result.vendite_importate} vendite, ${result.spese_importate} spese`);
+                showFeedback(`✅ Importati: ${result.vendite_importate}V ${result.spese_importate}S`);
                 setTimeout(() => render(), 1500);
             } else {
-                showFeedback('❌ ' + (result.error || 'Errore import'));
+                showFeedback('❌ Errore import');
             }
-        } catch (e) {
-            showFeedback('❌ Errore caricamento');
+        } catch(e) {
+            showFeedback('❌ Errore');
         }
         
         event.target.value = '';
