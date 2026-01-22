@@ -770,6 +770,123 @@
         render();
     }
     
+    // Importa Backup da Excel
+    async function handleImportBackup(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        showFeedback('📂 Lettura file...');
+        
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            let venditeImportate = 0;
+            let speseImportate = 0;
+            
+            // Leggi foglio VENDITE
+            if (workbook.SheetNames.includes('VENDITE')) {
+                const sheet = workbook.Sheets['VENDITE'];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                
+                // Salta intestazione, processa righe
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.length < 5) continue;
+                    
+                    const [data, ora, prodotto, categoria, importo] = row;
+                    if (!prodotto || !importo || prodotto === 'Totale Vendite:') continue;
+                    
+                    // Converti data e ora in timestamp
+                    let timestamp;
+                    try {
+                        if (typeof data === 'number') {
+                            // Data Excel seriale
+                            const excelDate = new Date((data - 25569) * 86400 * 1000);
+                            timestamp = excelDate.toISOString();
+                        } else if (typeof data === 'string' && data.includes('/')) {
+                            const [giorno, mese, anno] = data.split('/');
+                            const [ore, minuti, secondi] = (ora || '12:00:00').toString().split(':');
+                            timestamp = new Date(anno, mese - 1, giorno, ore || 12, minuti || 0, secondi || 0).toISOString();
+                        } else {
+                            timestamp = new Date().toISOString();
+                        }
+                    } catch (e) {
+                        timestamp = new Date().toISOString();
+                    }
+                    
+                    // Trova prodotto nel listino
+                    const prod = state.prodotti.find(p => p.nome === prodotto);
+                    
+                    const vendita = {
+                        prodotto_id: prod?.id || 0,
+                        nome_prodotto: prodotto,
+                        prezzo: parseFloat(importo) || 0,
+                        categoria: categoria || 'PERSONALIZZATE',
+                        timestamp: timestamp
+                    };
+                    
+                    const r = await API.addVendita(vendita);
+                    if (r.success) venditeImportate++;
+                }
+            }
+            
+            // Leggi foglio SPESE
+            if (workbook.SheetNames.includes('SPESE')) {
+                const sheet = workbook.Sheets['SPESE'];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.length < 5) continue;
+                    
+                    const [data, ora, categoriaSpesa, , importo] = row;
+                    if (!categoriaSpesa || !importo || categoriaSpesa === 'Totale Spese:') continue;
+                    
+                    let timestamp;
+                    try {
+                        if (typeof data === 'number') {
+                            const excelDate = new Date((data - 25569) * 86400 * 1000);
+                            timestamp = excelDate.toISOString();
+                        } else if (typeof data === 'string' && data.includes('/')) {
+                            const [giorno, mese, anno] = data.split('/');
+                            const [ore, minuti, secondi] = (ora || '12:00:00').toString().split(':');
+                            timestamp = new Date(anno, mese - 1, giorno, ore || 12, minuti || 0, secondi || 0).toISOString();
+                        } else {
+                            timestamp = new Date().toISOString();
+                        }
+                    } catch (e) {
+                        timestamp = new Date().toISOString();
+                    }
+                    
+                    const spesa = {
+                        categoria_spesa: categoriaSpesa,
+                        importo: parseFloat(importo) || 0,
+                        note: '',
+                        timestamp: timestamp
+                    };
+                    
+                    const r = await API.addSpesa(spesa);
+                    if (r.success) speseImportate++;
+                }
+            }
+            
+            // Reset input file
+            event.target.value = '';
+            
+            // Mostra risultato
+            alert(`✅ IMPORTAZIONE COMPLETATA!\n\n💰 Vendite importate: ${venditeImportate}\n💸 Spese importate: ${speseImportate}`);
+            showFeedback(`✅ Importate ${venditeImportate}V ${speseImportate}S`);
+            render();
+            
+        } catch (e) {
+            console.error('Errore importazione:', e);
+            alert(`❌ ERRORE IMPORTAZIONE\n\n${e.message}\n\nAssicurati che il file sia un backup Excel valido.`);
+            showFeedback('❌ Errore importazione');
+            event.target.value = '';
+        }
+    }
+    
     function showFeedback(msg) {
         state.feedback = msg; render();
         setTimeout(() => { state.feedback = ''; render(); }, 2500);
