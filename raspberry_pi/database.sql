@@ -9,7 +9,7 @@ USE proloco_bar;
 -- Tabella Prodotti
 CREATE TABLE IF NOT EXISTS prodotti (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(100) NOT NULL,
+    nome VARCHAR(100) NOT NULL UNIQUE,
     prezzo DECIMAL(10,2) DEFAULT 0.00,
     categoria ENUM('CAFFETTERIA', 'BEVANDE', 'GELATI', 'PERSONALIZZATE') NOT NULL,
     icona VARCHAR(10) DEFAULT '📦',
