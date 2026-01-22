@@ -614,39 +614,6 @@ const StatisticheView = ({ periodo, setPeriodo, openResetModal }) => {
 const StoricoView = ({ showFeedback, refresh }) => {
   const [transazioni, setTransazioni] = useState([]);
   
-  const getGiorniDaUltimoReport = () => {
-    const ultimoReport = localStorage.getItem('ultimoResocontoInviato');
-    if (!ultimoReport) return Infinity;
-    
-    const dataUltimo = new Date(ultimoReport);
-    const now = new Date();
-    const diffMs = now - dataUltimo;
-    const diffGiorni = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    return diffGiorni;
-  };
-  
-  const getDataUltimoReport = () => {
-    const ultimoReport = localStorage.getItem('ultimoResocontoInviato');
-    if (!ultimoReport) return 'Mai inviato';
-    
-    const data = new Date(ultimoReport);
-    return data.toLocaleDateString('it-IT', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-  
-  const isReportPendente = () => {
-    if (!CONFIG.invio_resoconto_automatico) return false;
-    const giorniPassati = getGiorniDaUltimoReport();
-    return giorniPassati >= CONFIG.giorni_minimo_tra_report;
-  };
-  
   useEffect(() => {
     const vendite = db.getVendite().slice(0, 100);
     const spese = db.getSpese().slice(0, 100);
@@ -680,16 +647,56 @@ const StoricoView = ({ showFeedback, refresh }) => {
     }
   };
   
-  const exportExcel = () => {
-    showFeedback('📊 Export Excel in preparazione...');
-    // In una vera implementazione qui useremmo SheetJS
-    setTimeout(() => {
-      showFeedback('✅ Excel pronto! (Demo)');
-    }, 1000);
-  };
-  
-  const reportPendente = isReportPendente();
-  const giorniPassati = getGiorniDaUltimoReport();
+  return (
+    <div className="space-y-4" data-testid="storico-view">
+      <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
+        <h3 className="text-xl font-bold text-amber-100 mb-4" style={{fontFamily: "'Georgia', serif"}}>📋 Ultime 100 Transazioni</h3>
+        
+        {transazioni.length === 0 ? (
+          <div className="text-amber-200/70 text-center py-8">Nessuna transazione registrata</div>
+        ) : (
+          <div className="space-y-2 max-h-[500px] overflow-y-auto hide-scrollbar">
+            {transazioni.map(t => {
+              const dt = new Date(t.timestamp);
+              const isSpesa = t.tipo === 'spesa';
+              
+              return (
+                <div 
+                  key={t.id}
+                  className={`${isSpesa ? 'bg-red-900/30 border-red-700/50' : 'bg-amber-900/30 border-amber-700/50'} p-3 rounded-xl flex justify-between items-center hover:bg-amber-900/50 transition-all border`}
+                >
+                  <div className={isSpesa ? 'text-red-200' : 'text-amber-100'}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{isSpesa ? '💸' : '💰'}</span>
+                      <div>
+                        <div className="font-bold text-sm">{t.nome_prodotto}</div>
+                        <div className="text-xs opacity-75">
+                          {dt.toLocaleDateString('it-IT')} - {dt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className={`text-lg font-black ${isSpesa ? 'text-red-400' : 'text-green-400'}`}>
+                      {isSpesa ? '-' : '+'}€{Math.abs(t.prezzo).toFixed(2)}
+                    </div>
+                    <button 
+                      onClick={() => handleDelete(t.id, t.tipo)}
+                      data-testid={`delete-transazione-${t.id}`}
+                      className="text-red-400 hover:text-red-300 p-1 hover:bg-red-500/20 rounded-lg transition-all"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
   
   return (
     <div className="space-y-4" data-testid="storico-view">
