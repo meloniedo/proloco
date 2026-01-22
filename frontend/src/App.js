@@ -162,8 +162,8 @@ const Header = ({ reportPendente, giorniPassati }) => {
 const Feedback = ({ message }) => {
   if (!message) return null;
   return (
-    <div className="fixed top-32 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
-      <div className="bg-amber-100 text-amber-900 px-8 py-4 rounded-2xl shadow-2xl text-xl font-bold border-4 border-amber-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+      <div className="bg-amber-100 text-amber-900 px-12 py-8 rounded-3xl shadow-2xl text-3xl font-black border-4 border-amber-800 animate-bounce text-center max-w-xs">
         {message}
       </div>
     </div>
@@ -172,33 +172,30 @@ const Feedback = ({ message }) => {
 
 const Navigation = ({ view, setView }) => {
   const navItems = [
-    { id: 'vendita', icon: '🛒', label: 'Vendita' },
-    { id: 'spese', icon: '💸', label: 'Spese' },
-    { id: 'statistiche', icon: '📊', label: 'Stats' },
-    { id: 'storico', icon: '📋', label: 'Storico' },
-    { id: 'impostazioni', icon: '⚙️', label: 'Imposta.' }
+    { id: 'vendita', icon: '🛒' },
+    { id: 'spese', icon: '💸' },
+    { id: 'statistiche', icon: '📊' },
+    { id: 'storico', icon: '📋' },
+    { id: 'impostazioni', icon: '⚙️' }
   ];
   
   return (
-    <div className="nav-wood fixed bottom-0 left-0 right-0 z-40 pb-safe">
-      <div className="max-w-7xl mx-auto px-2 py-2">
-        <div className="grid grid-cols-5 gap-1">
-          {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setView(item.id)}
-              data-testid={`nav-${item.id}`}
-              className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl font-semibold transition-all ${
-                view === item.id 
-                  ? 'btn-wood-active shadow-lg' 
-                  : 'btn-wood-inactive hover:bg-amber-800/50'
-              }`}
-            >
-              <span className="text-xl mb-1">{item.icon}</span>
-              <span className="text-xs capitalize">{item.label}</span>
-            </button>
-          ))}
-        </div>
+    <div className="nav-wood fixed bottom-0 left-0 right-0 z-40" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}>
+      <div className="flex justify-around items-center py-2 px-2">
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            onClick={() => setView(item.id)}
+            data-testid={`nav-${item.id}`}
+            className={`flex items-center justify-center w-14 h-14 rounded-full transition-all ${
+              view === item.id 
+                ? 'btn-wood-active shadow-lg scale-110' 
+                : 'btn-wood-inactive hover:bg-amber-800/50'
+            }`}
+          >
+            <span className="text-2xl">{item.icon}</span>
+          </button>
+        ))}
       </div>
     </div>
   );

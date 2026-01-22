@@ -202,8 +202,8 @@
     function renderFeedback() {
         if (!state.feedback) return '';
         return `
-            <div class="fixed top-24 left-1/2 z-50 animate-bounce" style="transform: translateX(-50%);">
-                <div class="bg-amber-100 text-amber-900 px-6 py-3 rounded-2xl shadow-2xl text-lg font-bold border-4 border-amber-800">
+            <div class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+                <div class="bg-amber-100 text-amber-900 px-10 py-6 rounded-3xl shadow-2xl text-2xl font-black border-4 border-amber-800 animate-bounce text-center" style="max-width: 280px;">
                     ${state.feedback}
                 </div>
             </div>
@@ -480,9 +480,9 @@
         ];
         return `
             <div class="nav-wood fixed bottom-0 left-0 right-0 z-40" style="padding-bottom: env(safe-area-inset-bottom);">
-                <div class="flex justify-around items-center py-2 px-2">
+                <div class="flex flex-row justify-around items-center py-2 px-2">
                     ${items.map(i => `
-                        <button onclick="changeView('${i.id}')" class="flex items-center justify-center w-12 h-12 rounded-full transition-all ${state.view === i.id ? 'btn-wood-active' : 'btn-wood-inactive'}">
+                        <button onclick="changeView('${i.id}')" class="flex items-center justify-center w-14 h-14 rounded-full transition-all ${state.view === i.id ? 'btn-wood-active scale-110' : 'btn-wood-inactive'}">
                             <span class="text-2xl">${i.icon}</span>
                         </button>
                     `).join('')}
