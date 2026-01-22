@@ -11,8 +11,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Bar Manager">
     <meta name="application-name" content="Bar Manager">
-    <meta name="msapplication-TileColor" content="#8B4513">
-    <meta name="msapplication-tap-highlight" content="no">
     <meta name="format-detection" content="telephone=no">
     
     <!-- Manifest PWA -->
@@ -21,14 +19,6 @@
     <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" href="icons/icon-152.png">
     <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-152.png">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-72.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72.png">
-    
-    <!-- Apple Splash Screens -->
-    <link rel="apple-touch-startup-image" href="icons/icon-512.png">
     
     <title>Proloco Santa Bianca - Bar Manager</title>
     
@@ -36,37 +26,43 @@
     <link rel="stylesheet" href="css/style.css">
     
     <style>
-        /* Font fallback senza Google Fonts (offline) */
         body { 
             font-family: Georgia, 'Times New Roman', serif; 
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
         }
-        
-        /* Supporto notch iPhone */
         .safe-top { padding-top: env(safe-area-inset-top); }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+        html, body { height: 100%; overflow: hidden; }
+        #app { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        html { height: -webkit-fill-available; }
+        body { min-height: 100vh; min-height: -webkit-fill-available; }
         
-        /* Fullscreen mode */
-        html, body {
-            height: 100%;
-            overflow: hidden;
+        /* Modal input styling */
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #92400e;
+            background: rgba(255,255,255,0.9);
+            color: #78350f;
+            font-size: 16px;
+            margin-bottom: 12px;
         }
-        
-        #app {
-            height: 100%;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+        .modal-input:focus {
+            outline: none;
+            border-color: #b45309;
         }
-        
-        /* Nascondi barra indirizzi su scroll */
-        html {
-            height: -webkit-fill-available;
-        }
-        body {
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
+        .modal-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #92400e;
+            background: rgba(255,255,255,0.9);
+            color: #78350f;
+            font-size: 16px;
+            margin-bottom: 12px;
         }
     </style>
 </head>
@@ -75,12 +71,10 @@
     <div id="app"></div>
 
     <script>
-    // ==================== REGISTRAZIONE SERVICE WORKER ====================
+    // ==================== SERVICE WORKER ====================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('SW registrato'))
-                .catch(err => console.log('SW errore:', err));
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW:', err));
         });
     }
 
@@ -95,94 +89,87 @@
             {nome: "Articoli S. Mercato", icona: "🛒", colore: "bg-green-700"},
             {nome: "Rimborso Servizio", icona: "💼", colore: "bg-stone-700"},
             {nome: "Spesa Generica", icona: "📋", colore: "bg-stone-600"}
-        ]
+        ],
+        categorie_prodotti: ['CAFFETTERIA', 'BEVANDE', 'GELATI', 'PERSONALIZZATE'],
+        icone_disponibili: ['☕', '🍷', '🥃', '🥤', '💧', '🍦', '🎱', '➕', '🍺', '🧃', '🍵', '🥛', '🍰', '🍪', '🥜', '📦']
     };
 
-    // ==================== API FUNCTIONS ====================
+    // ==================== API ====================
     const API = {
         async getProdotti() {
-            try {
-                const res = await fetch('api/prodotti.php');
-                return res.json();
-            } catch(e) {
-                console.error('Errore getProdotti:', e);
-                return [];
-            }
+            try { const r = await fetch('api/prodotti.php'); return r.json(); } catch(e) { return []; }
         },
         async getVendite() {
-            try {
-                const res = await fetch('api/vendite.php');
-                return res.json();
-            } catch(e) {
-                return [];
-            }
+            try { const r = await fetch('api/vendite.php'); return r.json(); } catch(e) { return []; }
         },
         async getSpese() {
-            try {
-                const res = await fetch('api/spese.php');
-                return res.json();
-            } catch(e) {
-                return [];
-            }
+            try { const r = await fetch('api/spese.php'); return r.json(); } catch(e) { return []; }
         },
         async getStatistiche(periodo = 'oggi') {
-            try {
-                const res = await fetch(`api/statistiche.php?periodo=${periodo}`);
-                return res.json();
-            } catch(e) {
-                return {totaleVendite: 0, totaleIncasso: 0, totaleSpese: 0, profittoNetto: 0, perCategoria: {}, prodottiPiuVenduti: []};
-            }
+            try { const r = await fetch(`api/statistiche.php?periodo=${periodo}`); return r.json(); } 
+            catch(e) { return {totaleVendite: 0, totaleIncasso: 0, totaleSpese: 0, profittoNetto: 0, perCategoria: {}, prodottiPiuVenduti: []}; }
         },
-        async addVendita(vendita) {
-            const res = await fetch('api/vendite.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(vendita)
-            });
-            return res.json();
+        async addVendita(v) {
+            const r = await fetch('api/vendite.php', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(v)});
+            return r.json();
         },
-        async addSpesa(spesa) {
-            const res = await fetch('api/spese.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(spesa)
-            });
-            return res.json();
+        async addSpesa(s) {
+            const r = await fetch('api/spese.php', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(s)});
+            return r.json();
         },
-        async deleteVendita(id) {
-            const res = await fetch(`api/vendite.php?id=${id}`, {method: 'DELETE'});
-            return res.json();
-        },
-        async deleteSpesa(id) {
-            const res = await fetch(`api/spese.php?id=${id}`, {method: 'DELETE'});
-            return res.json();
-        },
+        async deleteVendita(id) { const r = await fetch(`api/vendite.php?id=${id}`, {method: 'DELETE'}); return r.json(); },
+        async deleteSpesa(id) { const r = await fetch(`api/spese.php?id=${id}`, {method: 'DELETE'}); return r.json(); },
         async resetPeriodo(periodo, password) {
-            const res = await fetch('api/reset.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({periodo, password})
-            });
-            return res.json();
+            const r = await fetch('api/reset.php', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({periodo, password})});
+            return r.json();
+        },
+        // API Listino
+        async getListino() {
+            try { const r = await fetch('api/listino.php'); return r.json(); } catch(e) { return []; }
+        },
+        async addProdotto(p) {
+            const r = await fetch('api/listino.php', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p)});
+            return r.json();
+        },
+        async updateProdotto(p) {
+            const r = await fetch('api/listino.php', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(p)});
+            return r.json();
+        },
+        async deleteProdotto(id) { const r = await fetch(`api/listino.php?id=${id}`, {method: 'DELETE'}); return r.json(); },
+        // API USB Backup
+        async getUSBStatus() {
+            try { const r = await fetch('api/usb_backup.php?action=status'); return r.json(); } catch(e) { return {connected: false}; }
+        },
+        async doUSBBackup() {
+            const r = await fetch('api/usb_backup.php?action=backup');
+            return r.json();
+        },
+        async listUSBBackups() {
+            try { const r = await fetch('api/usb_backup.php?action=list'); return r.json(); } catch(e) { return {backups: []}; }
         }
     };
 
-    // ==================== APP STATE ====================
+    // ==================== STATE ====================
     const state = {
         view: 'vendita',
         periodo: 'oggi',
         prodotti: [],
         showKeypad: false,
         showResetModal: false,
+        showAddProductModal: false,
+        showEditProductModal: false,
+        editingProduct: null,
         selectedProduct: null,
         selectedSpesaCategoria: '',
         customPrice: '',
         keypadMode: 'vendita',
         resetPassword: '',
-        feedback: ''
+        feedback: '',
+        usbStatus: null,
+        newProduct: { nome: '', prezzo: '', categoria: 'CAFFETTERIA', icona: '📦' }
     };
 
-    // ==================== RENDERING ====================
+    // ==================== RENDER ====================
     async function render() {
         const app = document.getElementById('app');
         app.innerHTML = `
@@ -192,8 +179,9 @@
             ${renderNavigation()}
             ${state.showKeypad ? renderKeypad() : ''}
             ${state.showResetModal ? renderResetModal() : ''}
+            ${state.showAddProductModal ? renderAddProductModal() : ''}
+            ${state.showEditProductModal ? renderEditProductModal() : ''}
         `;
-        attachEventListeners();
     }
 
     function renderHeader() {
@@ -201,12 +189,10 @@
             <div class="header-wood sticky top-0 z-40 safe-top">
                 <div class="max-w-7xl mx-auto px-4 py-4">
                     <div class="flex items-center justify-center gap-3">
-                        <h1 class="text-2xl md:text-3xl font-bold text-amber-100 text-center drop-shadow-lg" style="font-family: Georgia, serif;">
+                        <h1 class="text-2xl font-bold text-amber-100 text-center drop-shadow-lg">
                             ☕ ${CONFIG.nome_bar}
                         </h1>
-                        <div class="relative group">
-                            <span class="inline-flex items-center justify-center w-4 h-4 bg-green-500 rounded-full"></span>
-                        </div>
+                        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
                     </div>
                 </div>
             </div>
@@ -216,8 +202,8 @@
     function renderFeedback() {
         if (!state.feedback) return '';
         return `
-            <div class="fixed top-32 left-1/2 z-50 animate-bounce" style="transform: translateX(-50%);">
-                <div class="bg-amber-100 text-amber-900 px-8 py-4 rounded-2xl shadow-2xl text-xl font-bold border-4 border-amber-800">
+            <div class="fixed top-24 left-1/2 z-50 animate-bounce" style="transform: translateX(-50%);">
+                <div class="bg-amber-100 text-amber-900 px-6 py-3 rounded-2xl shadow-2xl text-lg font-bold border-4 border-amber-800">
                     ${state.feedback}
                 </div>
             </div>
@@ -231,281 +217,250 @@
             case 'spese': content = await renderSpese(); break;
             case 'statistiche': content = await renderStatistiche(); break;
             case 'storico': content = await renderStorico(); break;
+            case 'impostazioni': content = await renderImpostazioni(); break;
         }
-        return `<div class="max-w-7xl mx-auto px-4 py-6 pb-28">${content}</div>`;
+        return `<div class="max-w-7xl mx-auto px-4 py-4 pb-28">${content}</div>`;
     }
 
     async function renderVendita() {
-        if (state.prodotti.length === 0) {
-            state.prodotti = await API.getProdotti();
-        }
+        if (state.prodotti.length === 0) state.prodotti = await API.getProdotti();
         
         const grouped = {};
-        state.prodotti.forEach(p => {
+        state.prodotti.filter(p => p.attivo != 0).forEach(p => {
             if (!grouped[p.categoria]) grouped[p.categoria] = [];
             grouped[p.categoria].push(p);
         });
 
-        const categoriaColors = {
-            'CAFFETTERIA': 'cat-caffetteria',
-            'BEVANDE': 'cat-bevande',
-            'GELATI': 'cat-gelati',
-            'PERSONALIZZATE': 'cat-personalizzate'
+        const colors = {
+            'CAFFETTERIA': 'cat-caffetteria', 'BEVANDE': 'cat-bevande',
+            'GELATI': 'cat-gelati', 'PERSONALIZZATE': 'cat-personalizzate'
         };
+        const icons = { 'CAFFETTERIA': '☕', 'BEVANDE': '🍷', 'GELATI': '🍦', 'PERSONALIZZATE': '💰' };
 
-        const categoriaIcons = {
-            'CAFFETTERIA': '☕',
-            'BEVANDE': '🍷',
-            'GELATI': '🍦',
-            'PERSONALIZZATE': '💰'
-        };
-
-        let html = '<div class="space-y-8">';
-        
-        for (const [categoria, items] of Object.entries(grouped)) {
+        let html = '<div class="space-y-6">';
+        for (const [cat, items] of Object.entries(grouped)) {
             html += `
-                <div class="space-y-4">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="${categoriaColors[categoria]} p-3 rounded-xl text-4xl shadow-lg border-2 border-amber-900/30">
-                            ${categoriaIcons[categoria]}
-                        </div>
-                        <h2 class="text-2xl font-bold text-amber-100 drop-shadow-lg" style="font-family: Georgia, serif;">${categoria}</h2>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <div class="${colors[cat]} p-2 rounded-lg text-2xl">${icons[cat]}</div>
+                        <h2 class="text-xl font-bold text-amber-100">${cat}</h2>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        ${items.map(p => `
+                            <button onclick="handleProductClick(${p.id})" 
+                                class="${colors[p.categoria]} text-amber-100 p-4 rounded-xl shadow-lg active:scale-95 transition-transform border-2 border-amber-900/30">
+                                <div class="text-3xl mb-2">${p.icona}</div>
+                                <div class="font-bold text-sm mb-1">${p.nome}</div>
+                                <div class="text-lg font-black">${parseFloat(p.prezzo) === 0 ? '💰' : '€'+parseFloat(p.prezzo).toFixed(2)}</div>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
             `;
-            
-            items.forEach(prodotto => {
-                const prezzo = parseFloat(prodotto.prezzo);
-                html += `
-                    <button onclick="handleProductClick(${prodotto.id})" 
-                            class="${categoriaColors[prodotto.categoria]} text-amber-100 p-6 rounded-2xl shadow-xl active:scale-95 transition-transform border-2 border-amber-900/30">
-                        <div class="text-4xl mb-3">${prodotto.icona}</div>
-                        <div class="font-bold text-lg mb-2 leading-tight">${prodotto.nome}</div>
-                        <div class="text-2xl font-black">
-                            ${prezzo === 0 ? '💰 Inserisci' : `€${prezzo.toFixed(2)}`}
-                        </div>
-                    </button>
-                `;
-            });
-            
-            html += `</div></div>`;
         }
-        
         html += '</div>';
         return html;
     }
 
     async function renderSpese() {
-        const spese = await API.getSpese();
-        const ultime = spese.slice(0, 10);
-
+        const spese = (await API.getSpese()).slice(0, 10);
         let html = `
-            <div class="space-y-6">
-                <div class="card-felt p-6 rounded-3xl border-4 border-amber-800">
-                    <h2 class="text-2xl font-bold text-amber-100 mb-6 text-center" style="font-family: Georgia, serif;">💸 Registra Spese</h2>
-                    <div class="grid grid-cols-2 gap-4">
-        `;
-        
-        CONFIG.categorie_spese.forEach(cat => {
-            html += `
-                <button onclick="handleSpesaClick('${cat.nome}', '${cat.icona}')"
-                        class="${cat.colore} text-amber-100 p-6 rounded-2xl shadow-xl active:scale-95 transition-transform border-2 border-amber-900/30">
-                    <div class="text-4xl mb-2">${cat.icona}</div>
-                    <div class="font-bold text-sm">${cat.nome}</div>
-                </button>
-            `;
-        });
-        
-        html += `</div></div>
-            <div class="card-felt p-6 rounded-3xl border-4 border-amber-800">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-amber-100" style="font-family: Georgia, serif;">📋 Ultime Spese</h3>
-                    <button onclick="render()" class="btn-wood text-amber-100 px-4 py-2 rounded-xl text-sm">🔄</button>
-                </div>
-        `;
-        
-        if (ultime.length === 0) {
-            html += '<div class="text-amber-200 opacity-75 text-center py-8">Nessuna spesa registrata</div>';
-        } else {
-            html += '<div class="space-y-2 max-h-96 overflow-y-auto hide-scrollbar">';
-            ultime.forEach(s => {
-                const dt = new Date(s.timestamp);
-                html += `
-                    <div class="bg-amber-900/30 p-4 rounded-xl flex justify-between items-center border border-amber-800/50">
-                        <div class="text-amber-100">
-                            <div class="font-bold">${s.categoria_spesa}</div>
-                            <div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')} ${dt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="text-xl font-black text-red-400">-€${parseFloat(s.importo).toFixed(2)}</div>
-                            <button onclick="deleteSpesa(${s.id})" class="text-red-400 p-2">🗑️</button>
-                        </div>
+            <div class="space-y-4">
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <h2 class="text-xl font-bold text-amber-100 mb-4 text-center">💸 Registra Spese</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        ${CONFIG.categorie_spese.map(c => `
+                            <button onclick="handleSpesaClick('${c.nome}', '${c.icona}')"
+                                class="${c.colore} text-amber-100 p-4 rounded-xl shadow-lg active:scale-95 border-2 border-amber-900/30">
+                                <div class="text-3xl mb-1">${c.icona}</div>
+                                <div class="font-bold text-xs">${c.nome}</div>
+                            </button>
+                        `).join('')}
                     </div>
-                `;
-            });
-            html += '</div>';
-        }
-        
-        html += '</div></div>';
+                </div>
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <h3 class="text-lg font-bold text-amber-100 mb-3">📋 Ultime Spese</h3>
+                    ${spese.length === 0 ? '<div class="text-amber-200/50 text-center py-4">Nessuna spesa</div>' : 
+                    `<div class="space-y-2">${spese.map(s => {
+                        const dt = new Date(s.timestamp);
+                        return `<div class="bg-amber-900/30 p-3 rounded-lg flex justify-between items-center border border-amber-800/50">
+                            <div class="text-amber-100"><div class="font-bold text-sm">${s.categoria_spesa}</div><div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')}</div></div>
+                            <div class="flex items-center gap-2"><span class="text-lg font-black text-red-400">-€${parseFloat(s.importo).toFixed(2)}</span>
+                            <button onclick="deleteSpesa(${s.id})" class="text-red-400 p-1">🗑️</button></div>
+                        </div>`;
+                    }).join('')}</div>`}
+                </div>
+            </div>
+        `;
         return html;
     }
 
     async function renderStatistiche() {
         const stats = await API.getStatistiche(state.periodo);
-        
-        let html = `
-            <div class="space-y-6">
+        return `
+            <div class="space-y-4">
                 <div class="grid grid-cols-3 gap-2">
                     ${['oggi', 'settimana', 'mese'].map(p => `
-                        <button onclick="changePeriodo('${p}')"
-                                class="px-3 py-2 rounded-xl font-semibold transition-all text-sm ${
-                                    state.periodo === p ? 'btn-wood-active shadow-lg' : 'btn-wood-inactive'
-                                }">
+                        <button onclick="changePeriodo('${p}')" class="px-2 py-2 rounded-lg font-semibold text-sm ${state.periodo === p ? 'btn-wood-active' : 'btn-wood-inactive'}">
                             ${p === 'oggi' ? '📅 Oggi' : p === 'settimana' ? '📆 Sett.' : '🗓️ Mese'}
                         </button>
                     `).join('')}
                 </div>
-                
-                <div class="grid grid-cols-1 gap-4">
-                    <div class="stat-card-green p-6 rounded-2xl shadow-xl text-amber-100 border-4 border-green-900">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-lg font-semibold">Incasso</h3>
-                            <span class="text-2xl">📈</span>
-                        </div>
-                        <div class="text-4xl font-black">€${stats.totaleIncasso.toFixed(2)}</div>
+                <div class="grid grid-cols-1 gap-3">
+                    <div class="stat-card-green p-4 rounded-xl text-amber-100 border-2 border-green-800">
+                        <div class="flex justify-between items-center"><span class="font-semibold">Incasso</span><span class="text-2xl">📈</span></div>
+                        <div class="text-3xl font-black">€${stats.totaleIncasso.toFixed(2)}</div>
                     </div>
-                    
-                    <div class="stat-card-red p-6 rounded-2xl shadow-xl text-amber-100 border-4 border-red-900">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-lg font-semibold">Spese</h3>
-                            <span class="text-2xl">📉</span>
-                        </div>
-                        <div class="text-4xl font-black">€${stats.totaleSpese.toFixed(2)}</div>
+                    <div class="stat-card-red p-4 rounded-xl text-amber-100 border-2 border-red-800">
+                        <div class="flex justify-between items-center"><span class="font-semibold">Spese</span><span class="text-2xl">📉</span></div>
+                        <div class="text-3xl font-black">€${stats.totaleSpese.toFixed(2)}</div>
                     </div>
-                    
-                    <div class="${stats.profittoNetto >= 0 ? 'stat-card-blue border-blue-900' : 'stat-card-orange border-orange-900'} p-6 rounded-2xl shadow-xl text-amber-100 border-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-lg font-semibold">Profitto Netto</h3>
-                            <span class="text-2xl">💰</span>
-                        </div>
-                        <div class="text-4xl font-black">€${stats.profittoNetto.toFixed(2)}</div>
-                        <div class="text-sm opacity-75">${stats.totaleVendite} vendite</div>
+                    <div class="${stats.profittoNetto >= 0 ? 'stat-card-blue border-blue-800' : 'stat-card-orange border-orange-800'} p-4 rounded-xl text-amber-100 border-2">
+                        <div class="flex justify-between items-center"><span class="font-semibold">Profitto</span><span class="text-2xl">💰</span></div>
+                        <div class="text-3xl font-black">€${stats.profittoNetto.toFixed(2)}</div>
+                        <div class="text-xs opacity-75">${stats.totaleVendite} vendite</div>
                     </div>
                 </div>
-                
-                <div class="card-felt p-6 rounded-3xl border-4 border-amber-800">
-                    <h3 class="text-xl font-bold text-amber-100 mb-4" style="font-family: Georgia, serif;">🏆 Top 5</h3>
-                    <div class="space-y-2">
-                        ${stats.prodottiPiuVenduti && stats.prodottiPiuVenduti.length > 0 ? 
-                            stats.prodottiPiuVenduti.map((prod, idx) => `
-                                <div class="bg-amber-900/30 p-3 rounded-xl flex justify-between items-center border border-amber-800/50">
-                                    <div class="flex items-center gap-3">
-                                        <div class="text-2xl font-black text-yellow-400">#${idx + 1}</div>
-                                        <div class="text-amber-100">
-                                            <div class="font-bold">${prod.nome}</div>
-                                            <div class="text-xs opacity-75">${prod.quantita} vendite</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-xl font-black text-amber-100">€${prod.incasso.toFixed(2)}</div>
-                                </div>
-                            `).join('') : 
-                            '<div class="text-amber-200 opacity-50 text-center py-4">Nessuna vendita</div>'
-                        }
-                    </div>
-                </div>
-                
-                <button onclick="openResetModal()" 
-                        class="w-full btn-wood text-amber-100 py-4 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2 border-2 border-red-700">
+                <button onclick="openResetModal()" class="w-full btn-wood text-amber-100 py-3 rounded-xl font-bold border-2 border-red-700">
                     🗑️ 🔒 Reset Periodo
                 </button>
             </div>
         `;
-        
-        return html;
     }
 
     async function renderStorico() {
         const vendite = await API.getVendite();
         const spese = await API.getSpese();
-        
-        const tutteTransazioni = [
-            ...vendite.map(v => ({...v, tipo: 'vendita', prezzo: parseFloat(v.prezzo)})),
-            ...spese.map(s => ({...s, tipo: 'spesa', nome_prodotto: s.categoria_spesa, prezzo: -parseFloat(s.importo)}))
-        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 50);
+        const trans = [...vendite.map(v => ({...v, tipo: 'vendita', prezzo: parseFloat(v.prezzo)})),
+                       ...spese.map(s => ({...s, tipo: 'spesa', nome_prodotto: s.categoria_spesa, prezzo: -parseFloat(s.importo)}))
+        ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
 
-        let html = `
-            <div class="space-y-4">
-                <a href="api/export.php" 
-                   class="w-full bg-green-800 text-amber-100 py-4 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2 border-2 border-green-600"
-                   style="display: flex; text-decoration: none;">
-                    📊 Scarica Backup
+        return `
+            <div class="space-y-3">
+                <a href="api/export.php" class="w-full bg-green-800 text-amber-100 py-3 rounded-xl font-bold flex items-center justify-center gap-2 border-2 border-green-600" style="display:flex;text-decoration:none;">
+                    📊 Scarica CSV
                 </a>
-                
-                <label class="w-full bg-amber-900/50 text-amber-200 py-3 rounded-xl text-sm flex items-center justify-center gap-2 border border-amber-700 cursor-pointer">
-                    📥 Importa Backup
-                    <input type="file" accept=".csv" onchange="handleImport(event)" style="display: none;">
+                <label class="w-full bg-amber-900/50 text-amber-200 py-2 rounded-lg text-sm flex items-center justify-center gap-2 border border-amber-700 cursor-pointer">
+                    📥 Importa CSV <input type="file" accept=".csv" onchange="handleImport(event)" style="display:none;">
                 </label>
-                
-                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
-                    <h3 class="text-xl font-bold text-amber-100 mb-4" style="font-family: Georgia, serif;">📋 Ultime Transazioni</h3>
+                <div class="card-felt p-3 rounded-xl border-4 border-amber-800">
+                    <h3 class="text-lg font-bold text-amber-100 mb-3">📋 Transazioni</h3>
+                    ${trans.length === 0 ? '<div class="text-amber-200/50 text-center py-4">Nessuna</div>' :
+                    `<div class="space-y-2 max-h-80 overflow-y-auto">${trans.map(t => {
+                        const dt = new Date(t.timestamp);
+                        const isS = t.tipo === 'spesa';
+                        return `<div class="${isS ? 'bg-red-900/30' : 'bg-amber-900/30'} p-2 rounded-lg flex justify-between items-center border ${isS ? 'border-red-700/50' : 'border-amber-700/50'}">
+                            <div class="${isS ? 'text-red-200' : 'text-amber-100'}">
+                                <div class="font-bold text-sm">${t.nome_prodotto}</div>
+                                <div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')}</div>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="font-black ${isS ? 'text-red-400' : 'text-green-400'}">${isS ? '-' : '+'}€${Math.abs(t.prezzo).toFixed(2)}</span>
+                                <button onclick="${isS ? `deleteSpesa(${t.id})` : `deleteVendita(${t.id})`}" class="text-red-400 p-1 text-sm">🗑️</button>
+                            </div>
+                        </div>`;
+                    }).join('')}</div>`}
+                </div>
+            </div>
         `;
+    }
+
+    async function renderImpostazioni() {
+        const listino = await API.getListino();
+        state.usbStatus = await API.getUSBStatus();
         
-        if (tutteTransazioni.length === 0) {
-            html += '<div class="text-amber-200 opacity-75 text-center py-8">Nessuna transazione</div>';
-        } else {
-            html += '<div class="space-y-2 max-h-96 overflow-y-auto hide-scrollbar">';
-            tutteTransazioni.forEach(t => {
-                const dt = new Date(t.timestamp);
-                const isSpesa = t.tipo === 'spesa';
+        return `
+            <div class="space-y-4">
+                <h2 class="text-xl font-bold text-amber-100 text-center">⚙️ Impostazioni</h2>
                 
-                html += `
-                    <div class="${isSpesa ? 'bg-red-900/30 border-red-700/50' : 'bg-amber-900/30 border-amber-700/50'} p-3 rounded-xl flex justify-between items-center border">
-                        <div class="${isSpesa ? 'text-red-200' : 'text-amber-100'}">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xl">${isSpesa ? '💸' : '💰'}</span>
-                                <div>
-                                    <div class="font-bold">${t.nome_prodotto}</div>
-                                    <div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')} ${dt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</div>
+                <!-- BACKUP USB -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <h3 class="text-lg font-bold text-amber-100 mb-3">💾 Backup su USB</h3>
+                    ${state.usbStatus?.connected ? `
+                        <div class="bg-green-900/50 p-3 rounded-lg mb-3 border border-green-700">
+                            <div class="flex items-center gap-2 text-green-300">
+                                <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                                <span class="font-bold">Chiavetta USB Collegata</span>
+                            </div>
+                            <div class="text-xs text-green-200/70 mt-1">
+                                Spazio libero: ${state.usbStatus.free_space_formatted} / ${state.usbStatus.total_space_formatted}
+                            </div>
+                        </div>
+                        <button onclick="doUSBBackup()" class="w-full bg-green-800 text-amber-100 py-3 rounded-xl font-bold border-2 border-green-600 active:scale-95">
+                            💾 Esegui Backup su USB
+                        </button>
+                    ` : `
+                        <div class="bg-red-900/50 p-3 rounded-lg mb-3 border border-red-700">
+                            <div class="flex items-center gap-2 text-red-300">
+                                <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                                <span class="font-bold">Nessuna USB</span>
+                            </div>
+                            <div class="text-xs text-red-200/70 mt-1">
+                                Inserisci una chiavetta USB per fare il backup
+                            </div>
+                        </div>
+                        <button onclick="refreshUSBStatus()" class="w-full bg-amber-800 text-amber-100 py-2 rounded-lg font-bold border border-amber-700">
+                            🔄 Controlla USB
+                        </button>
+                    `}
+                </div>
+                
+                <!-- GESTIONE LISTINO -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-bold text-amber-100">📋 Listino Prodotti</h3>
+                        <button onclick="openAddProductModal()" class="bg-green-700 text-amber-100 px-3 py-1 rounded-lg text-sm font-bold active:scale-95">
+                            ➕ Aggiungi
+                        </button>
+                    </div>
+                    <div class="space-y-2 max-h-64 overflow-y-auto">
+                        ${listino.map(p => `
+                            <div class="bg-amber-900/30 p-3 rounded-lg flex justify-between items-center border border-amber-800/50 ${p.attivo == 0 ? 'opacity-50' : ''}">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl">${p.icona}</span>
+                                    <div class="text-amber-100">
+                                        <div class="font-bold text-sm">${p.nome}</div>
+                                        <div class="text-xs opacity-75">${p.categoria} - €${parseFloat(p.prezzo).toFixed(2)}</div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="openEditProductModal(${p.id})" class="bg-amber-700 text-amber-100 px-2 py-1 rounded text-sm">✏️</button>
+                                    <button onclick="deleteProdotto(${p.id})" class="bg-red-700 text-amber-100 px-2 py-1 rounded text-sm">🗑️</button>
                                 </div>
                             </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="text-xl font-black ${isSpesa ? 'text-red-400' : 'text-green-400'}">
-                                ${isSpesa ? '-' : '+'}€${Math.abs(t.prezzo).toFixed(2)}
-                            </div>
-                            <button onclick="${isSpesa ? `deleteSpesa(${t.id})` : `deleteVendita(${t.id})`}" class="text-red-400 p-1">🗑️</button>
-                        </div>
+                        `).join('')}
                     </div>
-                `;
-            });
-            html += '</div>';
-        }
-        
-        html += '</div></div>';
-        return html;
+                </div>
+                
+                <!-- INFO -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <h3 class="text-lg font-bold text-amber-100 mb-2">ℹ️ Info Sistema</h3>
+                    <div class="text-amber-200/70 text-sm space-y-1">
+                        <div>Password Reset: <span class="text-amber-100 font-bold">5054</span></div>
+                        <div>WiFi: <span class="text-amber-100 font-bold">ProlocoBar</span></div>
+                        <div>IP: <span class="text-amber-100 font-bold">192.168.4.1</span></div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     function renderNavigation() {
-        const navItems = [
+        const items = [
             { id: 'vendita', icon: '🛒', label: 'Vendita' },
             { id: 'spese', icon: '💸', label: 'Spese' },
             { id: 'statistiche', icon: '📊', label: 'Stats' },
-            { id: 'storico', icon: '📋', label: 'Storico' }
+            { id: 'storico', icon: '📋', label: 'Storico' },
+            { id: 'impostazioni', icon: '⚙️', label: 'Imposta.' }
         ];
-        
         return `
             <div class="nav-wood fixed bottom-0 left-0 right-0 z-40 safe-bottom">
-                <div class="max-w-7xl mx-auto px-2 py-2">
-                    <div class="grid grid-cols-4 gap-2">
-                        ${navItems.map(item => `
-                            <button onclick="changeView('${item.id}')"
-                                    class="flex flex-col items-center justify-center py-3 px-2 rounded-xl font-semibold transition-all ${
-                                        state.view === item.id 
-                                        ? 'btn-wood-active shadow-lg' 
-                                        : 'btn-wood-inactive'
-                                    }">
-                                <span class="text-2xl mb-1">${item.icon}</span>
-                                <span class="text-xs">${item.label}</span>
+                <div class="max-w-7xl mx-auto px-1 py-2">
+                    <div class="grid grid-cols-5 gap-1">
+                        ${items.map(i => `
+                            <button onclick="changeView('${i.id}')" class="flex flex-col items-center justify-center py-2 px-1 rounded-lg font-semibold transition-all ${state.view === i.id ? 'btn-wood-active' : 'btn-wood-inactive'}">
+                                <span class="text-xl">${i.icon}</span>
+                                <span class="text-xs">${i.label}</span>
                             </button>
                         `).join('')}
                     </div>
@@ -517,36 +472,22 @@
     function renderKeypad() {
         return `
             <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                <div class="card-felt rounded-3xl shadow-2xl w-full max-w-sm p-4 border-4 border-amber-800">
-                    <div class="text-center mb-4">
-                        <div class="text-4xl mb-2">${state.selectedProduct?.icona || '💰'}</div>
-                        <h3 class="text-xl font-bold text-amber-100">${state.selectedProduct?.nome || ''}</h3>
+                <div class="card-felt rounded-2xl w-full max-w-xs p-4 border-4 border-amber-800">
+                    <div class="text-center mb-3">
+                        <div class="text-3xl mb-1">${state.selectedProduct?.icona || '💰'}</div>
+                        <h3 class="text-lg font-bold text-amber-100">${state.selectedProduct?.nome || ''}</h3>
                     </div>
-                    
-                    <div class="bg-amber-900/50 rounded-xl p-4 mb-4 border-2 border-amber-700">
-                        <div class="text-center">
-                            <div class="text-4xl font-black text-amber-100">€${state.customPrice || '0'}</div>
-                        </div>
+                    <div class="bg-amber-900/50 rounded-lg p-3 mb-3 border-2 border-amber-700">
+                        <div class="text-3xl font-black text-amber-100 text-center">€${state.customPrice || '0'}</div>
                     </div>
-                    
-                    <div class="grid grid-cols-3 gap-2 mb-4">
-                        ${['1','2','3','4','5','6','7','8','9',',','0','←'].map(key => `
-                            <button onclick="handleKeypadPress('${key}')"
-                                    class="btn-wood text-amber-100 text-2xl font-bold p-4 rounded-xl active:scale-95">
-                                ${key}
-                            </button>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        ${['1','2','3','4','5','6','7','8','9',',','0','←'].map(k => `
+                            <button onclick="handleKeypadPress('${k}')" class="btn-wood text-amber-100 text-xl font-bold p-3 rounded-lg active:scale-95">${k}</button>
                         `).join('')}
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="closeKeypad()" 
-                                class="bg-red-800 text-amber-100 font-bold py-3 rounded-xl active:scale-95 border-2 border-red-600">
-                            ❌ Annulla
-                        </button>
-                        <button onclick="confirmKeypad()" 
-                                class="bg-green-800 text-amber-100 font-bold py-3 rounded-xl active:scale-95 border-2 border-green-600">
-                            ✅ OK
-                        </button>
+                        <button onclick="closeKeypad()" class="bg-red-800 text-amber-100 font-bold py-2 rounded-lg active:scale-95 border-2 border-red-600">❌</button>
+                        <button onclick="confirmKeypad()" class="bg-green-800 text-amber-100 font-bold py-2 rounded-lg active:scale-95 border-2 border-green-600">✅</button>
                     </div>
                 </div>
             </div>
@@ -556,238 +497,231 @@
     function renderResetModal() {
         return `
             <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                <div style="background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);" class="rounded-3xl shadow-2xl w-full max-w-sm p-6 border-4 border-red-500">
+                <div style="background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);" class="rounded-2xl w-full max-w-xs p-4 border-4 border-red-500">
                     <div class="text-center mb-4">
-                        <div class="text-5xl mb-2">⚠️</div>
-                        <h3 class="text-2xl font-bold text-white">Reset ${state.periodo}</h3>
+                        <div class="text-4xl mb-2">⚠️</div>
+                        <h3 class="text-xl font-bold text-white">Reset ${state.periodo}</h3>
                     </div>
-                    
-                    <div style="background: rgba(255,255,255,0.1);" class="rounded-xl p-4 mb-4 border-2 border-red-400">
-                        <input type="password" 
-                               id="resetPasswordInput"
-                               value="${state.resetPassword}"
-                               oninput="updateResetPassword(this.value)"
-                               placeholder="Password" 
-                               maxlength="4"
-                               class="w-full px-4 py-3 text-white text-center text-xl font-bold rounded-xl border-2 border-white/30 focus:outline-none"
-                               style="background: rgba(255,255,255,0.2);">
-                    </div>
-                    
+                    <input type="password" id="resetPwd" oninput="updateResetPassword(this.value)" placeholder="Password" maxlength="4"
+                        class="w-full px-4 py-3 text-white text-center text-xl font-bold rounded-lg border-2 border-white/30 focus:outline-none mb-4" style="background: rgba(255,255,255,0.2);">
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="closeResetModal()" 
-                                class="bg-stone-600 text-white font-bold py-3 rounded-xl active:scale-95">
-                            Annulla
-                        </button>
-                        <button onclick="confirmReset()" 
-                                class="bg-red-600 text-white font-bold py-3 rounded-xl active:scale-95">
-                            🗑️ Reset
-                        </button>
+                        <button onclick="closeResetModal()" class="bg-stone-600 text-white font-bold py-2 rounded-lg active:scale-95">Annulla</button>
+                        <button onclick="confirmReset()" class="bg-red-600 text-white font-bold py-2 rounded-lg active:scale-95">🗑️ Reset</button>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    // ==================== EVENT HANDLERS ====================
-    function attachEventListeners() {}
-
-    function changeView(view) {
-        state.view = view;
-        render();
-        document.getElementById('app').scrollTop = 0;
+    function renderAddProductModal() {
+        return `
+            <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                <div class="card-felt rounded-2xl w-full max-w-sm p-4 border-4 border-amber-800">
+                    <h3 class="text-xl font-bold text-amber-100 text-center mb-4">➕ Nuovo Prodotto</h3>
+                    
+                    <input type="text" id="newProdNome" placeholder="Nome prodotto" class="modal-input" value="${state.newProduct.nome}">
+                    
+                    <input type="number" id="newProdPrezzo" placeholder="Prezzo (es. 1.50)" step="0.10" class="modal-input" value="${state.newProduct.prezzo}">
+                    
+                    <select id="newProdCategoria" class="modal-select">
+                        ${CONFIG.categorie_prodotti.map(c => `<option value="${c}" ${state.newProduct.categoria === c ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                    
+                    <div class="mb-4">
+                        <label class="text-amber-100 text-sm mb-2 block">Icona:</label>
+                        <div class="grid grid-cols-8 gap-1">
+                            ${CONFIG.icone_disponibili.map(i => `
+                                <button onclick="selectIcon('${i}')" class="text-2xl p-1 rounded ${state.newProduct.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}">${i}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="closeAddProductModal()" class="bg-stone-700 text-amber-100 font-bold py-2 rounded-lg active:scale-95">Annulla</button>
+                        <button onclick="saveNewProduct()" class="bg-green-700 text-amber-100 font-bold py-2 rounded-lg active:scale-95">💾 Salva</button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
-    function changePeriodo(periodo) {
-        state.periodo = periodo;
-        render();
+    function renderEditProductModal() {
+        const p = state.editingProduct;
+        if (!p) return '';
+        return `
+            <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                <div class="card-felt rounded-2xl w-full max-w-sm p-4 border-4 border-amber-800">
+                    <h3 class="text-xl font-bold text-amber-100 text-center mb-4">✏️ Modifica Prodotto</h3>
+                    
+                    <input type="text" id="editProdNome" placeholder="Nome prodotto" class="modal-input" value="${p.nome}">
+                    
+                    <input type="number" id="editProdPrezzo" placeholder="Prezzo" step="0.10" class="modal-input" value="${p.prezzo}">
+                    
+                    <select id="editProdCategoria" class="modal-select">
+                        ${CONFIG.categorie_prodotti.map(c => `<option value="${c}" ${p.categoria === c ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                    
+                    <div class="mb-4">
+                        <label class="text-amber-100 text-sm mb-2 block">Icona:</label>
+                        <div class="grid grid-cols-8 gap-1">
+                            ${CONFIG.icone_disponibili.map(i => `
+                                <button onclick="selectEditIcon('${i}')" class="text-2xl p-1 rounded ${p.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}">${i}</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="closeEditProductModal()" class="bg-stone-700 text-amber-100 font-bold py-2 rounded-lg active:scale-95">Annulla</button>
+                        <button onclick="saveEditProduct()" class="bg-green-700 text-amber-100 font-bold py-2 rounded-lg active:scale-95">💾 Salva</button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
-    async function handleProductClick(prodottoId) {
-        const prodotto = state.prodotti.find(p => p.id == prodottoId);
-        if (!prodotto) return;
-        
-        const prezzo = parseFloat(prodotto.prezzo);
-        
-        if (prezzo === 0 || prodotto.categoria === 'PERSONALIZZATE') {
-            state.selectedProduct = prodotto;
-            state.customPrice = '';
-            state.keypadMode = 'vendita';
-            state.showKeypad = true;
-            render();
+    // ==================== HANDLERS ====================
+    function changeView(v) { state.view = v; render(); document.getElementById('app').scrollTop = 0; }
+    function changePeriodo(p) { state.periodo = p; render(); }
+    
+    async function handleProductClick(id) {
+        const p = state.prodotti.find(x => x.id == id);
+        if (!p) return;
+        if (parseFloat(p.prezzo) === 0 || p.categoria === 'PERSONALIZZATE') {
+            state.selectedProduct = p; state.customPrice = ''; state.keypadMode = 'vendita'; state.showKeypad = true; render();
         } else {
-            await registraVendita(prodotto, prezzo);
+            await registraVendita(p, parseFloat(p.prezzo));
         }
     }
-
-    function handleSpesaClick(categoria, icona) {
-        state.selectedSpesaCategoria = categoria;
-        state.selectedProduct = {nome: categoria, icona: icona};
-        state.customPrice = '';
-        state.keypadMode = 'spesa';
-        state.showKeypad = true;
+    
+    function handleSpesaClick(cat, icon) {
+        state.selectedSpesaCategoria = cat; state.selectedProduct = {nome: cat, icona: icon};
+        state.customPrice = ''; state.keypadMode = 'spesa'; state.showKeypad = true; render();
+    }
+    
+    function handleKeypadPress(k) {
+        if (k === ',') { if (!state.customPrice.includes(',')) state.customPrice += ','; }
+        else if (k === '←') { state.customPrice = state.customPrice.slice(0, -1); }
+        else { if (state.customPrice.includes(',') && state.customPrice.split(',')[1]?.length >= 2) return; state.customPrice += k; }
         render();
     }
-
-    function handleKeypadPress(key) {
-        if (key === ',') {
-            if (!state.customPrice.includes(',')) state.customPrice += ',';
-        } else if (key === '←') {
-            state.customPrice = state.customPrice.slice(0, -1);
-        } else {
-            if (state.customPrice.includes(',')) {
-                const parts = state.customPrice.split(',');
-                if (parts[1] && parts[1].length >= 2) return;
-            }
-            state.customPrice += key;
-        }
-        render();
-    }
-
-    function closeKeypad() {
-        state.showKeypad = false;
-        state.customPrice = '';
-        state.selectedProduct = null;
-        render();
-    }
-
+    
+    function closeKeypad() { state.showKeypad = false; state.customPrice = ''; state.selectedProduct = null; render(); }
+    
     async function confirmKeypad() {
         const prezzo = parseFloat(state.customPrice.replace(',', '.'));
-        if (isNaN(prezzo) || prezzo <= 0) {
-            showFeedback('❌ Importo non valido!');
-            return;
-        }
-        
+        if (isNaN(prezzo) || prezzo <= 0) { showFeedback('❌ Importo!'); return; }
         state.showKeypad = false;
-        
-        if (state.keypadMode === 'vendita') {
-            await registraVendita(state.selectedProduct, prezzo);
-        } else {
-            await registraSpesa(state.selectedSpesaCategoria, prezzo);
-        }
-        
-        state.customPrice = '';
-        state.selectedProduct = null;
+        if (state.keypadMode === 'vendita') await registraVendita(state.selectedProduct, prezzo);
+        else await registraSpesa(state.selectedSpesaCategoria, prezzo);
+        state.customPrice = ''; state.selectedProduct = null;
     }
-
-    async function registraVendita(prodotto, prezzo) {
-        const vendita = {
-            prodotto_id: prodotto.id,
-            nome_prodotto: prodotto.nome,
-            prezzo: prezzo,
-            categoria: prodotto.categoria
-        };
-        
-        const result = await API.addVendita(vendita);
-        if (result.success) {
-            showFeedback(`✅ ${prodotto.nome} €${prezzo.toFixed(2)}`);
-        } else {
-            showFeedback('❌ Errore');
-        }
-        render();
+    
+    async function registraVendita(p, prezzo) {
+        const r = await API.addVendita({prodotto_id: p.id, nome_prodotto: p.nome, prezzo, categoria: p.categoria});
+        showFeedback(r.success ? `✅ ${p.nome} €${prezzo.toFixed(2)}` : '❌ Errore'); render();
     }
-
-    async function registraSpesa(categoria, importo) {
-        const spesa = {
-            categoria_spesa: categoria,
-            importo: importo,
-            note: ''
-        };
-        
-        const result = await API.addSpesa(spesa);
-        if (result.success) {
-            showFeedback(`✅ ${categoria} €${importo.toFixed(2)}`);
-        } else {
-            showFeedback('❌ Errore');
-        }
-        render();
+    
+    async function registraSpesa(cat, importo) {
+        const r = await API.addSpesa({categoria_spesa: cat, importo, note: ''});
+        showFeedback(r.success ? `✅ ${cat} €${importo.toFixed(2)}` : '❌ Errore'); render();
     }
-
-    async function deleteVendita(id) {
-        if (!confirm('Eliminare?')) return;
-        await API.deleteVendita(id);
-        showFeedback('✅ Eliminata');
-        render();
-    }
-
-    async function deleteSpesa(id) {
-        if (!confirm('Eliminare?')) return;
-        await API.deleteSpesa(id);
-        showFeedback('✅ Eliminata');
-        render();
-    }
-
-    function openResetModal() {
-        state.showResetModal = true;
-        state.resetPassword = '';
-        render();
-    }
-
-    function closeResetModal() {
-        state.showResetModal = false;
-        state.resetPassword = '';
-        render();
-    }
-
-    function updateResetPassword(value) {
-        state.resetPassword = value;
-    }
-
+    
+    async function deleteVendita(id) { if (!confirm('Eliminare?')) return; await API.deleteVendita(id); showFeedback('✅'); render(); }
+    async function deleteSpesa(id) { if (!confirm('Eliminare?')) return; await API.deleteSpesa(id); showFeedback('✅'); render(); }
+    
+    function openResetModal() { state.showResetModal = true; state.resetPassword = ''; render(); }
+    function closeResetModal() { state.showResetModal = false; render(); }
+    function updateResetPassword(v) { state.resetPassword = v; }
+    
     async function confirmReset() {
-        if (state.resetPassword !== CONFIG.password_reset) {
-            showFeedback('❌ Password errata!');
-            return;
-        }
-        
-        if (!confirm(`Eliminare dati "${state.periodo}"?`)) return;
-        
-        const result = await API.resetPeriodo(state.periodo, state.resetPassword);
-        
-        if (result.success) {
-            state.showResetModal = false;
-            state.resetPassword = '';
-            showFeedback('✅ Reset OK!');
-        } else {
-            showFeedback('❌ Errore');
-        }
-        render();
+        if (state.resetPassword !== CONFIG.password_reset) { showFeedback('❌ Password!'); return; }
+        if (!confirm(`Reset ${state.periodo}?`)) return;
+        const r = await API.resetPeriodo(state.periodo, state.resetPassword);
+        state.showResetModal = false; showFeedback(r.success ? '✅ Reset OK' : '❌ Errore'); render();
     }
-
-    async function handleImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        showFeedback('📥 Caricamento...');
-        
-        const formData = new FormData();
-        formData.append('file', file);
-        
+    
+    async function handleImport(e) {
+        const file = e.target.files[0]; if (!file) return;
+        showFeedback('📥...');
+        const fd = new FormData(); fd.append('file', file);
         try {
-            const res = await fetch('api/import.php', {method: 'POST', body: formData});
-            const result = await res.json();
-            
-            if (result.success) {
-                showFeedback(`✅ Importati: ${result.vendite_importate}V ${result.spese_importate}S`);
-                setTimeout(() => render(), 1500);
-            } else {
-                showFeedback('❌ Errore import');
-            }
-        } catch(e) {
-            showFeedback('❌ Errore');
-        }
-        
-        event.target.value = '';
+            const r = await (await fetch('api/import.php', {method: 'POST', body: fd})).json();
+            showFeedback(r.success ? `✅ ${r.vendite_importate}V ${r.spese_importate}S` : '❌');
+            setTimeout(render, 1500);
+        } catch(e) { showFeedback('❌'); }
+        e.target.value = '';
     }
-
-    function showFeedback(message) {
-        state.feedback = message;
+    
+    // Listino handlers
+    function openAddProductModal() { state.newProduct = {nome: '', prezzo: '', categoria: 'CAFFETTERIA', icona: '📦'}; state.showAddProductModal = true; render(); }
+    function closeAddProductModal() { state.showAddProductModal = false; render(); }
+    function selectIcon(i) { state.newProduct.icona = i; render(); }
+    
+    async function saveNewProduct() {
+        const nome = document.getElementById('newProdNome').value.trim();
+        const prezzo = parseFloat(document.getElementById('newProdPrezzo').value) || 0;
+        const categoria = document.getElementById('newProdCategoria').value;
+        if (!nome) { showFeedback('❌ Nome!'); return; }
+        const r = await API.addProdotto({nome, prezzo, categoria, icona: state.newProduct.icona});
+        state.showAddProductModal = false;
+        state.prodotti = []; // Force reload
+        showFeedback(r.success ? '✅ Aggiunto!' : '❌ Errore');
         render();
-        setTimeout(() => {
-            state.feedback = '';
-            render();
-        }, 2000);
     }
-
-    // ==================== INIT ====================
+    
+    async function openEditProductModal(id) {
+        const listino = await API.getListino();
+        state.editingProduct = listino.find(p => p.id == id);
+        if (state.editingProduct) { state.showEditProductModal = true; render(); }
+    }
+    function closeEditProductModal() { state.showEditProductModal = false; state.editingProduct = null; render(); }
+    function selectEditIcon(i) { state.editingProduct.icona = i; render(); }
+    
+    async function saveEditProduct() {
+        const p = state.editingProduct;
+        p.nome = document.getElementById('editProdNome').value.trim();
+        p.prezzo = parseFloat(document.getElementById('editProdPrezzo').value) || 0;
+        p.categoria = document.getElementById('editProdCategoria').value;
+        if (!p.nome) { showFeedback('❌ Nome!'); return; }
+        const r = await API.updateProdotto(p);
+        state.showEditProductModal = false; state.editingProduct = null;
+        state.prodotti = [];
+        showFeedback(r.success ? '✅ Salvato!' : '❌ Errore');
+        render();
+    }
+    
+    async function deleteProdotto(id) {
+        if (!confirm('Eliminare prodotto?')) return;
+        await API.deleteProdotto(id);
+        state.prodotti = [];
+        showFeedback('✅ Eliminato');
+        render();
+    }
+    
+    // USB Backup handlers
+    async function refreshUSBStatus() {
+        showFeedback('🔄 Controllo...');
+        state.usbStatus = await API.getUSBStatus();
+        render();
+    }
+    
+    async function doUSBBackup() {
+        showFeedback('💾 Backup in corso...');
+        const r = await API.doUSBBackup();
+        if (r.success) {
+            showFeedback(`✅ Backup OK! ${r.filename}`);
+        } else {
+            showFeedback('❌ ' + (r.error || 'Errore'));
+        }
+        render();
+    }
+    
+    function showFeedback(msg) {
+        state.feedback = msg; render();
+        setTimeout(() => { state.feedback = ''; render(); }, 2500);
+    }
+    
+    // Init
     render();
     </script>
 </body>
