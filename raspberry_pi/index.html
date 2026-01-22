@@ -77,8 +77,20 @@
     <script>
     // ==================== SERVICE WORKER ====================
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW:', err));
+        window.addEventListener('load', async () => {
+            try {
+                const registration = await navigator.serviceWorker.register('./sw.js', {
+                    scope: './'
+                });
+                console.log('✅ Service Worker registrato:', registration.scope);
+                
+                // Controlla aggiornamenti
+                registration.addEventListener('updatefound', () => {
+                    console.log('🔄 Nuovo Service Worker disponibile');
+                });
+            } catch (err) {
+                console.log('❌ Service Worker non registrato:', err);
+            }
         });
     }
 
