@@ -46,6 +46,21 @@ mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE
 mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
 mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
+
+# Pulisci duplicati prodotti PRIMA di inserire nuovi dati
+echo "  Pulizia duplicati prodotti..."
+mysql ${DB_NAME} -e "
+-- Elimina prodotti duplicati mantenendo solo il primo per ogni nome
+DELETE p1 FROM prodotti p1
+INNER JOIN prodotti p2 
+WHERE p1.id > p2.id AND p1.nome = p2.nome;
+" 2>/dev/null || true
+
+# Aggiungi constraint UNIQUE se non esiste
+mysql ${DB_NAME} -e "
+ALTER TABLE prodotti ADD UNIQUE INDEX unique_nome (nome);
+" 2>/dev/null || true
+
 echo -e "${GREEN}✓ Database OK${NC}"
 
 # ===== FASE 3: APP WEB =====
