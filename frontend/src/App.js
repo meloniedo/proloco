@@ -790,6 +790,259 @@ const StoricoView = ({ showFeedback, refresh }) => {
   );
 };
 
+// ==================== IMPOSTAZIONI VIEW ====================
+
+const ImpostazioniView = ({ showFeedback, refresh, setRefresh }) => {
+  const [listino, setListino] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [newProduct, setNewProduct] = useState({ nome: '', prezzo: '', categoria: 'CAFFETTERIA', icona: '📦' });
+  
+  const categorie = ['CAFFETTERIA', 'BEVANDE', 'GELATI', 'PERSONALIZZATE'];
+  const icone = ['☕', '🍷', '🥃', '🥤', '💧', '🍦', '🎱', '➕', '🍺', '🧃', '🍵', '🥛', '🍰', '🍪', '📦'];
+  
+  useEffect(() => {
+    setListino(db.getProdotti());
+  }, [refresh]);
+  
+  const handleAddProduct = () => {
+    if (!newProduct.nome.trim()) {
+      showFeedback('❌ Inserisci un nome!');
+      return;
+    }
+    
+    const prodotti = db.getProdotti();
+    const nuovoProdotto = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      nome: newProduct.nome.trim(),
+      prezzo: parseFloat(newProduct.prezzo) || 0,
+      categoria: newProduct.categoria,
+      icona: newProduct.icona
+    };
+    prodotti.push(nuovoProdotto);
+    localStorage.setItem('prodotti', JSON.stringify(prodotti));
+    
+    setShowAddModal(false);
+    setNewProduct({ nome: '', prezzo: '', categoria: 'CAFFETTERIA', icona: '📦' });
+    setRefresh(r => r + 1);
+    showFeedback('✅ Prodotto aggiunto!');
+  };
+  
+  const handleEditProduct = () => {
+    if (!editingProduct.nome.trim()) {
+      showFeedback('❌ Inserisci un nome!');
+      return;
+    }
+    
+    const prodotti = db.getProdotti();
+    const idx = prodotti.findIndex(p => p.id === editingProduct.id);
+    if (idx !== -1) {
+      prodotti[idx] = editingProduct;
+      localStorage.setItem('prodotti', JSON.stringify(prodotti));
+    }
+    
+    setShowEditModal(false);
+    setEditingProduct(null);
+    setRefresh(r => r + 1);
+    showFeedback('✅ Prodotto modificato!');
+  };
+  
+  const handleDeleteProduct = (id) => {
+    if (!window.confirm('Eliminare questo prodotto?')) return;
+    
+    const prodotti = db.getProdotti().filter(p => p.id !== id);
+    localStorage.setItem('prodotti', JSON.stringify(prodotti));
+    setRefresh(r => r + 1);
+    showFeedback('✅ Prodotto eliminato!');
+  };
+  
+  const openEditModal = (prodotto) => {
+    setEditingProduct({...prodotto});
+    setShowEditModal(true);
+  };
+  
+  return (
+    <div className="space-y-4" data-testid="impostazioni-view">
+      <h2 className="text-xl font-bold text-amber-100 text-center">⚙️ Impostazioni</h2>
+      
+      {/* BACKUP USB - Solo info demo */}
+      <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
+        <h3 className="text-lg font-bold text-amber-100 mb-3">💾 Backup su USB</h3>
+        <div className="bg-amber-900/30 p-3 rounded-lg border border-amber-700">
+          <p className="text-amber-200/70 text-sm">
+            Sul Raspberry Pi: inserisci una chiavetta USB e premi il pulsante backup.
+            Il backup verrà salvato automaticamente sulla chiavetta.
+          </p>
+          <p className="text-amber-200/50 text-xs mt-2">
+            (Questa funzione è disponibile solo sul Raspberry Pi)
+          </p>
+        </div>
+      </div>
+      
+      {/* GESTIONE LISTINO */}
+      <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold text-amber-100">📋 Listino Prodotti</h3>
+          <button 
+            onClick={() => setShowAddModal(true)}
+            data-testid="add-product-btn"
+            className="bg-green-700 text-amber-100 px-3 py-1 rounded-lg text-sm font-bold active:scale-95 transition-transform"
+          >
+            ➕ Aggiungi
+          </button>
+        </div>
+        
+        <div className="space-y-2 max-h-64 overflow-y-auto hide-scrollbar">
+          {listino.map(p => (
+            <div key={p.id} className="bg-amber-900/30 p-3 rounded-lg flex justify-between items-center border border-amber-800/50">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{p.icona}</span>
+                <div className="text-amber-100">
+                  <div className="font-bold text-sm">{p.nome}</div>
+                  <div className="text-xs text-amber-200/70">{p.categoria} - €{p.prezzo.toFixed(2)}</div>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <button 
+                  onClick={() => openEditModal(p)}
+                  className="bg-amber-700 text-amber-100 px-2 py-1 rounded text-sm"
+                >
+                  ✏️
+                </button>
+                <button 
+                  onClick={() => handleDeleteProduct(p.id)}
+                  className="bg-red-700 text-amber-100 px-2 py-1 rounded text-sm"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* INFO */}
+      <div className="card-felt p-4 rounded-2xl border-4 border-amber-800">
+        <h3 className="text-lg font-bold text-amber-100 mb-2">ℹ️ Info Sistema</h3>
+        <div className="text-amber-200/70 text-sm space-y-1">
+          <div>Password Reset: <span className="text-amber-100 font-bold">5054</span></div>
+          <div>WiFi (Raspberry): <span className="text-amber-100 font-bold">ProlocoBar</span></div>
+          <div>IP (Raspberry): <span className="text-amber-100 font-bold">192.168.4.1</span></div>
+        </div>
+      </div>
+      
+      {/* MODAL AGGIUNGI */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="card-felt rounded-2xl w-full max-w-sm p-4 border-4 border-amber-800">
+            <h3 className="text-xl font-bold text-amber-100 text-center mb-4">➕ Nuovo Prodotto</h3>
+            
+            <input 
+              type="text" 
+              placeholder="Nome prodotto"
+              value={newProduct.nome}
+              onChange={(e) => setNewProduct({...newProduct, nome: e.target.value})}
+              className="w-full px-3 py-2 rounded-lg border-2 border-amber-700 bg-amber-900/50 text-amber-100 mb-3"
+            />
+            
+            <input 
+              type="number" 
+              placeholder="Prezzo (es. 1.50)"
+              step="0.10"
+              value={newProduct.prezzo}
+              onChange={(e) => setNewProduct({...newProduct, prezzo: e.target.value})}
+              className="w-full px-3 py-2 rounded-lg border-2 border-amber-700 bg-amber-900/50 text-amber-100 mb-3"
+            />
+            
+            <select 
+              value={newProduct.categoria}
+              onChange={(e) => setNewProduct({...newProduct, categoria: e.target.value})}
+              className="w-full px-3 py-2 rounded-lg border-2 border-amber-700 bg-amber-900/50 text-amber-100 mb-3"
+            >
+              {categorie.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            
+            <div className="mb-4">
+              <label className="text-amber-100 text-sm mb-2 block">Icona:</label>
+              <div className="grid grid-cols-8 gap-1">
+                {icone.map(i => (
+                  <button 
+                    key={i}
+                    onClick={() => setNewProduct({...newProduct, icona: i})}
+                    className={`text-2xl p-1 rounded ${newProduct.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}`}
+                  >
+                    {i}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => setShowAddModal(false)} className="bg-stone-700 text-amber-100 font-bold py-2 rounded-lg">Annulla</button>
+              <button onClick={handleAddProduct} className="bg-green-700 text-amber-100 font-bold py-2 rounded-lg">💾 Salva</button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* MODAL MODIFICA */}
+      {showEditModal && editingProduct && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="card-felt rounded-2xl w-full max-w-sm p-4 border-4 border-amber-800">
+            <h3 className="text-xl font-bold text-amber-100 text-center mb-4">✏️ Modifica Prodotto</h3>
+            
+            <input 
+              type="text" 
+              placeholder="Nome prodotto"
+              value={editingProduct.nome}
+              onChange={(e) => setEditingProduct({...editingProduct, nome: e.target.value})}
+              className="w-full px-3 py-2 rounded-lg border-2 border-amber-700 bg-amber-900/50 text-amber-100 mb-3"
+            />
+            
+            <input 
+              type="number" 
+              placeholder="Prezzo"
+              step="0.10"
+              value={editingProduct.prezzo}
+              onChange={(e) => setEditingProduct({...editingProduct, prezzo: parseFloat(e.target.value) || 0})}
+              className="w-full px-3 py-2 rounded-lg border-2 border-amber-700 bg-amber-900/50 text-amber-100 mb-3"
+            />
+            
+            <select 
+              value={editingProduct.categoria}
+              onChange={(e) => setEditingProduct({...editingProduct, categoria: e.target.value})}
+              className="w-full px-3 py-2 rounded-lg border-2 border-amber-700 bg-amber-900/50 text-amber-100 mb-3"
+            >
+              {categorie.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            
+            <div className="mb-4">
+              <label className="text-amber-100 text-sm mb-2 block">Icona:</label>
+              <div className="grid grid-cols-8 gap-1">
+                {icone.map(i => (
+                  <button 
+                    key={i}
+                    onClick={() => setEditingProduct({...editingProduct, icona: i})}
+                    className={`text-2xl p-1 rounded ${editingProduct.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}`}
+                  >
+                    {i}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => {setShowEditModal(false); setEditingProduct(null);}} className="bg-stone-700 text-amber-100 font-bold py-2 rounded-lg">Annulla</button>
+              <button onClick={handleEditProduct} className="bg-green-700 text-amber-100 font-bold py-2 rounded-lg">💾 Salva</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ==================== APP PRINCIPALE ====================
 
 function App() {
