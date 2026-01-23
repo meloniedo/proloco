@@ -295,6 +295,27 @@ echo GREEN . "
 ╚══════════════════════════════════════════════════════════════╝
 " . RESET;
 
+// VERIFICA: Controlla cosa c'è realmente nel database
+echo BLUE . "\n🔍 Verifica database...\n" . RESET;
+$countVendite = $pdo->query("SELECT COUNT(*) as n FROM vendite")->fetch()['n'];
+$countSpese = $pdo->query("SELECT COUNT(*) as n FROM spese")->fetch()['n'];
+echo "   Vendite nel DB: $countVendite\n";
+echo "   Spese nel DB:   $countSpese\n";
+
+if ($countVendite == 0 && $venditeImportate > 0) {
+    echo RED . "\n⚠️  ATTENZIONE: Le vendite non sono state salvate!\n" . RESET;
+    echo YELLOW . "   Possibili cause:\n";
+    echo "   - La tabella 'vendite' ha colonne diverse\n";
+    echo "   - Errore silenzioso negli INSERT\n" . RESET;
+    
+    // Mostra struttura tabella
+    echo BLUE . "\n📋 Struttura tabella vendite:\n" . RESET;
+    $cols = $pdo->query("DESCRIBE vendite")->fetchAll();
+    foreach ($cols as $col) {
+        echo "   - " . $col['Field'] . " (" . $col['Type'] . ")\n";
+    }
+}
+
 // Aggiorna STORICO.txt
 echo BLUE . "\n🔄 Aggiornamento STORICO.txt...\n" . RESET;
 require_once __DIR__ . '/includes/storico_txt.php';
