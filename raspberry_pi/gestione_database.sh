@@ -65,9 +65,70 @@ show_db_status() {
     echo -e "   💸 Spese:       ${GREEN}${SPESE}${NC} record  (€${TOT_SPESE})"
     echo ""
     
-    # Conta backup disponibili
+    # === FILE TXT IMPORTANTI ===
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}📄 FILE DI TESTO${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    
+    # STORICO.txt
+    if [ -f "${WEB_DIR}/STORICO.txt" ]; then
+        STORICO_SIZE=$(du -h "${WEB_DIR}/STORICO.txt" | cut -f1)
+        STORICO_DATE=$(stat -c %y "${WEB_DIR}/STORICO.txt" 2>/dev/null | cut -d'.' -f1)
+        STORICO_LINES=$(wc -l < "${WEB_DIR}/STORICO.txt" 2>/dev/null)
+        echo -e "   📜 STORICO.txt"
+        echo -e "      Dimensione: ${GREEN}${STORICO_SIZE}${NC} (${STORICO_LINES} righe)"
+        echo -e "      Aggiornato: ${YELLOW}${STORICO_DATE}${NC}"
+    else
+        echo -e "   📜 STORICO.txt: ${RED}Non trovato${NC}"
+    fi
+    
+    # LISTINO.txt
+    if [ -f "${WEB_DIR}/LISTINO.txt" ]; then
+        LISTINO_SIZE=$(du -h "${WEB_DIR}/LISTINO.txt" | cut -f1)
+        LISTINO_DATE=$(stat -c %y "${WEB_DIR}/LISTINO.txt" 2>/dev/null | cut -d'.' -f1)
+        LISTINO_LINES=$(wc -l < "${WEB_DIR}/LISTINO.txt" 2>/dev/null)
+        echo -e "   📋 LISTINO.txt"
+        echo -e "      Dimensione: ${GREEN}${LISTINO_SIZE}${NC} (${LISTINO_LINES} righe)"
+        echo -e "      Aggiornato: ${YELLOW}${LISTINO_DATE}${NC}"
+    else
+        echo -e "   📋 LISTINO.txt: ${RED}Non trovato${NC}"
+    fi
+    echo ""
+    
+    # === BACKUP ===
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}💾 BACKUP DATABASE${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    
     BACKUP_COUNT=$(ls -1 ${BACKUP_DIR}/*.gz 2>/dev/null | wc -l)
-    echo -e "   💾 Backup salvati: ${YELLOW}${BACKUP_COUNT}${NC}"
+    echo -e "   Backup totali: ${YELLOW}${BACKUP_COUNT}${NC}"
+    
+    if [ "${BACKUP_COUNT}" -gt 0 ]; then
+        # Mostra il backup più recente
+        LATEST_BACKUP=$(ls -t ${BACKUP_DIR}/*.gz 2>/dev/null | head -1)
+        LATEST_NAME=$(basename ${LATEST_BACKUP})
+        LATEST_SIZE=$(du -h ${LATEST_BACKUP} | cut -f1)
+        LATEST_DATE=$(stat -c %y ${LATEST_BACKUP} 2>/dev/null | cut -d'.' -f1)
+        
+        echo ""
+        echo -e "   ${GREEN}★ PIÙ RECENTE:${NC}"
+        echo -e "      📁 ${CYAN}${LATEST_NAME}${NC}"
+        echo -e "      📏 Dimensione: ${LATEST_SIZE}"
+        echo -e "      📅 Data: ${YELLOW}${LATEST_DATE}${NC}"
+        
+        # Mostra anche il più vecchio se ci sono più backup
+        if [ "${BACKUP_COUNT}" -gt 1 ]; then
+            OLDEST_BACKUP=$(ls -t ${BACKUP_DIR}/*.gz 2>/dev/null | tail -1)
+            OLDEST_NAME=$(basename ${OLDEST_BACKUP})
+            OLDEST_DATE=$(stat -c %y ${OLDEST_BACKUP} 2>/dev/null | cut -d'.' -f1)
+            echo ""
+            echo -e "   ${RED}○ Più vecchio:${NC}"
+            echo -e "      📁 ${OLDEST_NAME}"
+            echo -e "      📅 Data: ${OLDEST_DATE}"
+        fi
+    fi
     echo ""
 }
 
