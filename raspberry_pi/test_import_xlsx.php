@@ -8,6 +8,14 @@
  * 
  * Questo script LEGGE il file e mostra cosa verrebbe importato
  * SENZA effettivamente scrivere nel database.
+ * 
+ * STRUTTURA FILE: UN SOLO FOGLIO con:
+ * - Sezione VENDITE (in alto)
+ * - TOTALE VENDITE
+ * - Riga "SPESE"
+ * - Header spese
+ * - Sezione SPESE (in basso)
+ * - TOTALE SPESE
  */
 
 define('GREEN', "\033[32m");
@@ -131,107 +139,161 @@ foreach ($sheetNames as $i => $name) {
     echo "   " . ($i + 1) . ". $name\n";
 }
 
-// ANALISI VENDITE
+// LEGGI L'UNICO FOGLIO (sheet1) - vendite E spese sono nello stesso foglio
 echo BLUE . "\n" . str_repeat("─", 60) . "\n" . RESET;
-echo BLUE . "📊 ANALISI FOGLIO VENDITE (sheet1)\n" . RESET;
+echo BLUE . "📊 ANALISI FOGLIO UNICO (sheet1) - VENDITE E SPESE\n" . RESET;
 echo BLUE . str_repeat("─", 60) . "\n" . RESET;
 
-$venditeRows = readSheet($zip, 1, $sharedStrings);
-echo "Righe totali nel foglio: " . count($venditeRows) . "\n";
+$allRows = readSheet($zip, 1, $sharedStrings);
+echo "Righe totali nel foglio: " . count($allRows) . "\n";
 
-if (count($venditeRows) > 0) {
-    echo YELLOW . "\nIntestazioni (riga 1):\n" . RESET;
-    echo "   " . implode(" | ", $venditeRows[0]) . "\n";
-}
-
+// PARSING A STATI: vendite -> spese
+$modalita = 'none'; // 'vendite', 'spese', 'none'
 $venditeValide = 0;
-$venditePreview = [];
-
-for ($i = 1; $i < count($venditeRows); $i++) {
-    $row = $venditeRows[$i];
-    if (count($row) < 5 || empty($row[2])) continue;
-    
-    $prodotto = trim($row[2]);
-    $categoria = trim($row[3]);
-    $importo = floatval(str_replace(',', '.', $row[4]));
-    
-    if (empty($prodotto) || stripos($prodotto, 'TOTALE') !== false) continue;
-    if ($importo <= 0) continue;
-    
-    $timestamp = excelDateToMysql($row[0], $row[1]);
-    
-    $venditeValide++;
-    if (count($venditePreview) < 5) {
-        $venditePreview[] = [
-            'data' => $timestamp,
-            'prodotto' => $prodotto,
-            'categoria' => $categoria,
-            'importo' => $importo
-        ];
-    }
-}
-
-echo GREEN . "\nVendite valide trovate: $venditeValide\n" . RESET;
-
-if (count($venditePreview) > 0) {
-    echo YELLOW . "\nAnteprima prime 5 vendite:\n" . RESET;
-    foreach ($venditePreview as $v) {
-        echo sprintf("   📅 %s | %-25s | %-15s | €%.2f\n", 
-            $v['data'], $v['prodotto'], $v['categoria'], $v['importo']);
-    }
-}
-
-// ANALISI SPESE
-echo BLUE . "\n" . str_repeat("─", 60) . "\n" . RESET;
-echo BLUE . "💸 ANALISI FOGLIO SPESE (sheet2)\n" . RESET;
-echo BLUE . str_repeat("─", 60) . "\n" . RESET;
-
-$speseRows = readSheet($zip, 2, $sharedStrings);
-echo "Righe totali nel foglio: " . count($speseRows) . "\n";
-
-if (count($speseRows) > 0) {
-    echo YELLOW . "\nIntestazioni (riga 1):\n" . RESET;
-    echo "   " . implode(" | ", $speseRows[0]) . "\n";
-}
-
 $speseValide = 0;
+$venditePreview = [];
 $spesePreview = [];
 
-for ($i = 1; $i < count($speseRows); $i++) {
-    $row = $speseRows[$i];
-    if (count($row) < 5) continue;
+echo YELLOW . "\n🔍 Scansione righe per individuare sezioni...\n" . RESET;
+
+for ($i = 0; $i < count($allRows); $i++) {
+    $row = $allRows[$i];
+    $firstCell = trim($row[0] ?? '');
+    $thirdCell = trim($row[2] ?? '');
     
-    // Struttura: Data(0), Ora(1), Categoria(2), Spesa(3 vuoto), Importo(4)
-    $categoria = trim($row[2]);
-    $importo = floatval(str_replace(',', '.', $row[4]));
-    
-    if (empty($categoria) || stripos($categoria, 'TOTALE') !== false) continue;
-    if ($importo <= 0) continue;
-    
-    $timestamp = excelDateToMysql($row[0], $row[1]);
-    
-    $speseValide++;
-    if (count($spesePreview) < 5) {
-        $spesePreview[] = [
-            'data' => $timestamp,
-            'categoria' => $categoria,
-            'importo' => $importo,
-            'note' => ''
-        ];
+    // Debug: mostra riga corrente (prime 30 righe)
+    if ($i < 5) {
+        echo "   Riga " . ($i + 1) . ": [" . implode("] [", array_slice($row, 0, 5)) . "]\n";
     }
-}
-
-echo GREEN . "\nSpese valide trovate: $speseValide\n" . RESET;
-
-if (count($spesePreview) > 0) {
-    echo YELLOW . "\nAnteprima prime 5 spese:\n" . RESET;
-    foreach ($spesePreview as $s) {
-        echo sprintf("   📅 %s | %-20s | €%.2f\n", 
-            $s['data'], $s['categoria'], $s['importo']);
+    
+    // Rileva intestazione VENDITE: riga con "Data" e "Prodotto"
+    if ($firstCell === 'Data' && $thirdCell === 'Prodotto') {
+        $modalita = 'vendite';
+        echo GREEN . "   ✅ Trovata intestazione VENDITE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
+    
+    // Rileva "TOTALE VENDITE" - passa a modalità attesa spese
+    if (stripos($firstCell, 'TOTALE VENDITE') !== false) {
+        $modalita = 'attesa_spese';
+        echo YELLOW . "   📍 Trovato TOTALE VENDITE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
+    
+    // Rileva riga singola "SPESE" che indica inizio sezione spese
+    if ($firstCell === 'SPESE' || ($modalita === 'attesa_spese' && stripos($firstCell, 'SPESE') !== false && stripos($firstCell, 'TOTALE') === false)) {
+        $modalita = 'attesa_header_spese';
+        echo YELLOW . "   📍 Trovata riga SPESE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
+    
+    // Rileva intestazione SPESE: riga con "Data" e "Categoria" (dopo riga SPESE)
+    if (($modalita === 'attesa_spese' || $modalita === 'attesa_header_spese') && $firstCell === 'Data' && $thirdCell === 'Categoria') {
+        $modalita = 'spese';
+        echo GREEN . "   ✅ Trovata intestazione SPESE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
+    
+    // Rileva "TOTALE SPESE" - fine parsing spese
+    if (stripos($firstCell, 'TOTALE SPESE') !== false) {
+        $modalita = 'none';
+        echo YELLOW . "   📍 Trovato TOTALE SPESE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
+    
+    // Rileva RIEPILOGO - fine parsing
+    if (stripos($firstCell, 'RIEPILOGO') !== false) {
+        $modalita = 'none';
+        continue;
+    }
+    
+    // Salta righe vuote o non valide (deve iniziare con una data)
+    if (empty($firstCell) || !preg_match('/\d{1,2}\/\d{1,2}\/\d{4}/', $firstCell)) {
+        continue;
+    }
+    
+    // PARSING VENDITE
+    if ($modalita === 'vendite') {
+        if (count($row) < 5) continue;
+        
+        $prodotto = trim($row[2]);
+        $categoria = trim($row[3]);
+        $importo = floatval(str_replace(',', '.', $row[4]));
+        
+        if (empty($prodotto) || $importo <= 0) continue;
+        
+        $timestamp = excelDateToMysql($row[0], $row[1]);
+        $venditeValide++;
+        
+        if (count($venditePreview) < 5) {
+            $venditePreview[] = [
+                'data' => $timestamp,
+                'prodotto' => $prodotto,
+                'categoria' => $categoria,
+                'importo' => $importo
+            ];
+        }
+    }
+    
+    // PARSING SPESE
+    if ($modalita === 'spese') {
+        // Struttura SPESE: Data(0), Ora(1), Categoria(2), [vuoto](3), Importo(4)
+        // Nel tuo file, l'importo è nella colonna E (indice 4)
+        $categoria = trim($row[2]);
+        
+        // Cerca l'importo - potrebbe essere in colonna 4 o oltre
+        $importo = 0;
+        for ($col = 3; $col < count($row); $col++) {
+            $val = str_replace(',', '.', trim($row[$col]));
+            if (is_numeric($val) && floatval($val) > 0) {
+                $importo = floatval($val);
+                break;
+            }
+        }
+        
+        if (empty($categoria) || $importo <= 0) continue;
+        
+        $timestamp = excelDateToMysql($row[0], $row[1]);
+        $speseValide++;
+        
+        if (count($spesePreview) < 5) {
+            $spesePreview[] = [
+                'data' => $timestamp,
+                'categoria' => $categoria,
+                'importo' => $importo
+            ];
+        }
     }
 }
 
 $zip->close();
+
+// MOSTRA RISULTATI
+echo BLUE . "\n" . str_repeat("─", 60) . "\n" . RESET;
+echo GREEN . "📊 VENDITE TROVATE: $venditeValide\n" . RESET;
+echo BLUE . str_repeat("─", 60) . "\n" . RESET;
+
+if (count($venditePreview) > 0) {
+    echo YELLOW . "Anteprima prime 5 vendite:\n" . RESET;
+    foreach ($venditePreview as $v) {
+        echo sprintf("   📅 %s | %-25s | %-15s | €%.2f\n", 
+            $v['data'], substr($v['prodotto'], 0, 25), $v['categoria'], $v['importo']);
+    }
+}
+
+echo BLUE . "\n" . str_repeat("─", 60) . "\n" . RESET;
+echo GREEN . "💸 SPESE TROVATE: $speseValide\n" . RESET;
+echo BLUE . str_repeat("─", 60) . "\n" . RESET;
+
+if (count($spesePreview) > 0) {
+    echo YELLOW . "Anteprima prime 5 spese:\n" . RESET;
+    foreach ($spesePreview as $s) {
+        echo sprintf("   📅 %s | %-20s | €%.2f\n", 
+            $s['data'], $s['categoria'], $s['importo']);
+    }
+} else {
+    echo RED . "⚠️ Nessuna spesa trovata!\n" . RESET;
+}
 
 // RIEPILOGO FINALE
 echo GREEN . "
@@ -240,8 +302,20 @@ echo GREEN . "
 ╠══════════════════════════════════════════════════════════════╣
 ║  Vendite da importare:   " . str_pad($venditeValide, 8) . "                           ║
 ║  Spese da importare:     " . str_pad($speseValide, 8) . "                           ║
-╠══════════════════════════════════════════════════════════════╣
-║  ✅ Il file può essere importato!                             ║
+╠══════════════════════════════════════════════════════════════╣" . RESET;
+
+if ($venditeValide > 0 && $speseValide > 0) {
+    echo GREEN . "
+║  ✅ Il file può essere importato!                             ║" . RESET;
+} elseif ($venditeValide > 0) {
+    echo YELLOW . "
+║  ⚠️ Solo vendite trovate, nessuna spesa                       ║" . RESET;
+} else {
+    echo RED . "
+║  ❌ Problema: verifica la struttura del file                  ║" . RESET;
+}
+
+echo GREEN . "
 ╚══════════════════════════════════════════════════════════════╝
 " . RESET;
 
