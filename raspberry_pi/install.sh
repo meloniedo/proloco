@@ -129,11 +129,12 @@ systemctl enable apache2
 # Crea cartelle necessarie
 mkdir -p ${WEB_DIR}/logs
 mkdir -p ${WEB_DIR}/backups
-mkdir -p /home/pi/proloco/BACKUP_GIORNALIERI
-mkdir -p /home/pi/proloco/RESOCONTI_SETTIMANALI
+mkdir -p /home/${USER_NAME}/proloco/BACKUP_GIORNALIERI
+mkdir -p /home/${USER_NAME}/proloco/RESOCONTI_SETTIMANALI
 chown -R www-data:www-data ${WEB_DIR}/logs
 chown -R www-data:www-data ${WEB_DIR}/backups
-chown -R www-data:www-data /home/pi/proloco
+chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/proloco/BACKUP_GIORNALIERI
+chown -R ${USER_NAME}:${USER_NAME} /home/${USER_NAME}/proloco/RESOCONTI_SETTIMANALI
 
 # Rendi eseguibili gli script cron
 chmod +x ${WEB_DIR}/cron_sync.php
