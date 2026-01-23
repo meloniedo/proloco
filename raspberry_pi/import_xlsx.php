@@ -263,7 +263,10 @@ for ($i = 0; $i < count($allRows); $i++) {
             }
         }
         
-        if (empty($categoria) || $importo <= 0) continue;
+        if (empty($categoria)) continue;
+        
+        // Permetti anche importi = 0
+        if ($importo < 0) $importo = 0;
         
         $timestamp = excelDateToMysql($data, $ora);
         
