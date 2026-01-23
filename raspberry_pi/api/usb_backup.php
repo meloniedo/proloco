@@ -39,18 +39,21 @@ function findUSB() {
         }
     }
     
-    // Metodo 2: Cerca in /media/edo/* (Raspberry Pi OS)
-    $piMedia = '/media/edo';
-    if (is_dir($piMedia)) {
-        $dirs = @scandir($piMedia);
+    // Metodo 2: Cerca in /media/* (chiavette montate direttamente)
+    $mediaDir = '/media';
+    if (is_dir($mediaDir)) {
+        $dirs = @scandir($mediaDir);
         if ($dirs) {
             foreach ($dirs as $dir) {
                 if ($dir === '.' || $dir === '..') continue;
-                $fullPath = $piMedia . '/' . $dir;
+                $fullPath = $mediaDir . '/' . $dir;
                 if (is_dir($fullPath)) {
                     // Verifica che sia scrivibile
                     if (is_writable($fullPath)) {
-                        return $fullPath;
+                        $freeSpace = @disk_free_space($fullPath);
+                        if ($freeSpace !== false && $freeSpace > 1048576) {
+                            return $fullPath;
+                        }
                     }
                     // Prova a renderlo scrivibile
                     @exec("sudo chmod 777 '$fullPath' 2>/dev/null");
@@ -62,22 +65,31 @@ function findUSB() {
         }
     }
     
-    // Metodo 3: Cerca in /media/* generici (es. /media/Volume da 4,0 GB)
-    $mediaDir = '/media';
+    // Metodo 3: Cerca anche in sottocartelle /media/utente/*
     if (is_dir($mediaDir)) {
         $dirs = @scandir($mediaDir);
         if ($dirs) {
             foreach ($dirs as $dir) {
-                if ($dir === '.' || $dir === '..' || $dir === 'edo') continue;
-                $fullPath = $mediaDir . '/' . $dir;
-                if (is_dir($fullPath) && is_writable($fullPath)) {
-                    $freeSpace = @disk_free_space($fullPath);
-                    if ($freeSpace !== false && $freeSpace > 1048576) {
-                        return $fullPath;
+                if ($dir === '.' || $dir === '..') continue;
+                $userMediaPath = $mediaDir . '/' . $dir;
+                if (is_dir($userMediaPath)) {
+                    $subDirs = @scandir($userMediaPath);
+                    if ($subDirs) {
+                        foreach ($subDirs as $subDir) {
+                            if ($subDir === '.' || $subDir === '..') continue;
+                            $fullPath = $userMediaPath . '/' . $subDir;
+                            if (is_dir($fullPath) && is_writable($fullPath)) {
+                                $freeSpace = @disk_free_space($fullPath);
+                                if ($freeSpace !== false && $freeSpace > 1048576) {
+                                    return $fullPath;
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+    }
     }
     
     // Metodo 4: Cerca in /mnt/*
