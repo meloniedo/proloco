@@ -654,6 +654,27 @@
                     </a>
                 </div>
                 
+                <!-- IMPORTA DATI DA XLSX -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 style="font-size: 22px;" class="font-bold text-amber-100">📤 Importa Dati</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded-full bg-orange-500"></span>
+                            <span style="font-size: 16px;" class="text-orange-300">Da file Excel</span>
+                        </div>
+                    </div>
+                    <div class="bg-orange-900/30 p-3 rounded-lg mb-3 border border-orange-700">
+                        <div class="text-orange-200" style="font-size: 16px;">
+                            📂 Carica un file Excel (.xlsx) per importare vendite e spese da backup precedenti o da altre app.
+                        </div>
+                    </div>
+                    <input type="file" id="importXlsxFile" accept=".xlsx" style="display:none;" onchange="handleImportXlsx(event)">
+                    <button onclick="document.getElementById('importXlsxFile').click()" style="font-size: 20px;" class="w-full bg-orange-700 hover:bg-orange-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-orange-500 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        📤 Seleziona File Excel
+                    </button>
+                    <div id="import-status" class="text-amber-200/70 mt-2" style="font-size: 16px; text-align: center; display: none;"></div>
+                </div>
+                
                 <!-- BACKUP AUTOMATICO -->
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800" id="backup-auto-section">
                     <div class="flex items-center justify-between mb-3">
