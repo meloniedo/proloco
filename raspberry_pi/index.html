@@ -1295,7 +1295,10 @@
         state.view = view;
         await render();
         if (view === 'impostazioni') {
-            setTimeout(loadBackupSettings, 100);
+            setTimeout(() => {
+                loadBackupSettings();
+                initTimeSettings();
+            }, 100);
         }
     };
     
