@@ -321,6 +321,11 @@ button { cursor: pointer; background-color: transparent; background-image: none;
     border: 2px solid #022c22;
 }
 
+.cat-cibo {
+    background: linear-gradient(145deg, #b45309 0%, #92400e 50%, #713f12 100%);
+    border: 2px solid #451a03;
+}
+
 /* ==================== STATISTICHE CARDS ==================== */
 .stat-card-green {
     background: linear-gradient(145deg, #166534 0%, #14532d 50%, #0f3d22 100%);
