@@ -1103,6 +1103,85 @@
         }
     }
     
+    // Importa dati da file XLSX esterno
+    async function handleImportXlsx(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const statusDiv = document.getElementById('import-status');
+        
+        // Verifica estensione
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'xlsx') {
+            alert('❌ Formato non supportato.\n\nUsa un file .xlsx');
+            event.target.value = '';
+            return;
+        }
+        
+        // Conferma importazione
+        if (!confirm(`📤 IMPORTA DATI\n\nFile: ${file.name}\n\nVuoi importare vendite e spese da questo file?\n\n⚠️ I dati verranno AGGIUNTI a quelli esistenti.`)) {
+            event.target.value = '';
+            return;
+        }
+        
+        showFeedback('📤 Importazione...');
+        if (statusDiv) {
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '⏳ Importazione in corso...';
+        }
+        
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch('api/import_xlsx.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            // Reset input file
+            event.target.value = '';
+            
+            if (result.success) {
+                const d = result.dettagli;
+                const msg = `✅ IMPORTAZIONE COMPLETATA!\n\n💰 Vendite importate: ${d.vendite_importate}\n💸 Spese importate: ${d.spese_importate}`;
+                
+                if (d.vendite_errori > 0 || d.spese_errori > 0) {
+                    alert(msg + `\n\n⚠️ Errori: ${d.vendite_errori} vendite, ${d.spese_errori} spese`);
+                } else {
+                    alert(msg);
+                }
+                
+                if (statusDiv) {
+                    statusDiv.innerHTML = `✅ Importate ${d.vendite_importate} vendite, ${d.spese_importate} spese`;
+                    statusDiv.style.color = '#86efac';
+                }
+                
+                showFeedback(`✅ Importati ${d.vendite_importate + d.spese_importate} record`);
+                render();
+            } else {
+                alert(`❌ ERRORE IMPORTAZIONE\n\n${result.error}`);
+                if (statusDiv) {
+                    statusDiv.innerHTML = '❌ ' + result.error;
+                    statusDiv.style.color = '#fca5a5';
+                }
+                showFeedback('❌ Errore');
+            }
+            
+        } catch (e) {
+            console.error('Errore importazione xlsx:', e);
+            alert(`❌ ERRORE IMPORTAZIONE\n\n${e.message}`);
+            if (statusDiv) {
+                statusDiv.innerHTML = '❌ Errore di connessione';
+                statusDiv.style.color = '#fca5a5';
+            }
+            showFeedback('❌ Errore');
+            event.target.value = '';
+        }
+    }
+    
     // ===== GESTIONE ORA SISTEMA =====
     
     // Controlla se serve mostrare popup ora all'avvio
