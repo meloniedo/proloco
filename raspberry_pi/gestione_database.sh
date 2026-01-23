@@ -183,22 +183,33 @@ list_backups() {
         return
     fi
     
-    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    printf "   ${CYAN}%-4s %-35s %-10s %-20s${NC}\n" "N°" "NOME FILE" "DIMENSIONE" "DATA CREAZIONE"
-    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    printf "   ${CYAN}%-4s %-40s %-10s %-20s${NC}\n" "N°" "NOME FILE" "DIM." "DATA CREAZIONE"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
     i=1
     for file in $(ls -t ${BACKUP_DIR}/*.gz 2>/dev/null); do
         filename=$(basename $file)
         size=$(du -h $file | cut -f1)
         date=$(stat -c %y $file | cut -d'.' -f1)
-        printf "   %-4s %-35s %-10s %-20s\n" "$i." "$filename" "$size" "$date"
+        
+        # Evidenzia il più recente
+        if [ $i -eq 1 ]; then
+            printf "   ${GREEN}%-4s %-40s %-10s %-20s ★ PIÙ RECENTE${NC}\n" "$i." "$filename" "$size" "$date"
+        else
+            printf "   %-4s %-40s %-10s %-20s\n" "$i." "$filename" "$size" "$date"
+        fi
         i=$((i+1))
     done
     
-    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     echo -e "   ${BLUE}Totale: $((i-1)) backup${NC}"
+    echo -e "   ${BLUE}Cartella: ${BACKUP_DIR}/${NC}"
+    
+    # Calcola spazio totale occupato
+    TOTAL_SIZE=$(du -sh ${BACKUP_DIR} 2>/dev/null | cut -f1)
+    echo -e "   ${BLUE}Spazio totale: ${TOTAL_SIZE}${NC}"
     
     press_enter
 }
