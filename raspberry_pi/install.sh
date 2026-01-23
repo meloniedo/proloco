@@ -22,7 +22,8 @@ IP_ADDRESS="192.168.4.1"
 DB_USER="edo"
 DB_PASS="5054"
 DB_NAME="proloco_bar"
-WEB_DIR="/var/www/html/proloco"
+WEB_DIR="/home/edo/proloco"
+USER_NAME="edo"
 
 # Verifica root
 if [ "$EUID" -ne 0 ]; then 
