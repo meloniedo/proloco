@@ -149,22 +149,64 @@ chmod +x ${WEB_DIR}/cron_listino.php
 # Rendi eseguibile lo script aggiorna.sh
 chmod +x ${REPO_DIR}/aggiorna.sh
 
-# Rendi eseguibili tutti gli script bash
-chmod +x ${WEB_DIR}/*.sh 2>/dev/null || true
-chmod +x ${REPO_DIR}/*.sh 2>/dev/null || true
+# ========================================
+# PERMESSI COMPLETI - SEZIONE CRITICA
+# ========================================
+echo "  Configurazione permessi completi..."
 
-# Crea e imposta permessi per file di testo (scrittura da terminale E da web)
+# Rendi eseguibili TUTTI gli script bash e PHP
+chmod 755 ${WEB_DIR}/*.sh 2>/dev/null || true
+chmod 755 ${WEB_DIR}/*.php 2>/dev/null || true
+chmod 755 ${WEB_DIR}/api/*.php 2>/dev/null || true
+chmod 755 ${REPO_DIR}/*.sh 2>/dev/null || true
+
+# Crea e imposta permessi per file di testo (666 = lettura/scrittura per tutti)
+# Questi file devono essere modificabili sia da terminale (utente edo) che da web (www-data)
 touch ${WEB_DIR}/STORICO.txt
 touch ${WEB_DIR}/LISTINO.txt
-chmod 666 ${WEB_DIR}/STORICO.txt
-chmod 666 ${WEB_DIR}/LISTINO.txt
 chown www-data:www-data ${WEB_DIR}/STORICO.txt
 chown www-data:www-data ${WEB_DIR}/LISTINO.txt
+chmod 666 ${WEB_DIR}/STORICO.txt
+chmod 666 ${WEB_DIR}/LISTINO.txt
 
-# Crea cartella backup per script bash
+# Crea cartelle per dati con permessi aperti (777 = tutti possono tutto)
 mkdir -p ${REPO_DIR}/backup
+mkdir -p ${REPO_DIR}/BACKUP_GIORNALIERI
+mkdir -p ${REPO_DIR}/RESOCONTI_SETTIMANALI
+mkdir -p ${WEB_DIR}/logs
+mkdir -p ${WEB_DIR}/backups
+
 chmod 777 ${REPO_DIR}/backup
+chmod 777 ${REPO_DIR}/BACKUP_GIORNALIERI
+chmod 777 ${REPO_DIR}/RESOCONTI_SETTIMANALI
+chmod 777 ${WEB_DIR}/logs
+chmod 777 ${WEB_DIR}/backups
+
 chown ${USER_NAME}:${USER_NAME} ${REPO_DIR}/backup
+chown ${USER_NAME}:${USER_NAME} ${REPO_DIR}/BACKUP_GIORNALIERI
+chown ${USER_NAME}:${USER_NAME} ${REPO_DIR}/RESOCONTI_SETTIMANALI
+chown www-data:www-data ${WEB_DIR}/logs
+chown www-data:www-data ${WEB_DIR}/backups
+
+# Aggiungi utente edo al gruppo www-data (può modificare file web)
+usermod -a -G www-data ${USER_NAME} 2>/dev/null || true
+
+# Cartella includes (necessaria per config.php)
+chown -R www-data:www-data ${WEB_DIR}/includes
+chmod -R 755 ${WEB_DIR}/includes
+
+# Cartella API
+chown -R www-data:www-data ${WEB_DIR}/api
+chmod -R 755 ${WEB_DIR}/api
+
+# Permessi finali cartella web principale
+chown -R www-data:www-data ${WEB_DIR}
+chmod -R 775 ${WEB_DIR}
+
+# Permessi git (per aggiornamenti da terminale)
+chown -R ${USER_NAME}:${USER_NAME} ${REPO_DIR}/.git 2>/dev/null || true
+
+echo -e "${GREEN}✓ Permessi configurati correttamente${NC}"
 
 # Configura CRON per sincronizzazione automatica STORICO.txt ogni minuto
 echo "# Sincronizzazione STORICO.txt ogni minuto" > /etc/cron.d/proloco_sync
