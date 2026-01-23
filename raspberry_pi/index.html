@@ -317,31 +317,92 @@
 
     async function renderStatistiche() {
         const stats = await API.getStatistiche(state.periodo);
+        
+        // Calcola per categoria e top 5
+        const vendite = await API.getVendite();
+        const perCategoria = {};
+        const perProdotto = {};
+        
+        vendite.forEach(v => {
+            const cat = v.categoria || 'ALTRO';
+            const nome = v.nome_prodotto;
+            const prezzo = parseFloat(v.prezzo);
+            
+            if (!perCategoria[cat]) perCategoria[cat] = { count: 0, totale: 0 };
+            perCategoria[cat].count++;
+            perCategoria[cat].totale += prezzo;
+            
+            if (!perProdotto[nome]) perProdotto[nome] = { count: 0, totale: 0 };
+            perProdotto[nome].count++;
+            perProdotto[nome].totale += prezzo;
+        });
+        
+        // Top 5 prodotti
+        const top5 = Object.entries(perProdotto)
+            .sort((a, b) => b[1].count - a[1].count)
+            .slice(0, 5);
+        
         return `
             <div class="space-y-4">
                 <div class="grid grid-cols-3 gap-2">
                     ${['oggi', 'settimana', 'mese'].map(p => `
-                        <button onclick="changePeriodo('${p}')" class="px-2 py-2 rounded-lg font-semibold text-sm ${state.periodo === p ? 'btn-wood-active' : 'btn-wood-inactive'}">
+                        <button onclick="changePeriodo('${p}')" style="font-size: 18px; padding: 12px;" class="rounded-xl font-bold ${state.periodo === p ? 'btn-wood-active' : 'btn-wood-inactive'}">
                             ${p === 'oggi' ? '📅 Oggi' : p === 'settimana' ? '📆 Sett.' : '🗓️ Mese'}
                         </button>
                     `).join('')}
                 </div>
+                
+                <!-- Riepilogo principale -->
                 <div class="grid grid-cols-1 gap-3">
-                    <div class="stat-card-green p-4 rounded-xl text-amber-100 border-2 border-green-800">
-                        <div class="flex justify-between items-center"><span class="font-semibold">Incasso</span><span class="text-2xl">📈</span></div>
-                        <div class="text-3xl font-black">€${stats.totaleIncasso.toFixed(2)}</div>
+                    <div class="stat-card-green p-5 rounded-xl text-amber-100 border-2 border-green-800">
+                        <div class="flex justify-between items-center"><span style="font-size: 20px;" class="font-semibold">Incasso</span><span style="font-size: 32px;">📈</span></div>
+                        <div style="font-size: 36px;" class="font-black">€${stats.totaleIncasso.toFixed(2)}</div>
                     </div>
-                    <div class="stat-card-red p-4 rounded-xl text-amber-100 border-2 border-red-800">
-                        <div class="flex justify-between items-center"><span class="font-semibold">Spese</span><span class="text-2xl">📉</span></div>
-                        <div class="text-3xl font-black">€${stats.totaleSpese.toFixed(2)}</div>
+                    <div class="stat-card-red p-5 rounded-xl text-amber-100 border-2 border-red-800">
+                        <div class="flex justify-between items-center"><span style="font-size: 20px;" class="font-semibold">Spese</span><span style="font-size: 32px;">📉</span></div>
+                        <div style="font-size: 36px;" class="font-black">€${stats.totaleSpese.toFixed(2)}</div>
                     </div>
-                    <div class="${stats.profittoNetto >= 0 ? 'stat-card-blue border-blue-800' : 'stat-card-orange border-orange-800'} p-4 rounded-xl text-amber-100 border-2">
-                        <div class="flex justify-between items-center"><span class="font-semibold">Profitto</span><span class="text-2xl">💰</span></div>
-                        <div class="text-3xl font-black">€${stats.profittoNetto.toFixed(2)}</div>
-                        <div class="text-xs opacity-75">${stats.totaleVendite} vendite</div>
+                    <div class="${stats.profittoNetto >= 0 ? 'stat-card-blue border-blue-800' : 'stat-card-orange border-orange-800'} p-5 rounded-xl text-amber-100 border-2">
+                        <div class="flex justify-between items-center"><span style="font-size: 20px;" class="font-semibold">Profitto</span><span style="font-size: 32px;">💰</span></div>
+                        <div style="font-size: 36px;" class="font-black">€${stats.profittoNetto.toFixed(2)}</div>
+                        <div style="font-size: 16px;" class="opacity-75">${stats.totaleVendite} vendite</div>
                     </div>
                 </div>
-                <button onclick="openResetModal()" class="w-full btn-wood text-amber-100 py-3 rounded-xl font-bold border-2 border-red-700">
+                
+                <!-- Top 5 Prodotti -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <h3 style="font-size: 22px;" class="font-bold text-amber-100 mb-4">🏆 Top 5 Prodotti</h3>
+                    ${top5.length === 0 ? '<div class="text-amber-200/50 text-center py-4" style="font-size: 18px;">Nessuna vendita</div>' : 
+                    `<div class="space-y-3">${top5.map((p, i) => `
+                        <div class="bg-amber-900/30 p-4 rounded-lg flex justify-between items-center border border-amber-700">
+                            <div class="flex items-center gap-3">
+                                <span style="font-size: 28px; width: 40px; text-align: center;" class="font-black text-amber-300">${i + 1}.</span>
+                                <span style="font-size: 20px;" class="text-amber-100 font-bold">${p[0]}</span>
+                            </div>
+                            <div class="text-right">
+                                <div style="font-size: 20px;" class="font-bold text-green-400">€${p[1].totale.toFixed(2)}</div>
+                                <div style="font-size: 16px;" class="text-amber-200/70">${p[1].count} vendite</div>
+                            </div>
+                        </div>
+                    `).join('')}</div>`}
+                </div>
+                
+                <!-- Per Categoria -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <h3 style="font-size: 22px;" class="font-bold text-amber-100 mb-4">📁 Per Categoria</h3>
+                    ${Object.keys(perCategoria).length === 0 ? '<div class="text-amber-200/50 text-center py-4" style="font-size: 18px;">Nessun dato</div>' : 
+                    `<div class="space-y-3">${Object.entries(perCategoria).map(([cat, data]) => `
+                        <div class="bg-amber-900/30 p-4 rounded-lg flex justify-between items-center border border-amber-700">
+                            <span style="font-size: 20px;" class="text-amber-100 font-bold">${cat}</span>
+                            <div class="text-right">
+                                <div style="font-size: 20px;" class="font-bold text-green-400">€${data.totale.toFixed(2)}</div>
+                                <div style="font-size: 16px;" class="text-amber-200/70">${data.count} vendite</div>
+                            </div>
+                        </div>
+                    `).join('')}</div>`}
+                </div>
+                
+                <button onclick="openResetModal()" style="font-size: 20px; padding: 16px;" class="w-full btn-wood text-amber-100 rounded-xl font-bold border-2 border-red-700">
                     🗑️ 🔒 Reset Periodo
                 </button>
             </div>
