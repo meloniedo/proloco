@@ -133,17 +133,20 @@ systemctl enable apache2
 # Crea cartelle necessarie
 mkdir -p ${WEB_DIR}/logs
 mkdir -p ${WEB_DIR}/backups
-mkdir -p /home/pi/proloco/BACKUP_GIORNALIERI
-mkdir -p /home/pi/proloco/RESOCONTI_SETTIMANALI
-chown -R www-data:www-data ${WEB_DIR}/logs
-chown -R www-data:www-data ${WEB_DIR}/backups
-chown -R ${USER_NAME}:${USER_NAME} /home/pi/proloco/BACKUP_GIORNALIERI
-chown -R ${USER_NAME}:${USER_NAME} /home/pi/proloco/RESOCONTI_SETTIMANALI
+mkdir -p ${REPO_DIR}/BACKUP_GIORNALIERI
+mkdir -p ${REPO_DIR}/RESOCONTI_SETTIMANALI
+chown -R www-data:www-data ${WEB_DIR}
+chmod -R 755 ${WEB_DIR}
+chown -R ${USER_NAME}:${USER_NAME} ${REPO_DIR}/BACKUP_GIORNALIERI
+chown -R ${USER_NAME}:${USER_NAME} ${REPO_DIR}/RESOCONTI_SETTIMANALI
 
 # Rendi eseguibili gli script cron
 chmod +x ${WEB_DIR}/cron_sync.php
 chmod +x ${WEB_DIR}/cron_backup.php
 chmod +x ${WEB_DIR}/cron_resoconto.php
+
+# Rendi eseguibile lo script aggiorna.sh
+chmod +x ${REPO_DIR}/aggiorna.sh
 
 # Configura CRON per sincronizzazione automatica STORICO.txt ogni minuto
 echo "# Sincronizzazione STORICO.txt ogni minuto" > /etc/cron.d/proloco_sync
