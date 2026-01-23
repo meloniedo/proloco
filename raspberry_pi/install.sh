@@ -104,10 +104,8 @@ USBSERVICE
 # Ricarica udev
 udevadm control --reload-rules 2>/dev/null || true
 
-# Crea directory media con permessi corretti
-mkdir -p /media/${USER_NAME}
-chmod 777 /media/${USER_NAME}
-chown www-data:www-data /media/${USER_NAME} 2>/dev/null || true
+# Crea directory media con permessi corretti (per USB)
+chmod 777 /media 2>/dev/null || true
 
 # Apache
 cat > /etc/apache2/sites-available/proloco.conf << EOF
