@@ -5,7 +5,7 @@
 // Esegue backup settimanale programmato
 // ========================================
 
-$baseDir = '/home/pi/proloco';
+$baseDir = '/home/pi/proloco/raspberry_pi';
 
 require_once $baseDir . '/includes/config.php';
 

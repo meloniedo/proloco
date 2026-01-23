@@ -5,7 +5,7 @@
 require_once '../includes/config.php';
 
 // Include le funzioni del resoconto
-$baseDir = '/home/pi/proloco';
+$baseDir = '/home/pi/proloco/raspberry_pi';
 $resocontiDir = '/home/pi/proloco/RESOCONTI_SETTIMANALI';
 
 // Funzione per aggiornare il resoconto totale inline

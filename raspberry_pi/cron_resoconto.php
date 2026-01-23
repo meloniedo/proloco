@@ -5,7 +5,7 @@
 // Crea resoconto in /home/pi/proloco/RESOCONTI_SETTIMANALI/
 // ========================================
 
-$baseDir = '/home/pi/proloco';
+$baseDir = '/home/pi/proloco/raspberry_pi';
 $resocontiDir = '/home/pi/proloco/RESOCONTI_SETTIMANALI';
 $backupDir = '/home/pi/proloco/BACKUP_GIORNALIERI';
 

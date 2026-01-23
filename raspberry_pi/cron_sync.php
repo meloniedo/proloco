@@ -8,7 +8,7 @@
 // ========================================
 
 // Percorso assoluto
-$baseDir = '/home/pi/proloco';
+$baseDir = '/home/pi/proloco/raspberry_pi';
 
 require_once $baseDir . '/includes/config.php';
 require_once $baseDir . '/includes/storico_txt.php';
