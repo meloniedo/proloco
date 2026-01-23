@@ -17,6 +17,9 @@ WHITE='\033[1;37m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
+# Abilita nullglob per gestire cartelle vuote senza errori
+shopt -s nullglob
+
 # Configurazione
 DB_NAME="proloco_bar"
 DB_USER="edo"
