@@ -128,12 +128,16 @@ systemctl enable apache2
 # Crea cartelle necessarie
 mkdir -p ${WEB_DIR}/logs
 mkdir -p ${WEB_DIR}/backups
+mkdir -p /home/pi/proloco/BACKUP_GIORNALIERI
+mkdir -p /home/pi/proloco/RESOCONTI_SETTIMANALI
 chown -R www-data:www-data ${WEB_DIR}/logs
 chown -R www-data:www-data ${WEB_DIR}/backups
+chown -R www-data:www-data /home/pi/proloco
 
 # Rendi eseguibili gli script cron
 chmod +x ${WEB_DIR}/cron_sync.php
 chmod +x ${WEB_DIR}/cron_backup.php
+chmod +x ${WEB_DIR}/cron_resoconto.php
 
 # Configura CRON per sincronizzazione automatica STORICO.txt ogni minuto
 echo "# Sincronizzazione STORICO.txt ogni minuto" > /etc/cron.d/proloco_sync
@@ -144,6 +148,17 @@ chmod 644 /etc/cron.d/proloco_sync
 echo "# Backup automatico programmato" > /etc/cron.d/proloco_backup
 echo "* * * * * www-data /usr/bin/php ${WEB_DIR}/cron_backup.php > /dev/null 2>&1" >> /etc/cron.d/proloco_backup
 chmod 644 /etc/cron.d/proloco_backup
+
+# Configura CRON per resoconto settimanale (ogni lunedì alle 08:00)
+echo "# Resoconto settimanale automatico" > /etc/cron.d/proloco_resoconto
+echo "0 8 * * 1 www-data /usr/bin/php ${WEB_DIR}/cron_resoconto.php > /dev/null 2>&1" >> /etc/cron.d/proloco_resoconto
+chmod 644 /etc/cron.d/proloco_resoconto
+
+# Configura sudo per permettere a www-data di cambiare l'ora del sistema
+echo "# Permetti a www-data di cambiare data/ora" > /etc/sudoers.d/proloco-time
+echo "www-data ALL=(ALL) NOPASSWD: /bin/date" >> /etc/sudoers.d/proloco-time
+echo "www-data ALL=(ALL) NOPASSWD: /sbin/hwclock" >> /etc/sudoers.d/proloco-time
+chmod 440 /etc/sudoers.d/proloco-time
 
 systemctl restart cron
 
