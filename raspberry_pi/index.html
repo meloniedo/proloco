@@ -550,10 +550,24 @@
     }
 
     async function renderImpostazioni() {
-        const listino = await API.getListino();
-        state.usbStatus = await API.getUSBStatus();
+        let listino = [];
+        let usbConnected = false;
         
-        const usbConnected = state.usbStatus?.connected;
+        try {
+            listino = await API.getListino();
+        } catch(e) {
+            console.error('Errore caricamento listino:', e);
+            listino = [];
+        }
+        
+        try {
+            state.usbStatus = await API.getUSBStatus();
+            usbConnected = state.usbStatus?.connected;
+        } catch(e) {
+            console.error('Errore caricamento USB status:', e);
+            state.usbStatus = null;
+            usbConnected = false;
+        }
         
         return `
             <div class="space-y-4">
