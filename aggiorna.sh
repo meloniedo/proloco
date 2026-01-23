@@ -16,6 +16,10 @@ git fetch --all
 git reset --hard origin/main
 git clean -fd
 
+# Ripristina permessi per Apache
+sudo chown -R www-data:www-data /home/pi/proloco
+sudo chmod -R 755 /home/pi/proloco
+
 echo ""
 echo "✅ Aggiornamento completato!"
 echo ""
