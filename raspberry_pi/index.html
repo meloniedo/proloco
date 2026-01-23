@@ -455,20 +455,20 @@
                     `).join('')}
                 </div>
                 
-                <!-- Riepilogo principale -->
-                <div class="grid grid-cols-1 gap-3">
-                    <div class="stat-card-green p-5 rounded-xl text-amber-100 border-2 border-green-800">
-                        <div class="flex justify-between items-center"><span style="font-size: 20px;" class="font-semibold">Incasso</span><span style="font-size: 32px;">📈</span></div>
-                        <div style="font-size: 36px;" class="font-black">€${stats.totaleIncasso.toFixed(2)}</div>
+                <!-- Riepilogo principale - GRANDE E CENTRATO -->
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="stat-card-green p-6 rounded-2xl text-amber-100 border-4 border-green-700 text-center">
+                        <div style="font-size: 28px; font-weight: bold; margin-bottom: 8px;">📈 INCASSO</div>
+                        <div style="font-size: 52px; font-weight: 900;">€${stats.totaleIncasso.toFixed(2)}</div>
                     </div>
-                    <div class="stat-card-red p-5 rounded-xl text-amber-100 border-2 border-red-800">
-                        <div class="flex justify-between items-center"><span style="font-size: 20px;" class="font-semibold">Spese</span><span style="font-size: 32px;">📉</span></div>
-                        <div style="font-size: 36px;" class="font-black">€${stats.totaleSpese.toFixed(2)}</div>
+                    <div class="stat-card-red p-6 rounded-2xl text-amber-100 border-4 border-red-700 text-center">
+                        <div style="font-size: 28px; font-weight: bold; margin-bottom: 8px;">📉 SPESE</div>
+                        <div style="font-size: 52px; font-weight: 900;">€${stats.totaleSpese.toFixed(2)}</div>
                     </div>
-                    <div class="${stats.profittoNetto >= 0 ? 'stat-card-blue border-blue-800' : 'stat-card-orange border-orange-800'} p-5 rounded-xl text-amber-100 border-2">
-                        <div class="flex justify-between items-center"><span style="font-size: 20px;" class="font-semibold">Profitto</span><span style="font-size: 32px;">💰</span></div>
-                        <div style="font-size: 36px;" class="font-black">€${stats.profittoNetto.toFixed(2)}</div>
-                        <div style="font-size: 16px;" class="opacity-75">${stats.totaleVendite} vendite</div>
+                    <div class="${stats.profittoNetto >= 0 ? 'stat-card-blue border-blue-700' : 'stat-card-orange border-orange-700'} p-6 rounded-2xl text-amber-100 border-4 text-center">
+                        <div style="font-size: 28px; font-weight: bold; margin-bottom: 8px;">💰 PROFITTO</div>
+                        <div style="font-size: 52px; font-weight: 900;">€${stats.profittoNetto.toFixed(2)}</div>
+                        <div style="font-size: 18px; opacity: 0.8; margin-top: 8px;">${stats.totaleVendite} vendite</div>
                     </div>
                 </div>
                 
