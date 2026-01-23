@@ -144,6 +144,7 @@ chown -R ${USER_NAME}:${USER_NAME} ${REPO_DIR}/RESOCONTI_SETTIMANALI
 chmod +x ${WEB_DIR}/cron_sync.php
 chmod +x ${WEB_DIR}/cron_backup.php
 chmod +x ${WEB_DIR}/cron_resoconto.php
+chmod +x ${WEB_DIR}/cron_listino.php
 
 # Rendi eseguibile lo script aggiorna.sh
 chmod +x ${REPO_DIR}/aggiorna.sh
@@ -152,6 +153,11 @@ chmod +x ${REPO_DIR}/aggiorna.sh
 echo "# Sincronizzazione STORICO.txt ogni minuto" > /etc/cron.d/proloco_sync
 echo "* * * * * www-data /usr/bin/php ${WEB_DIR}/cron_sync.php > /dev/null 2>&1" >> /etc/cron.d/proloco_sync
 chmod 644 /etc/cron.d/proloco_sync
+
+# Configura CRON per sincronizzazione automatica LISTINO.txt ogni minuto
+echo "# Sincronizzazione LISTINO.txt ogni minuto" > /etc/cron.d/proloco_listino
+echo "* * * * * www-data /usr/bin/php ${WEB_DIR}/cron_listino.php > /dev/null 2>&1" >> /etc/cron.d/proloco_listino
+chmod 644 /etc/cron.d/proloco_listino
 
 # Configura CRON per backup automatico (controlla ogni minuto se è l'ora programmata)
 echo "# Backup automatico programmato" > /etc/cron.d/proloco_backup
