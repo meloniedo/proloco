@@ -12,6 +12,8 @@
  * STRUTTURA FILE: UN SOLO FOGLIO con:
  * - Sezione VENDITE (in alto)
  * - TOTALE VENDITE
+ * - Riga "SPESE"
+ * - Header spese
  * - Sezione SPESE (in basso)
  * - TOTALE SPESE
  */
@@ -152,8 +154,8 @@ function excelDateToMysql($excelDate, $time = '') {
 $allRows = readSheet($zip, 1, $sharedStrings);
 echo "Righe totali nel foglio: " . count($allRows) . "\n";
 
-// Trova la sezione VENDITE e SPESE
-$modalita = 'none'; // 'vendite' o 'spese'
+// PARSING A STATI: vendite -> spese
+$modalita = 'none'; // 'vendite', 'spese', 'attesa_spese', 'attesa_header_spese', 'none'
 $venditeImportate = 0;
 $venditeErrori = 0;
 $speseImportate = 0;
@@ -167,33 +169,55 @@ echo BLUE . "\n📊 Analisi e importazione dati...\n" . RESET;
 for ($i = 0; $i < count($allRows); $i++) {
     $row = $allRows[$i];
     $firstCell = trim($row[0] ?? '');
+    $thirdCell = trim($row[2] ?? '');
     
-    // Rileva intestazione VENDITE
-    if ($firstCell === 'Data' && isset($row[2]) && trim($row[2]) === 'Prodotto') {
+    // Rileva intestazione VENDITE: riga con "Data" e "Prodotto"
+    if ($firstCell === 'Data' && $thirdCell === 'Prodotto') {
         $modalita = 'vendite';
-        echo YELLOW . "  📍 Trovata sezione VENDITE alla riga " . ($i + 1) . "\n" . RESET;
+        echo YELLOW . "  📍 Trovata intestazione VENDITE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
     }
     
-    // Rileva intestazione SPESE
-    if ($firstCell === 'Data' && isset($row[2]) && trim($row[2]) === 'Categoria') {
+    // Rileva "TOTALE VENDITE" - passa a modalità attesa spese
+    if (stripos($firstCell, 'TOTALE VENDITE') !== false) {
+        $modalita = 'attesa_spese';
+        echo YELLOW . "  📍 Trovato TOTALE VENDITE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
+    
+    // Rileva riga singola "SPESE" che indica inizio sezione spese
+    if ($firstCell === 'SPESE' || ($modalita === 'attesa_spese' && stripos($firstCell, 'SPESE') !== false && stripos($firstCell, 'TOTALE') === false)) {
+        $modalita = 'attesa_header_spese';
+        echo YELLOW . "  📍 Trovata riga SPESE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
+    
+    // Rileva intestazione SPESE: riga con "Data" e "Categoria" (dopo riga SPESE)
+    if (($modalita === 'attesa_spese' || $modalita === 'attesa_header_spese') && $firstCell === 'Data' && $thirdCell === 'Categoria') {
         $modalita = 'spese';
-        echo YELLOW . "  📍 Trovata sezione SPESE alla riga " . ($i + 1) . "\n" . RESET;
+        echo YELLOW . "  📍 Trovata intestazione SPESE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
     }
     
-    // Rileva righe di totale - cambia modalità a none
-    if (stripos($firstCell, 'TOTALE') !== false || stripos($firstCell, 'RIEPILOGO') !== false) {
+    // Rileva "TOTALE SPESE" - fine parsing spese
+    if (stripos($firstCell, 'TOTALE SPESE') !== false) {
+        $modalita = 'none';
+        echo YELLOW . "  📍 Trovato TOTALE SPESE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
+    
+    // Rileva RIEPILOGO - fine parsing
+    if (stripos($firstCell, 'RIEPILOGO') !== false) {
         $modalita = 'none';
         continue;
     }
     
-    // Salta righe vuote o intestazioni
+    // Salta righe vuote o non valide (deve iniziare con una data)
     if (empty($firstCell) || !preg_match('/\d{1,2}\/\d{1,2}\/\d{4}/', $firstCell)) {
         continue;
     }
     
-    // Importa in base alla modalità
+    // IMPORTA VENDITE
     if ($modalita === 'vendite') {
         // Struttura VENDITE: Data(0), Ora(1), Prodotto(2), Categoria(3), Importo(4)
         if (count($row) < 5) continue;
@@ -215,22 +239,21 @@ for ($i = 0; $i < count($allRows); $i++) {
             $venditeErrori++;
         }
     }
+    // IMPORTA SPESE
     elseif ($modalita === 'spese') {
-        // Struttura SPESE: Data(0), Ora(1), Categoria(2), Spesa(3), Note(4), Importo(5)
-        // MA nel tuo file: Data(0), Ora(1), Categoria(2), (3 vuoto), Importo(4 o 5)
-        
+        // Struttura SPESE: Data(0), Ora(1), Categoria(2), [vuoto](3), Importo(4)
         $data = $row[0];
         $ora = $row[1];
         $categoria = trim($row[2]);
         
-        // Trova l'importo (potrebbe essere in colonna 4 o 5)
+        // Cerca l'importo - potrebbe essere in colonna 4 o oltre
         $importo = 0;
-        if (isset($row[5]) && is_numeric(str_replace(',', '.', $row[5]))) {
-            $importo = floatval(str_replace(',', '.', $row[5]));
-        } elseif (isset($row[4]) && is_numeric(str_replace(',', '.', $row[4]))) {
-            $importo = floatval(str_replace(',', '.', $row[4]));
-        } elseif (isset($row[3]) && is_numeric(str_replace(',', '.', $row[3]))) {
-            $importo = floatval(str_replace(',', '.', $row[3]));
+        for ($col = 3; $col < count($row); $col++) {
+            $val = str_replace(',', '.', trim($row[$col]));
+            if (is_numeric($val) && floatval($val) > 0) {
+                $importo = floatval($val);
+                break;
+            }
         }
         
         if (empty($categoria) || $importo <= 0) continue;
