@@ -202,8 +202,8 @@ $speseRows = readSheet($zip, 2, $sharedStrings);
 $speseImportate = 0;
 $speseErrori = 0;
 
-// Struttura effettiva: Data, Ora, (vuoto), Spesa/Categoria, Note, Importo
-// La colonna "Categoria" (indice 2) è vuota, "Spesa" (indice 3) contiene il nome categoria
+// Struttura REALE: Data, Ora, Categoria (nome spesa), Spesa (vuoto), Note, Importo
+// La colonna C (indice 2) contiene il nome della categoria/spesa
 $stmtSpesa = $pdo->prepare("INSERT INTO spese (categoria_spesa, importo, note, timestamp) VALUES (?, ?, ?, ?)");
 
 for ($i = 1; $i < count($speseRows); $i++) {
@@ -213,9 +213,9 @@ for ($i = 1; $i < count($speseRows); $i++) {
     
     $data = $row[0];
     $ora = $row[1];
-    // Colonna 2 è "Categoria" (vuota), colonna 3 è "Spesa" che contiene il nome della categoria
-    $categoria = trim($row[3]); 
-    $note = trim($row[4]);
+    // Colonna C (indice 2) contiene il nome della spesa
+    $categoria = trim($row[2]); 
+    $note = trim($row[4] ?? '');
     $importo = floatval(str_replace(',', '.', $row[5]));
     
     // Salta righe di totale o senza categoria
