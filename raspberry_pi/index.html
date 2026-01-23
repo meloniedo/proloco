@@ -1403,19 +1403,6 @@
         }
     }
     
-    // Carica impostazioni backup quando si va nelle impostazioni
-    const originalChangeView = changeView;
-    changeView = async function(view) {
-        state.view = view;
-        await render();
-        if (view === 'impostazioni') {
-            setTimeout(() => {
-                loadBackupSettings();
-                initTimeSettings();
-            }, 100);
-        }
-    };
-    
     function showFeedback(msg) {
         state.feedback = msg; render();
         setTimeout(() => { state.feedback = ''; render(); }, 2500);
