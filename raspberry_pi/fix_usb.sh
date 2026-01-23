@@ -11,22 +11,13 @@ usermod -a -G plugdev www-data 2>/dev/null
 usermod -a -G disk www-data 2>/dev/null
 echo "✓ Utente www-data aggiunto ai gruppi"
 
-# Crea directory con permessi corretti
-mkdir -p /media/edo
-chmod 777 /media/edo
-chown www-data:www-data /media/edo
-echo "✓ Directory /media/edo configurata"
+# Permessi per /media
+chmod 777 /media 2>/dev/null
+echo "✓ Directory /media configurata"
 
 # Se c'è già una chiavetta montata, sistema i permessi
-for dir in /media/edo/*; do
-    if [ -d "$dir" ]; then
-        chmod 777 "$dir" 2>/dev/null
-        echo "✓ Permessi aggiornati per: $dir"
-    fi
-done
-
 for dir in /media/*; do
-    if [ -d "$dir" ] && [ "$dir" != "/media/edo" ]; then
+    if [ -d "$dir" ]; then
         chmod 777 "$dir" 2>/dev/null
         echo "✓ Permessi aggiornati per: $dir"
     fi
