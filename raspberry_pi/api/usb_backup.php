@@ -39,8 +39,8 @@ function findUSB() {
         }
     }
     
-    // Metodo 2: Cerca in /media/pi/* (Raspberry Pi OS)
-    $piMedia = '/media/pi';
+    // Metodo 2: Cerca in /media/edo/* (Raspberry Pi OS)
+    $piMedia = '/media/edo';
     if (is_dir($piMedia)) {
         $dirs = @scandir($piMedia);
         if ($dirs) {
