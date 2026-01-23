@@ -1,0 +1,659 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#                    MANUALE PROLOCO BAR MANAGER
+#                         RASPBERRY PI 3A+
+# ══════════════════════════════════════════════════════════════════════════════
+#
+#  Versione: 4.0
+#  Data: Gennaio 2026
+#  WiFi: ProlocoBar / proloco2024
+#  IP: 192.168.4.1
+#
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+================================================================================
+                        INDICE
+================================================================================
+
+1. STRUTTURA CARTELLE
+2. COMANDI BASE TERMINALE (per chi inizia)
+3. CONNESSIONE AL RASPBERRY
+4. AGGIORNAMENTO APP DA GITHUB
+5. GESTIONE HOTSPOT / INTERNET
+6. IMPORTAZIONE DATI DA EXCEL
+7. BACKUP E RESET DATABASE
+8. GESTIONE PERMESSI
+9. COMANDI UTILI DI VERIFICA
+10. RISOLUZIONE PROBLEMI COMUNI
+11. FILE IMPORTANTI - COSA FA OGNUNO
+
+
+================================================================================
+1. STRUTTURA CARTELLE
+================================================================================
+
+/home/pi/proloco/                    ← CARTELLA PRINCIPALE
+│
+├── raspberry_pi/                    ← APP WEB (qui lavora Apache)
+│   ├── index.html                   ← Pagina principale dell'app
+│   ├── STORICO.txt                  ← Storico vendite/spese (sync automatico)
+│   ├── LISTINO.txt                  ← Lista prodotti (sync automatico)
+│   │
+│   ├── api/                         ← API Backend
+│   │   ├── vendite.php
+│   │   ├── spese.php
+│   │   ├── prodotti.php
+│   │   ├── statistiche.php
+│   │   ├── import_xlsx.php          ← Importazione da web
+│   │   └── ...
+│   │
+│   ├── includes/                    ← File configurazione
+│   │   ├── config.php               ← Credenziali database
+│   │   ├── storico_txt.php          ← Funzioni STORICO.txt
+│   │   └── listino_txt.php          ← Funzioni LISTINO.txt
+│   │
+│   ├── css/                         ← Stili
+│   │
+│   ├── import_xlsx.php              ← Script importazione (terminale)
+│   ├── test_import_xlsx.php         ← Test importazione (terminale)
+│   ├── backup_database.sh           ← Script backup
+│   ├── reset_database.sh            ← Script reset
+│   ├── backup_e_reset.sh            ← Backup + Reset insieme
+│   ├── avvio_proloco.sh             ← Eseguito all'accensione
+│   ├── install.sh                   ← Installazione completa
+│   │
+│   ├── cron_sync.php                ← Sync STORICO ogni minuto
+│   ├── cron_listino.php             ← Sync LISTINO ogni minuto
+│   ├── cron_backup.php              ← Backup automatico
+│   └── cron_resoconto.php           ← Resoconto settimanale
+│
+├── BACKUP_GIORNALIERI/              ← Backup automatici
+├── RESOCONTI_SETTIMANALI/           ← Report settimanali
+├── backup/                          ← Backup manuali da script
+│
+├── aggiorna.sh                      ← Aggiornamento da GitHub
+├── modalita_internet.sh             ← Attiva WiFi normale
+└── modalita_hotspot.sh              ← Attiva hotspot bar
+
+
+================================================================================
+2. COMANDI BASE TERMINALE (per chi inizia)
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  NAVIGAZIONE                                                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  cd /percorso/cartella    → Vai in una cartella                             │
+│  cd ..                    → Torna indietro di una cartella                  │
+│  cd ~                     → Vai alla home (/home/pi)                        │
+│  cd /home/pi/proloco      → Vai alla cartella principale app                │
+│  pwd                      → Mostra dove sei ora                             │
+│                                                                             │
+│  ls                       → Lista file nella cartella                       │
+│  ls -la                   → Lista dettagliata (anche file nascosti)         │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  OPERAZIONI FILE                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  cat nomefile.txt         → Mostra contenuto file                           │
+│  nano nomefile.txt        → Modifica file (CTRL+X per uscire e salvare)     │
+│  cp file1 file2           → Copia file                                      │
+│  mv file1 file2           → Sposta/rinomina file                            │
+│  rm nomefile              → Cancella file                                   │
+│  mkdir nomecartella       → Crea cartella                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PERMESSI E SUDO                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  sudo comando             → Esegui come amministratore                      │
+│  sudo su                  → Diventa root (amministratore)                   │
+│  exit                     → Esci da root                                    │
+│                                                                             │
+│  chmod 755 file           → Rendi eseguibile                                │
+│  chmod 666 file           → Permetti lettura/scrittura a tutti              │
+│  chown utente:gruppo file → Cambia proprietario                             │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SISTEMA                                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  sudo reboot              → Riavvia                                         │
+│  sudo shutdown -h now     → Spegni                                          │
+│  sudo apt update          → Aggiorna lista pacchetti                        │
+│  sudo apt upgrade         → Installa aggiornamenti                          │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+3. CONNESSIONE AL RASPBERRY
+================================================================================
+
+METODO 1: Tramite WiFi Hotspot (uso normale)
+─────────────────────────────────────────────
+1. Connettiti al WiFi "ProlocoBar" con password "proloco2024"
+2. Apri il browser e vai su: http://192.168.4.1
+3. Per terminale SSH: ssh edo@192.168.4.1
+
+METODO 2: Collegamento diretto con monitor e tastiera
+─────────────────────────────────────────────────────
+1. Collega monitor HDMI e tastiera USB
+2. Accendi il Raspberry
+3. Login: utente "edo", password "5054"
+
+METODO 3: Tramite cavo Ethernet (se disponibile)
+────────────────────────────────────────────────
+1. Collega cavo Ethernet tra Raspberry e PC/router
+2. Trova l'IP del Raspberry con: ping raspberrypi.local
+3. Connettiti con: ssh edo@[IP_TROVATO]
+
+
+================================================================================
+4. AGGIORNAMENTO APP DA GITHUB
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  METODO VELOCE (usa lo script)                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    cd /home/pi/proloco
+    ./aggiorna.sh
+
+    Oppure:
+    sudo bash aggiorna.sh
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  METODO MANUALE                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # 1. Vai nella cartella
+    cd /home/pi/proloco
+
+    # 2. Scarica aggiornamenti
+    git pull origin main
+
+    # 3. Se ci sono errori/conflitti, forza il reset:
+    git fetch --all
+    git reset --hard origin/main
+    git pull origin main
+
+    # 4. Riesegui install.sh per applicare modifiche
+    cd raspberry_pi
+    sudo bash install.sh
+
+    # 5. Riavvia
+    sudo reboot
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SE DEVI PRIMA ATTIVARE INTERNET                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Attiva modalità internet
+    sudo bash /home/pi/proloco/modalita_internet.sh
+    
+    # Connettiti al WiFi
+    sudo nmcli device wifi connect "NOME_RETE" password "PASSWORD"
+    
+    # Fai git pull...
+    cd /home/pi/proloco
+    git pull origin main
+    
+    # Torna a modalità hotspot
+    sudo bash /home/pi/proloco/modalita_hotspot.sh
+
+
+================================================================================
+5. GESTIONE HOTSPOT / INTERNET
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ATTIVARE MODALITÀ HOTSPOT (uso normale bar)                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    sudo bash /home/pi/proloco/modalita_hotspot.sh
+
+    Oppure manualmente:
+    sudo systemctl stop NetworkManager
+    sudo rfkill unblock all
+    sudo ip link set wlan0 down
+    sudo ip addr flush dev wlan0
+    sudo ip addr add 192.168.4.1/24 dev wlan0
+    sudo ip link set wlan0 up
+    sudo systemctl restart hostapd
+    sudo systemctl restart dnsmasq
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ATTIVARE MODALITÀ INTERNET (per aggiornamenti)                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    sudo bash /home/pi/proloco/modalita_internet.sh
+
+    Oppure manualmente:
+    sudo systemctl stop hostapd
+    sudo systemctl stop dnsmasq
+    sudo systemctl unmask NetworkManager
+    sudo systemctl enable NetworkManager
+    sudo systemctl start NetworkManager
+
+    # Connetti al WiFi:
+    sudo nmcli device wifi connect "NOME_RETE" password "PASSWORD"
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  VERIFICA STATO                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Verifica IP
+    ip addr show wlan0
+
+    # Verifica servizi hotspot
+    sudo systemctl status hostapd
+    sudo systemctl status dnsmasq
+
+    # Verifica NetworkManager
+    sudo systemctl status NetworkManager
+
+
+================================================================================
+6. IMPORTAZIONE DATI DA EXCEL
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PROCEDURA COMPLETA                                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # 1. Copia il file .xlsx sul Raspberry (es. con chiavetta USB)
+    #    Il file deve essere in formato .xlsx
+
+    # 2. Vai nella cartella app
+    cd /home/pi/proloco/raspberry_pi
+
+    # 3. OPZIONALE: Testa prima l'importazione (non modifica il database)
+    php test_import_xlsx.php /percorso/al/file.xlsx
+
+    # 4. Se il test è OK, esegui backup e reset del database
+    ./backup_e_reset.sh
+
+    # 5. Importa i dati
+    php import_xlsx.php /percorso/al/file.xlsx
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ESEMPIO CON FILE SU CHIAVETTA USB                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # La chiavetta di solito è in /media/usb_sda1 o simile
+    # Verifica dove è montata:
+    ls /media/
+
+    # Poi:
+    cd /home/pi/proloco/raspberry_pi
+    ./backup_e_reset.sh
+    php import_xlsx.php /media/usb_sda1/storico.xlsx
+
+
+================================================================================
+7. BACKUP E RESET DATABASE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SOLO BACKUP                                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    cd /home/pi/proloco/raspberry_pi
+    ./backup_database.sh
+
+    # I backup vengono salvati in: /home/pi/proloco/backup/
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SOLO RESET (cancella tutto!)                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    cd /home/pi/proloco/raspberry_pi
+    ./reset_database.sh
+
+    # Ti chiederà conferma scrivendo "SI"
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  BACKUP + RESET (consigliato prima di importare)                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    cd /home/pi/proloco/raspberry_pi
+    ./backup_e_reset.sh
+
+    # Fa backup automatico, poi cancella tutto
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  RIPRISTINARE UN BACKUP                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # 1. Trova i backup disponibili
+    ls -la /home/pi/proloco/backup/
+
+    # 2. Decomprimi il backup (se .gz)
+    gunzip -k /home/pi/proloco/backup/backup_XXXXXXXX.sql.gz
+
+    # 3. Ripristina
+    mysql -u edo -p5054 proloco_bar < /home/pi/proloco/backup/backup_XXXXXXXX.sql
+
+
+================================================================================
+8. GESTIONE PERMESSI
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SE HAI PROBLEMI DI PERMESSI                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Esegui lo script di fix permessi:
+    sudo /usr/local/bin/avvio_proloco.sh
+
+    # Oppure manualmente:
+    cd /home/pi/proloco/raspberry_pi
+    sudo chown -R www-data:www-data .
+    sudo chmod -R 775 .
+    sudo chmod 666 STORICO.txt LISTINO.txt
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PERMESSI RAPIDI PER FILE SPECIFICI                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # File di testo (lettura/scrittura per tutti)
+    sudo chmod 666 /home/pi/proloco/raspberry_pi/STORICO.txt
+    sudo chmod 666 /home/pi/proloco/raspberry_pi/LISTINO.txt
+
+    # Script eseguibili
+    sudo chmod 755 /home/pi/proloco/raspberry_pi/*.sh
+    sudo chmod 755 /home/pi/proloco/*.sh
+
+
+================================================================================
+9. COMANDI UTILI DI VERIFICA
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  VERIFICA SERVIZI                                                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Apache (web server)
+    sudo systemctl status apache2
+
+    # Database MySQL
+    sudo systemctl status mariadb
+
+    # Hotspot
+    sudo systemctl status hostapd
+    sudo systemctl status dnsmasq
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  VERIFICA DATABASE                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Conta vendite e spese
+    mysql -u edo -p5054 proloco_bar -e "SELECT COUNT(*) as vendite FROM vendite"
+    mysql -u edo -p5054 proloco_bar -e "SELECT COUNT(*) as spese FROM spese"
+
+    # Conta prodotti
+    mysql -u edo -p5054 proloco_bar -e "SELECT COUNT(*) as prodotti FROM prodotti"
+
+    # Vedi ultime 5 vendite
+    mysql -u edo -p5054 proloco_bar -e "SELECT * FROM vendite ORDER BY id DESC LIMIT 5"
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  VERIFICA LOG E ERRORI                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Log Apache (errori PHP)
+    sudo tail -50 /var/log/apache2/error.log
+
+    # Log sistema
+    sudo tail -50 /var/log/syslog
+
+    # Log Proloco
+    sudo tail -50 /var/log/proloco.log
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  VERIFICA SPAZIO DISCO                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    df -h
+
+
+================================================================================
+10. RISOLUZIONE PROBLEMI COMUNI
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA: L'app non si apre (pagina bianca o errore)                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Riavvia Apache
+    sudo systemctl restart apache2
+
+    # Controlla errori
+    sudo tail -20 /var/log/apache2/error.log
+
+    # Verifica permessi
+    sudo /usr/local/bin/avvio_proloco.sh
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA: Non riesco a connettermi al WiFi "ProlocoBar"                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Riavvia i servizi hotspot
+    sudo systemctl restart hostapd
+    sudo systemctl restart dnsmasq
+
+    # Se non funziona, riavvia il Raspberry
+    sudo reboot
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA: Errore "Permission denied"                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Esegui lo script fix permessi
+    sudo /usr/local/bin/avvio_proloco.sh
+
+    # Oppure riavvia
+    sudo reboot
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA: Git pull non funziona (conflitti)                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    cd /home/pi/proloco
+    git fetch --all
+    git reset --hard origin/main
+    git pull origin main
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA: STORICO.txt vuoto o non si aggiorna                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Fix permessi file
+    sudo chmod 666 /home/pi/proloco/raspberry_pi/STORICO.txt
+    sudo chown www-data:www-data /home/pi/proloco/raspberry_pi/STORICO.txt
+
+    # Rigenera manualmente
+    php /home/pi/proloco/raspberry_pi/cron_sync.php
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  PROBLEMA: Database vuoto dopo importazione                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # Verifica errori durante importazione
+    # Guarda l'output del comando php import_xlsx.php
+
+    # Verifica connessione database
+    mysql -u edo -p5054 proloco_bar -e "SELECT 1"
+
+
+================================================================================
+11. FILE IMPORTANTI - COSA FA OGNUNO
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FILE DI CONFIGURAZIONE                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    includes/config.php
+    → Contiene le credenziali del database (utente: edo, password: 5054)
+    → NON MODIFICARE se non sai cosa fai
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  FILE DI DATI                                                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    STORICO.txt
+    → Contiene tutte le vendite e spese in formato leggibile
+    → Si aggiorna automaticamente ogni minuto
+    → Puoi aprirlo con qualsiasi editor di testo
+
+    LISTINO.txt
+    → Contiene tutti i prodotti del listino
+    → Si aggiorna automaticamente ogni minuto
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SCRIPT PRINCIPALI                                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    install.sh
+    → Installazione completa dell'app
+    → Eseguilo dopo ogni aggiornamento importante
+
+    aggiorna.sh
+    → Aggiorna l'app da GitHub
+    → Usa questo per gli aggiornamenti normali
+
+    avvio_proloco.sh
+    → Eseguito automaticamente all'accensione
+    → Sistema i permessi
+
+    modalita_internet.sh
+    → Attiva la connessione WiFi normale
+    → Usalo quando devi aggiornare da GitHub
+
+    modalita_hotspot.sh
+    → Attiva l'hotspot "ProlocoBar"
+    → Usalo per tornare alla modalità bar
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SCRIPT DATABASE                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    backup_database.sh
+    → Crea un backup del database
+
+    reset_database.sh
+    → Cancella TUTTE le vendite e spese
+
+    backup_e_reset.sh
+    → Fa backup E poi cancella (consigliato)
+
+    import_xlsx.php
+    → Importa dati da file Excel
+
+    test_import_xlsx.php
+    → Testa l'importazione senza modificare nulla
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SCRIPT AUTOMATICI (cron)                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    cron_sync.php
+    → Aggiorna STORICO.txt ogni minuto
+
+    cron_listino.php
+    → Aggiorna LISTINO.txt ogni minuto
+
+    cron_backup.php
+    → Backup automatico all'ora programmata
+
+    cron_resoconto.php
+    → Genera resoconto settimanale (ogni lunedì)
+
+
+================================================================================
+                        CREDENZIALI IMPORTANTI
+================================================================================
+
+    ┌────────────────────────────────────────────────────────┐
+    │  WiFi Hotspot                                          │
+    │  ─────────────                                         │
+    │  Nome rete: ProlocoBar                                 │
+    │  Password:  proloco2024                                │
+    │  IP:        192.168.4.1                                │
+    ├────────────────────────────────────────────────────────┤
+    │  Database MySQL                                        │
+    │  ───────────────                                       │
+    │  Utente:    edo                                        │
+    │  Password:  5054                                       │
+    │  Database:  proloco_bar                                │
+    ├────────────────────────────────────────────────────────┤
+    │  Utente Raspberry                                      │
+    │  ─────────────────                                     │
+    │  Utente:    edo                                        │
+    │  Password:  5054                                       │
+    └────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                        COMANDI RAPIDI (CHEAT SHEET)
+================================================================================
+
+    # Vai alla cartella app
+    cd /home/pi/proloco/raspberry_pi
+
+    # Aggiorna da GitHub
+    cd /home/pi/proloco && ./aggiorna.sh
+
+    # Backup + Reset database
+    ./backup_e_reset.sh
+
+    # Importa Excel
+    php import_xlsx.php /percorso/file.xlsx
+
+    # Fix permessi
+    sudo /usr/local/bin/avvio_proloco.sh
+
+    # Riavvia
+    sudo reboot
+
+    # Attiva internet
+    sudo bash /home/pi/proloco/modalita_internet.sh
+
+    # Attiva hotspot
+    sudo bash /home/pi/proloco/modalita_hotspot.sh
+
+
+================================================================================
+                              FINE MANUALE
+================================================================================
