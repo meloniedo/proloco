@@ -476,6 +476,31 @@ menu_backup_xlsx() {
             5) delete_backup_xlsx ;;
             6) show_xlsx_folders ;;
             0) return ;;
+export_xlsx() {
+    clear_screen
+    show_submenu_header "📤 ESPORTA - Crea File Excel"
+    
+    VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+    SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+    
+    echo ""
+    echo -e "   Dati da esportare: ${YELLOW}${VENDITE}${NC} vendite, ${YELLOW}${SPESE}${NC} spese"
+    echo ""
+    
+    if [ "$VENDITE" -eq 0 ] && [ "$SPESE" -eq 0 ]; then
+        echo -e "${RED}   ⚠️  Il database è VUOTO!${NC}"
+        echo -e "${YELLOW}   Non ci sono dati da esportare.${NC}"
+        press_enter
+        return
+    fi
+    
+    echo -e "${YELLOW}   Esportazione in corso...${NC}"
+    echo ""
+    
+    php ${WEB_DIR}/export_xlsx.php
+    
+    press_enter
+}
             *) echo -e "${RED}   Opzione non valida!${NC}"; sleep 1 ;;
         esac
     done
