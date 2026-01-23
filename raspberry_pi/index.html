@@ -1078,6 +1078,123 @@
         }
     }
     
+    // ===== GESTIONE ORA SISTEMA =====
+    
+    // Controlla se serve mostrare popup ora all'avvio
+    async function checkSystemTime() {
+        try {
+            const response = await fetch('api/system_time.php');
+            const data = await response.json();
+            
+            if (data.needs_sync) {
+                state.systemTime.data = data.data_attuale;
+                state.systemTime.ora = data.ora_attuale;
+                state.showTimePopup = true;
+                render();
+            }
+        } catch (e) {
+            console.log('Errore controllo ora:', e);
+        }
+    }
+    
+    // Conferma impostazione ora dal popup
+    async function confirmTimePopup() {
+        const data = document.getElementById('popup-data').value;
+        const ora = document.getElementById('popup-ora').value;
+        
+        if (!data || !ora) {
+            showFeedback('❌ Inserisci data e ora!');
+            return;
+        }
+        
+        showFeedback('⏰ Impostazione ora...');
+        
+        try {
+            const response = await fetch('api/system_time.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data, ora })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                showFeedback('✅ Ora impostata!');
+                state.showTimePopup = false;
+                render();
+            } else {
+                showFeedback('❌ ' + (result.error || 'Errore'));
+            }
+        } catch (e) {
+            showFeedback('❌ Errore connessione');
+        }
+    }
+    
+    // Salta popup ora (l'ora è corretta)
+    function skipTimePopup() {
+        state.showTimePopup = false;
+        // Crea flag per non mostrare più il popup
+        fetch('api/system_time.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: new Date().toISOString().split('T')[0], ora: new Date().toTimeString().slice(0,5) })
+        }).catch(() => {});
+        render();
+    }
+    
+    // Aggiorna ora sistema dalle impostazioni
+    async function updateSystemTime() {
+        const data = document.getElementById('settings-data').value;
+        const ora = document.getElementById('settings-ora').value;
+        
+        if (!data || !ora) {
+            showFeedback('❌ Inserisci data e ora!');
+            return;
+        }
+        
+        if (!confirm(`Vuoi impostare l'ora del sistema a:\n${data} ${ora}?`)) {
+            return;
+        }
+        
+        showFeedback('⏰ Impostazione ora...');
+        
+        try {
+            const response = await fetch('api/system_time.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data, ora })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                showFeedback('✅ Ora aggiornata!');
+                // Aggiorna display
+                setTimeout(() => {
+                    const display = document.getElementById('current-time-display');
+                    if (display) display.textContent = new Date().toLocaleString('it-IT');
+                }, 1000);
+            } else {
+                showFeedback('❌ ' + (result.error || 'Errore'));
+            }
+        } catch (e) {
+            showFeedback('❌ Errore connessione');
+        }
+    }
+    
+    // Inizializza campi data/ora quando si apre impostazioni
+    function initTimeSettings() {
+        const oggi = new Date();
+        const dataInput = document.getElementById('settings-data');
+        const oraInput = document.getElementById('settings-ora');
+        if (dataInput) dataInput.value = oggi.toISOString().split('T')[0];
+        if (oraInput) oraInput.value = oggi.toTimeString().slice(0,5);
+    }
+    
+    // ===== RESOCONTO TOTALE =====
+    
+    function viewResocontoTotale() {
+        window.open('api/view_resoconto.php', '_blank');
+    }
+    
     // ===== BACKUP AUTOMATICO =====
     
     // Carica impostazioni backup quando si apre la pagina impostazioni
