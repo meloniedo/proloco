@@ -309,12 +309,17 @@ function doBackup() {
         // Genera Excel XML
         $excelContent = generateExcelXML($vendite, $spese, $prodotti);
         
-        // Scrivi file
+        // Scrivi file su USB
         $written = @file_put_contents($filepath, $excelContent);
         
         if ($written === false) {
             return ['success' => false, 'error' => 'Errore durante la scrittura del file. Spazio insufficiente o chiavetta rimossa.'];
         }
+        
+        // Salva copia locale in /home/pi/proloco/BACKUP_GIORNALIERI
+        $backupLocaleDir = '/home/pi/proloco/BACKUP_GIORNALIERI';
+        if (!is_dir($backupLocaleDir)) @mkdir($backupLocaleDir, 0755, true);
+        @file_put_contents($backupLocaleDir . '/' . $filename, $excelContent);
         
         // Sync per assicurarsi che sia scritto
         @exec('sync');
