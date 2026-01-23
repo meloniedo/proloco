@@ -107,7 +107,7 @@ udevadm control --reload-rules 2>/dev/null || true
 # Crea directory media con permessi corretti
 mkdir -p /media/pi
 chmod 777 /media/pi
-chown www-data:www-data /media/pi
+chown www-data:www-data /media/edo 2>/dev/null || true
 
 # Apache
 cat > /etc/apache2/sites-available/proloco.conf << EOF
@@ -123,6 +123,11 @@ EOF
 a2dissite 000-default.conf 2>/dev/null || true
 a2ensite proloco.conf
 a2enmod rewrite
+
+# Permessi cartella web per Apache
+chown -R ${USER_NAME}:${USER_NAME} ${WEB_DIR}
+chmod -R 755 ${WEB_DIR}
+
 systemctl restart apache2
 systemctl enable apache2
 
