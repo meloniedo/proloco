@@ -296,6 +296,7 @@ sudo tail -50 /var/log/apache2/error.log
 | `avvio_proloco.sh` | Fix permessi all'avvio |
 | `modalita_internet.sh` | Attiva WiFi |
 | `modalita_hotspot.sh` | Attiva hotspot |
+| `gestione_database.sh` | 🎯 Menu interattivo backup/ripristino |
 | `backup_e_reset.sh` | Backup + reset DB |
 | `import_xlsx.php` | Importa Excel |
 
