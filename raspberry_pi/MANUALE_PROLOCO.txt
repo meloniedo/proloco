@@ -418,27 +418,89 @@ METODO 3: Tramite cavo Ethernet (se disponibile)
     cd /home/pi/proloco/raspberry_pi
     ./gestione_database.sh
 
-    Questo apre un menu grafico con tutte le opzioni:
-    
+    Questo apre un menu completo con dashboard e tutte le opzioni:
+
     ╔══════════════════════════════════════════════════════════════╗
     ║          🗄️  GESTIONE DATABASE - PROLOCO BAR                 ║
     ╚══════════════════════════════════════════════════════════════╝
     
-       1) 📦 Crea nuovo backup
-       2) 📋 Lista backup disponibili
-       3) 🔄 Ripristina un backup
-       4) 🗑️  Elimina backup
-       5) ⚠️  Reset database (cancella vendite/spese)
-       6) 📄 Esporta in formato leggibile (.txt)
-       
+    La dashboard mostra:
+    • Stato database (vendite, spese, prodotti)
+    • File TXT (STORICO.txt, LISTINO.txt) con data ultimo aggiornamento
+    • Backup SQL disponibili con il più recente evidenziato ★
+    • Backup Excel disponibili con il più recente evidenziato ★
+    
+    MENU PRINCIPALE:
+       1) 💾 Gestione Backup SQL (database)
+       2) 📊 Gestione Backup Excel (xlsx)
+       3) ⚠️  Reset database (cancella vendite/spese)
+       4) 📄 Esporta in formato leggibile (.txt)
        0) 🚪 Esci
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SOTTOMENU 1: GESTIONE BACKUP SQL                                           │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    I backup SQL sono copie complete del database MySQL.
+    Cartella: /home/pi/proloco/backup/
+    Formato: backup_YYYYMMDD_HHMMSS.sql.gz
+
+    Opzioni disponibili:
+       1) 📦 Crea nuovo backup SQL
+       2) 📋 Lista tutti i backup SQL (con ★ sul più recente)
+       3) 🔄 Ripristina un backup SQL
+       4) 🗑️  Elimina backup SQL
+          → Elimina singolo
+          → Elimina TUTTI
+          → Elimina vecchi (mantieni ultimi 5)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  SOTTOMENU 2: GESTIONE BACKUP EXCEL (XLSX)                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    I backup Excel sono file .xlsx esportati dall'app.
+    
+    Cartelle monitorate:
+    • /home/pi/proloco/BACKUP_GIORNALIERI/  (backup automatici)
+    • /raspberry_pi/backups/                 (backup da app web)
+
+    Opzioni disponibili:
+       1) 📋 Lista tutti i file Excel (con ★ sul più recente)
+       2) 📥 Importa file Excel nel database
+          → Con opzione backup+reset prima dell'importazione
+          → Oppure aggiungi ai dati esistenti
+       3) 🔍 Testa importazione (senza modificare il database)
+       4) 🗑️  Elimina file Excel
+       5) 📂 Mostra percorsi cartelle (utile per USB)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  STRUTTURA CARTELLE BACKUP                                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    /home/pi/proloco/
+    │
+    ├── backup/                      ← Backup SQL database (.sql.gz)
+    │   ├── backup_20260122_163045.sql.gz
+    │   └── ...
+    │
+    ├── BACKUP_GIORNALIERI/          ← Backup Excel automatici (.xlsx)
+    │   ├── storico_22-01-2026.xlsx
+    │   └── ...
+    │
+    ├── RESOCONTI_SETTIMANALI/       ← Report settimanali
+    │
+    └── raspberry_pi/
+        └── backups/                 ← Backup Excel da app web
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  COMANDI RAPIDI (senza menu)                                                │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-    # Solo Backup
+    # Solo Backup SQL
     ./backup_database.sh
 
     # Solo Reset (cancella tutto!)
@@ -447,22 +509,12 @@ METODO 3: Tramite cavo Ethernet (se disponibile)
     # Backup + Reset insieme
     ./backup_e_reset.sh
 
-
-┌─────────────────────────────────────────────────────────────────────────────┐
-│  DOVE SONO I BACKUP?                                                        │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-    Cartella: /home/pi/proloco/backup/
-    
-    I file hanno formato: backup_YYYYMMDD_HHMMSS.sql.gz
-    Esempio: backup_20260122_153045.sql.gz
-    
-    - .sql = formato database MySQL
-    - .gz = compresso (occupa meno spazio)
+    # Importa Excel direttamente
+    php import_xlsx.php /percorso/file.xlsx
 
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  RIPRISTINO MANUALE (se non vuoi usare il menu)                             │
+│  RIPRISTINO MANUALE BACKUP SQL                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 
     # 1. Trova i backup disponibili
@@ -476,6 +528,23 @@ METODO 3: Tramite cavo Ethernet (se disponibile)
 
     # 4. Elimina il file .sql decompresso (opzionale)
     rm /home/pi/proloco/backup/backup_XXXXXXXX.sql
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  IMPORTARE FILE XLSX DA CHIAVETTA USB                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+    # 1. Inserisci la chiavetta USB
+    
+    # 2. Trova dove è montata
+    ls /media/
+    
+    # 3. Copia il file nella cartella backup
+    cp /media/usb_sda1/miofile.xlsx /home/pi/proloco/BACKUP_GIORNALIERI/
+    
+    # 4. Usa il menu per importare
+    ./gestione_database.sh
+    # Scegli: 2 (Gestione Excel) → 2 (Importa)
 
 
 ================================================================================
