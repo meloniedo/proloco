@@ -353,14 +353,64 @@ chmod +x /etc/rc.local
 
 echo -e "${GREEN}✓ Avvio automatico OK${NC}"
 
+# ===== FASE 6: TEST E FINALIZZAZIONE =====
+echo ""
+echo -e "${CYAN}[6/6] Test e finalizzazione...${NC}"
+
+# Backup database esistente (se esiste)
+if mysql -u ${DB_USER} -p${DB_PASS} -e "USE ${DB_NAME}" 2>/dev/null; then
+    BACKUP_FILE="/home/pi/proloco/BACKUP_GIORNALIERI/backup_pre_install_$(date +%Y%m%d_%H%M%S).sql"
+    mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} > ${BACKUP_FILE} 2>/dev/null
+    echo -e "${GREEN}✓ Backup database esistente salvato${NC}"
+fi
+
+# Genera LISTINO.txt iniziale
+php ${WEB_DIR}/cron_listino.php 2>/dev/null
+echo -e "${GREEN}✓ LISTINO.txt generato${NC}"
+
+# Genera STORICO.txt iniziale
+php ${WEB_DIR}/cron_sync.php 2>/dev/null
+echo -e "${GREEN}✓ STORICO.txt generato${NC}"
+
+# Test connessione database
+if php -r "require '${WEB_DIR}/includes/config.php'; \$pdo = getDB(); echo 'OK';" 2>/dev/null | grep -q "OK"; then
+    echo -e "${GREEN}✓ Connessione database OK${NC}"
+else
+    echo -e "${RED}✗ ERRORE connessione database!${NC}"
+fi
+
+# Test Apache
+if curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1/ | grep -q "200\|301\|302"; then
+    echo -e "${GREEN}✓ Apache funzionante${NC}"
+else
+    echo -e "${YELLOW}⚠ Apache potrebbe non essere attivo (normale prima del reboot)${NC}"
+fi
+
 # ===== COMPLETATO =====
 echo ""
-echo -e "${GREEN}================================================${NC}"
-echo -e "${GREEN}  INSTALLAZIONE COMPLETATA!${NC}"
-echo -e "${GREEN}================================================${NC}"
+echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}              INSTALLAZIONE COMPLETATA!                      ${NC}"
+echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "WiFi: ${GREEN}${WIFI_SSID}${NC} / ${GREEN}${WIFI_PASSWORD}${NC}"
-echo -e "App:  ${GREEN}http://${IP_ADDRESS}${NC}"
+echo -e "  ${CYAN}WiFi Hotspot:${NC}"
+echo -e "    SSID:     ${GREEN}${WIFI_SSID}${NC}"
+echo -e "    Password: ${GREEN}${WIFI_PASSWORD}${NC}"
 echo ""
-echo -e "${YELLOW}Esegui ora: sudo reboot${NC}"
+echo -e "  ${CYAN}Applicazione:${NC}"
+echo -e "    URL: ${GREEN}http://${IP_ADDRESS}${NC}"
+echo ""
+echo -e "  ${CYAN}File importanti:${NC}"
+echo -e "    Listino:   ${GREEN}${WEB_DIR}/LISTINO.txt${NC}"
+echo -e "    Storico:   ${GREEN}${WEB_DIR}/STORICO.txt${NC}"
+echo -e "    Backup:    ${GREEN}${REPO_DIR}/BACKUP_GIORNALIERI/${NC}"
+echo -e "    Resoconti: ${GREEN}${REPO_DIR}/RESOCONTI_SETTIMANALI/${NC}"
+echo ""
+echo -e "  ${CYAN}Comandi utili:${NC}"
+echo -e "    Aggiornare app:       ${GREEN}./aggiorna.sh${NC}"
+echo -e "    Modalità internet:    ${GREEN}sudo bash modalita_internet.sh${NC}"
+echo -e "    Modalità hotspot:     ${GREEN}sudo bash modalita_hotspot.sh${NC}"
+echo ""
+echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+echo ""
+echo -e "${YELLOW}>>> Esegui ora: ${NC}${GREEN}sudo reboot${NC}"
 echo ""
