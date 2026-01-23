@@ -8,6 +8,12 @@
  * 
  * Importa vendite e spese da un file Excel esportato
  * dalla versione precedente dell'app.
+ * 
+ * STRUTTURA FILE: UN SOLO FOGLIO con:
+ * - Sezione VENDITE (in alto)
+ * - TOTALE VENDITE
+ * - Sezione SPESE (in basso)
+ * - TOTALE SPESE
  */
 
 // Colori per output terminale
@@ -67,16 +73,6 @@ if ($sharedStringsXml) {
         $sharedStrings[] = (string)$si->t;
     }
 }
-
-// Leggi workbook per nomi fogli
-$workbookXml = $zip->getFromName('xl/workbook.xml');
-$workbook = simplexml_load_string($workbookXml);
-$sheetNames = [];
-foreach ($workbook->sheets->sheet as $sheet) {
-    $sheetNames[] = (string)$sheet['name'];
-}
-
-echo YELLOW . "📋 Fogli trovati: " . implode(', ', $sheetNames) . "\n" . RESET;
 
 // Funzione per convertire riferimento cella in indice colonna
 function colToIndex($col) {
@@ -152,92 +148,114 @@ function excelDateToMysql($excelDate, $time = '') {
     return date('Y-m-d H:i:s');
 }
 
-// Leggi foglio VENDITE (sheet1)
-echo BLUE . "\n📊 Importazione VENDITE...\n" . RESET;
-$venditeRows = readSheet($zip, 1, $sharedStrings);
+// Leggi UNICO foglio (sheet1)
+$allRows = readSheet($zip, 1, $sharedStrings);
+echo "Righe totali nel foglio: " . count($allRows) . "\n";
 
+// Trova la sezione VENDITE e SPESE
+$modalita = 'none'; // 'vendite' o 'spese'
 $venditeImportate = 0;
 $venditeErrori = 0;
-
-// Salta intestazione (prima riga)
-$stmtVendita = $pdo->prepare("INSERT INTO vendite (nome_prodotto, prezzo, categoria, timestamp) VALUES (?, ?, ?, ?)");
-
-for ($i = 1; $i < count($venditeRows); $i++) {
-    $row = $venditeRows[$i];
-    
-    // Struttura: Data, Ora, Prodotto, Categoria, Importo
-    if (count($row) < 5) continue;
-    if (empty($row[2])) continue; // Salta righe senza prodotto
-    
-    $data = $row[0];
-    $ora = $row[1];
-    $prodotto = trim($row[2]);
-    $categoria = trim($row[3]);
-    $importo = floatval(str_replace(',', '.', $row[4]));
-    
-    // Salta righe di totale o intestazioni
-    if (empty($prodotto) || stripos($prodotto, 'TOTALE') !== false) continue;
-    if ($importo <= 0) continue;
-    
-    $timestamp = excelDateToMysql($data, $ora);
-    
-    try {
-        $stmtVendita->execute([$prodotto, $importo, $categoria, $timestamp]);
-        $venditeImportate++;
-    } catch (Exception $e) {
-        $venditeErrori++;
-        echo RED . "  ⚠️ Errore riga $i: " . $e->getMessage() . "\n" . RESET;
-    }
-}
-
-echo GREEN . "  ✅ Vendite importate: $venditeImportate\n" . RESET;
-if ($venditeErrori > 0) {
-    echo YELLOW . "  ⚠️ Errori: $venditeErrori\n" . RESET;
-}
-
-// Leggi foglio SPESE (sheet2)
-echo BLUE . "\n💸 Importazione SPESE...\n" . RESET;
-$speseRows = readSheet($zip, 2, $sharedStrings);
-
 $speseImportate = 0;
 $speseErrori = 0;
 
-// Struttura REALE: Data(0), Ora(1), Categoria(2), Spesa(3 vuoto), Importo(4)
-// SOLO 5 COLONNE!
+$stmtVendita = $pdo->prepare("INSERT INTO vendite (nome_prodotto, prezzo, categoria, timestamp) VALUES (?, ?, ?, ?)");
 $stmtSpesa = $pdo->prepare("INSERT INTO spese (categoria_spesa, importo, note, timestamp) VALUES (?, ?, ?, ?)");
 
-for ($i = 1; $i < count($speseRows); $i++) {
-    $row = $speseRows[$i];
+echo BLUE . "\n📊 Analisi e importazione dati...\n" . RESET;
+
+for ($i = 0; $i < count($allRows); $i++) {
+    $row = $allRows[$i];
+    $firstCell = trim($row[0] ?? '');
     
-    if (count($row) < 5) continue;
+    // Rileva intestazione VENDITE
+    if ($firstCell === 'Data' && isset($row[2]) && trim($row[2]) === 'Prodotto') {
+        $modalita = 'vendite';
+        echo YELLOW . "  📍 Trovata sezione VENDITE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
     
-    $data = $row[0];
-    $ora = $row[1];
-    $categoria = trim($row[2]); 
-    $note = '';
-    $importo = floatval(str_replace(',', '.', $row[4]));
+    // Rileva intestazione SPESE
+    if ($firstCell === 'Data' && isset($row[2]) && trim($row[2]) === 'Categoria') {
+        $modalita = 'spese';
+        echo YELLOW . "  📍 Trovata sezione SPESE alla riga " . ($i + 1) . "\n" . RESET;
+        continue;
+    }
     
-    // Salta righe di totale o senza categoria
-    if (empty($categoria) || stripos($categoria, 'TOTALE') !== false) continue;
-    if ($importo <= 0) continue;
+    // Rileva righe di totale - cambia modalità a none
+    if (stripos($firstCell, 'TOTALE') !== false || stripos($firstCell, 'RIEPILOGO') !== false) {
+        $modalita = 'none';
+        continue;
+    }
     
-    $timestamp = excelDateToMysql($data, $ora);
+    // Salta righe vuote o intestazioni
+    if (empty($firstCell) || !preg_match('/\d{1,2}\/\d{1,2}\/\d{4}/', $firstCell)) {
+        continue;
+    }
     
-    try {
-        $stmtSpesa->execute([$categoria, $importo, $note, $timestamp]);
-        $speseImportate++;
-    } catch (Exception $e) {
-        $speseErrori++;
-        echo RED . "  ⚠️ Errore riga $i: " . $e->getMessage() . "\n" . RESET;
+    // Importa in base alla modalità
+    if ($modalita === 'vendite') {
+        // Struttura VENDITE: Data(0), Ora(1), Prodotto(2), Categoria(3), Importo(4)
+        if (count($row) < 5) continue;
+        
+        $data = $row[0];
+        $ora = $row[1];
+        $prodotto = trim($row[2]);
+        $categoria = trim($row[3]);
+        $importo = floatval(str_replace(',', '.', $row[4]));
+        
+        if (empty($prodotto) || $importo <= 0) continue;
+        
+        $timestamp = excelDateToMysql($data, $ora);
+        
+        try {
+            $stmtVendita->execute([$prodotto, $importo, $categoria, $timestamp]);
+            $venditeImportate++;
+        } catch (Exception $e) {
+            $venditeErrori++;
+        }
+    }
+    elseif ($modalita === 'spese') {
+        // Struttura SPESE: Data(0), Ora(1), Categoria(2), Spesa(3), Note(4), Importo(5)
+        // MA nel tuo file: Data(0), Ora(1), Categoria(2), (3 vuoto), Importo(4 o 5)
+        
+        $data = $row[0];
+        $ora = $row[1];
+        $categoria = trim($row[2]);
+        
+        // Trova l'importo (potrebbe essere in colonna 4 o 5)
+        $importo = 0;
+        if (isset($row[5]) && is_numeric(str_replace(',', '.', $row[5]))) {
+            $importo = floatval(str_replace(',', '.', $row[5]));
+        } elseif (isset($row[4]) && is_numeric(str_replace(',', '.', $row[4]))) {
+            $importo = floatval(str_replace(',', '.', $row[4]));
+        } elseif (isset($row[3]) && is_numeric(str_replace(',', '.', $row[3]))) {
+            $importo = floatval(str_replace(',', '.', $row[3]));
+        }
+        
+        if (empty($categoria) || $importo <= 0) continue;
+        
+        $timestamp = excelDateToMysql($data, $ora);
+        
+        try {
+            $stmtSpesa->execute([$categoria, $importo, '', $timestamp]);
+            $speseImportate++;
+        } catch (Exception $e) {
+            $speseErrori++;
+        }
     }
 }
 
+$zip->close();
+
+echo GREEN . "\n  ✅ Vendite importate: $venditeImportate\n" . RESET;
+if ($venditeErrori > 0) {
+    echo YELLOW . "  ⚠️ Vendite con errori: $venditeErrori\n" . RESET;
+}
 echo GREEN . "  ✅ Spese importate: $speseImportate\n" . RESET;
 if ($speseErrori > 0) {
-    echo YELLOW . "  ⚠️ Errori: $speseErrori\n" . RESET;
+    echo YELLOW . "  ⚠️ Spese con errori: $speseErrori\n" . RESET;
 }
-
-$zip->close();
 
 // Riepilogo finale
 echo GREEN . "
