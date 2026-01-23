@@ -163,12 +163,15 @@ menu_backup_sql() {
         SQL_COUNT=$(ls -1 ${BACKUP_SQL_DIR}/*.gz 2>/dev/null | wc -l)
         SQL_SIZE=$(du -sh ${BACKUP_SQL_DIR} 2>/dev/null | cut -f1)
         echo -e "   Backup disponibili: ${YELLOW}${SQL_COUNT}${NC}  │  Spazio occupato: ${SQL_SIZE}"
+        echo -e "   Cartella: ${BLUE}${BACKUP_SQL_DIR}/${NC}"
         echo ""
         
-        echo -e "   ${GREEN}1)${NC} 📦 Crea nuovo backup SQL"
+        echo -e "   ${GREEN}1)${NC} 📤 ${GREEN}ESPORTA${NC} - Crea nuovo backup SQL"
         echo -e "   ${GREEN}2)${NC} 📋 Lista tutti i backup SQL"
-        echo -e "   ${GREEN}3)${NC} 🔄 Ripristina un backup SQL"
+        echo -e "   ${GREEN}3)${NC} 📥 ${GREEN}IMPORTA${NC} - Ripristina un backup SQL"
         echo -e "   ${GREEN}4)${NC} 🗑️  Elimina backup SQL"
+        echo ""
+        echo -e "   ${CYAN}Flusso: ESPORTA (1) → salva file .sql.gz → IMPORTA (3)${NC}"
         echo ""
         echo -e "   ${RED}0)${NC} ← Torna al menu principale"
         echo ""
