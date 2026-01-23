@@ -15,8 +15,8 @@ NC='\033[0m' # No Color
 
 # Configurazione database
 DB_NAME="proloco_bar"
-DB_USER="proloco"
-DB_PASS="proloco123"
+DB_USER="edo"
+DB_PASS="5054"
 
 echo -e "${RED}"
 echo "╔══════════════════════════════════════════════════════════════╗"
