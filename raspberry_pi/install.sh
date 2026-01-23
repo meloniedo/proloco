@@ -175,6 +175,30 @@ echo "www-data ALL=(ALL) NOPASSWD: /bin/date" >> /etc/sudoers.d/proloco-time
 echo "www-data ALL=(ALL) NOPASSWD: /sbin/hwclock" >> /etc/sudoers.d/proloco-time
 chmod 440 /etc/sudoers.d/proloco-time
 
+# ===== SERVIZIO AVVIO AUTOMATICO =====
+# Copia script di avvio
+cp ${WEB_DIR}/avvio_proloco.sh /usr/local/bin/avvio_proloco.sh
+chmod +x /usr/local/bin/avvio_proloco.sh
+
+# Crea servizio systemd per avvio automatico
+cat > /etc/systemd/system/proloco-avvio.service << EOF
+[Unit]
+Description=Proloco Bar Manager - Fix permessi all'avvio
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/avvio_proloco.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable proloco-avvio.service
+systemctl start proloco-avvio.service
+
 systemctl restart cron
 
 
