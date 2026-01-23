@@ -191,12 +191,31 @@ menu_backup_sql() {
 
 do_backup_sql() {
     clear_screen
-    show_submenu_header "📦 CREAZIONE BACKUP SQL"
+    show_submenu_header "📤 ESPORTA - Creazione Backup SQL"
+    
+    VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+    SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+    
+    echo ""
+    echo -e "   Dati da esportare: ${YELLOW}${VENDITE}${NC} vendite, ${YELLOW}${SPESE}${NC} spese"
+    echo ""
+    
+    if [ "$VENDITE" -eq 0 ] && [ "$SPESE" -eq 0 ]; then
+        echo -e "${YELLOW}   ⚠️  ATTENZIONE: Il database è vuoto!${NC}"
+        echo -e "${YELLOW}   Il backup verrà creato ma sarà vuoto.${NC}"
+        echo ""
+        read -p "   Vuoi continuare? (S/N): " conferma
+        if [ "$conferma" != "S" ] && [ "$conferma" != "s" ]; then
+            echo -e "${BLUE}   Operazione annullata.${NC}"
+            press_enter
+            return
+        fi
+    fi
     
     TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
     BACKUP_FILE="${BACKUP_SQL_DIR}/backup_${TIMESTAMP}.sql"
     
-    echo -e "   Creazione backup in corso..."
+    echo -e "   Esportazione in corso..."
     
     mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} > ${BACKUP_FILE} 2>/dev/null
     
@@ -205,11 +224,16 @@ do_backup_sql() {
         SIZE=$(du -h "${BACKUP_FILE}.gz" | cut -f1)
         
         echo ""
-        echo -e "${GREEN}   ✅ BACKUP COMPLETATO!${NC}"
-        echo -e "   📁 File: ${CYAN}backup_${TIMESTAMP}.sql.gz${NC}"
+        echo -e "${GREEN}   ✅ ESPORTAZIONE COMPLETATA!${NC}"
+        echo ""
+        echo -e "   📁 File creato: ${CYAN}backup_${TIMESTAMP}.sql.gz${NC}"
         echo -e "   📏 Dimensione: ${SIZE}"
+        echo -e "   📂 Cartella: ${BACKUP_SQL_DIR}/"
+        echo ""
+        echo -e "${YELLOW}   💡 Per reimportare questo backup:${NC}"
+        echo -e "${YELLOW}      Menu 1 → Opzione 3 (IMPORTA)${NC}"
     else
-        echo -e "${RED}   ❌ Errore durante il backup!${NC}"
+        echo -e "${RED}   ❌ Errore durante l'esportazione!${NC}"
     fi
     
     press_enter
