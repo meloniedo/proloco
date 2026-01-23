@@ -597,11 +597,10 @@ test_import_xlsx() {
     
     # Raccogli tutti i file
     all_files=()
-    for file in ${BACKUP_XLSX_DIR}/*.xlsx ${BACKUP_XLSX_DIR}/*.xls ${BACKUP_APP_DIR}/*.xlsx ${BACKUP_APP_DIR}/*.xls 2>/dev/null; do
-        if [ -f "$file" ]; then
-            all_files+=("$file")
-        fi
-    done
+    for file in "${BACKUP_XLSX_DIR}"/*.xlsx; do [ -f "$file" ] && all_files+=("$file"); done
+    for file in "${BACKUP_XLSX_DIR}"/*.xls; do [ -f "$file" ] && all_files+=("$file"); done
+    for file in "${BACKUP_APP_DIR}"/*.xlsx; do [ -f "$file" ] && all_files+=("$file"); done
+    for file in "${BACKUP_APP_DIR}"/*.xls; do [ -f "$file" ] && all_files+=("$file"); done
     
     if [ ${#all_files[@]} -eq 0 ]; then
         echo -e "${RED}   Nessun file Excel trovato.${NC}"
