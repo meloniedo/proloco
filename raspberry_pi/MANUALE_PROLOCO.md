@@ -150,7 +150,43 @@ sudo nmcli device wifi connect "NOME_RETE" password "PASSWORD"
 
 ## 6. IMPORTAZIONE DATI EXCEL
 
-### Procedura Completa
+### 📋 Struttura del File Excel (.xlsx)
+
+Il file deve contenere **UN SOLO FOGLIO** con questa struttura:
+
+#### Sezione VENDITE (in alto)
+
+| Colonna A | Colonna B | Colonna C | Colonna D | Colonna E |
+|-----------|-----------|-----------|-----------|-----------|
+| **Data** | **Ora** | **Prodotto** | **Categoria** | **Importo** |
+| 22/01/2026 | 15:41:11 | Caffè | CAFFETTERIA | 1.2 |
+| 22/01/2026 | 15:40:38 | Extra | PERSONALIZZATE | 2.6 |
+| ... | ... | ... | ... | ... |
+| | | | TOTALE VENDITE: | 910.60 |
+
+#### Sezione SPESE (sotto le vendite)
+
+| Colonna A | Colonna B | Colonna C | Colonna D | Colonna E |
+|-----------|-----------|-----------|-----------|-----------|
+| **SPESE** | | | | |
+| **Data** | **Ora** | **Categoria** | | **Importo** |
+| 20/01/2026 | 17:50:52 | Cialde caffè | | 140 |
+| 17/01/2026 | 18:53:41 | Articoli Pulizia | | 6 |
+| ... | ... | ... | | ... |
+| | | | TOTALE SPESE: | 627.50 |
+
+### ⚠️ Regole Importanti
+
+1. File DEVE essere **.xlsx** (non .xls)
+2. Vendite e spese nello **STESSO foglio** (Sheet 1)
+3. Date in formato: **GG/MM/AAAA** (es. 22/01/2026)
+4. Ora in formato: **HH:MM:SS** (es. 15:41:11)
+5. Importi con **PUNTO** decimale (es. 1.20, non 1,20)
+6. "TOTALE VENDITE" separa vendite e spese
+7. La parola "SPESE" indica inizio sezione spese
+
+### Procedura Importazione
+
 ```bash
 cd /home/pi/proloco/raspberry_pi
 
@@ -170,6 +206,14 @@ cd /home/pi/proloco/raspberry_pi
 ./backup_e_reset.sh
 php import_xlsx.php /media/usb_sda1/storico.xlsx
 ```
+
+### Risoluzione Problemi
+
+| Problema | Soluzione |
+|----------|-----------|
+| Vendite: 0 | Verifica intestazione con "Prodotto" in colonna C |
+| Spese: 0 | Verifica riga "TOTALE VENDITE" e riga "SPESE" |
+| Importi sbagliati | Usa PUNTO decimale (1.20 non 1,20) |
 
 ---
 
