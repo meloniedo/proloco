@@ -232,10 +232,6 @@ try {
     $backupLocaleDir = '/home/pi/proloco/BACKUP_GIORNALIERI';
     if (!is_dir($backupLocaleDir)) @mkdir($backupLocaleDir, 0755, true);
     @file_put_contents($backupLocaleDir . '/' . $filename, $xml);
-    
-    // Aggiorna anche il resoconto totale
-    require_once 'cron_resoconto.php';
-    aggiornaResocontoTotale();
 
     header('Content-Type: application/vnd.ms-excel');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
