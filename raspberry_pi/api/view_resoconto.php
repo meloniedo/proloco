@@ -5,8 +5,8 @@
 require_once '../includes/config.php';
 
 // Include le funzioni del resoconto
-$baseDir = '/var/www/html/proloco';
-$resocontiDir = '/home/pi/proloco/RESOCONTI_SETTIMANALI';
+$baseDir = '/home/edo/proloco';
+$resocontiDir = '/home/edo/proloco/RESOCONTI_SETTIMANALI';
 
 // Funzione per aggiornare il resoconto totale inline
 function aggiornaResocontoTotaleInline() {
