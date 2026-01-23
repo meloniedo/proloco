@@ -3,7 +3,7 @@
 # SCRIPT AGGIORNAMENTO PROLOCO BAR MANAGER
 # ========================================
 # Uso: ./aggiorna.sh
-# Questo script aggiorna l'app da GitHub senza problemi di permessi
+# Questo script aggiorna l'app da GitHub sovrascrivendo tutto
 
 cd /home/pi/proloco
 
@@ -11,8 +11,10 @@ cd /home/pi/proloco
 sudo chown -R edo:edo .git
 sudo chown -R edo:edo .
 
-# Esegue il pull
-git pull
+# FORZA l'aggiornamento scartando TUTTE le modifiche locali
+git fetch --all
+git reset --hard origin/main
+git clean -fd
 
 echo ""
 echo "✅ Aggiornamento completato!"
