@@ -34,46 +34,44 @@
 
 /home/pi/proloco/                    ← CARTELLA PRINCIPALE
 │
-├── raspberry_pi/                    ← APP WEB (qui lavora Apache)
-│   ├── index.html                   ← Pagina principale dell'app
-│   ├── STORICO.txt                  ← Storico vendite/spese (sync automatico)
-│   ├── LISTINO.txt                  ← Lista prodotti (sync automatico)
-│   │
-│   ├── api/                         ← API Backend
-│   │   ├── vendite.php
-│   │   ├── spese.php
-│   │   ├── prodotti.php
-│   │   ├── statistiche.php
-│   │   ├── import_xlsx.php          ← Importazione da web
-│   │   └── ...
-│   │
-│   ├── includes/                    ← File configurazione
-│   │   ├── config.php               ← Credenziali database
-│   │   ├── storico_txt.php          ← Funzioni STORICO.txt
-│   │   └── listino_txt.php          ← Funzioni LISTINO.txt
-│   │
-│   ├── css/                         ← Stili
-│   │
-│   ├── import_xlsx.php              ← Script importazione (terminale)
-│   ├── test_import_xlsx.php         ← Test importazione (terminale)
-│   ├── backup_database.sh           ← Script backup
-│   ├── reset_database.sh            ← Script reset
-│   ├── backup_e_reset.sh            ← Backup + Reset insieme
-│   ├── avvio_proloco.sh             ← Eseguito all'accensione
-│   ├── install.sh                   ← Installazione completa
-│   │
-│   ├── cron_sync.php                ← Sync STORICO ogni minuto
-│   ├── cron_listino.php             ← Sync LISTINO ogni minuto
-│   ├── cron_backup.php              ← Backup automatico
-│   └── cron_resoconto.php           ← Resoconto settimanale
-│
-├── BACKUP_GIORNALIERI/              ← Backup automatici
-├── RESOCONTI_SETTIMANALI/           ← Report settimanali
-├── backup/                          ← Backup manuali da script
+├── backup/                          ← 💾 Backup SQL database (.sql.gz)
+├── BACKUP_GIORNALIERI/              ← 📊 Backup Excel automatici (.xlsx)
+├── RESOCONTI_SETTIMANALI/           ← 📄 Report settimanali
 │
 ├── aggiorna.sh                      ← Aggiornamento da GitHub
 ├── modalita_internet.sh             ← Attiva WiFi normale
-└── modalita_hotspot.sh              ← Attiva hotspot bar
+├── modalita_hotspot.sh              ← Attiva hotspot bar
+│
+└── raspberry_pi/                    ← APP WEB (qui lavora Apache)
+    ├── index.html                   ← Pagina principale dell'app
+    ├── STORICO.txt                  ← Storico vendite/spese (sync automatico)
+    ├── LISTINO.txt                  ← Lista prodotti (sync automatico)
+    │
+    ├── api/                         ← API Backend
+    │   ├── vendite.php
+    │   ├── spese.php
+    │   ├── prodotti.php
+    │   ├── import_xlsx.php          ← Importazione da web
+    │   └── ...
+    │
+    ├── includes/                    ← File configurazione
+    │   └── config.php               ← Credenziali database
+    │
+    ├── backups/                     ← 📊 Backup Excel da app web
+    │
+    ├── gestione_database.sh         ← 🎯 MENU INTERATTIVO BACKUP/RIPRISTINO
+    ├── import_xlsx.php              ← Script importazione (terminale)
+    ├── test_import_xlsx.php         ← Test importazione (terminale)
+    ├── backup_database.sh           ← Script backup rapido
+    ├── reset_database.sh            ← Script reset rapido
+    ├── backup_e_reset.sh            ← Backup + Reset insieme
+    │
+    ├── install.sh                   ← Installazione completa
+    ├── avvio_proloco.sh             ← Eseguito all'accensione
+    ├── cron_*.php                   ← Script automatici (sync, backup)
+    │
+    ├── MANUALE_PROLOCO.txt          ← 📖 Questo manuale
+    └── MANUALE_PROLOCO.md           ← 📖 Manuale (versione markdown)
 
 
 ================================================================================
