@@ -557,15 +557,55 @@
         
         return `
             <div class="space-y-4">
-                <h2 class="text-xl font-bold text-amber-100 text-center">⚙️ Impostazioni</h2>
+                <h2 style="font-size: 28px;" class="font-bold text-amber-100 text-center">⚙️ Impostazioni</h2>
+                
+                <!-- IMPOSTA ORA SISTEMA -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 style="font-size: 22px;" class="font-bold text-amber-100">🕐 Ora di Sistema</h3>
+                    </div>
+                    <div class="bg-blue-900/30 p-3 rounded-lg mb-3 border border-blue-700">
+                        <div class="text-blue-200" style="font-size: 18px;">
+                            ⏰ Ora attuale: <strong id="current-time-display">${new Date().toLocaleString('it-IT')}</strong>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <div>
+                            <label style="color: #fef3c7; font-size: 16px; display: block; margin-bottom: 6px;">📅 Data:</label>
+                            <input type="date" id="settings-data" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3b82f6; background: rgba(0,0,0,0.3); color: #fef3c7; font-size: 18px;">
+                        </div>
+                        <div>
+                            <label style="color: #fef3c7; font-size: 16px; display: block; margin-bottom: 6px;">🕐 Ora:</label>
+                            <input type="time" id="settings-ora" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3b82f6; background: rgba(0,0,0,0.3); color: #fef3c7; font-size: 18px;">
+                        </div>
+                    </div>
+                    <button onclick="updateSystemTime()" style="font-size: 20px;" class="w-full bg-blue-700 hover:bg-blue-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-blue-500 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        ⏰ Aggiorna Ora Sistema
+                    </button>
+                </div>
+                
+                <!-- RESOCONTO TOTALE -->
+                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 style="font-size: 22px;" class="font-bold text-amber-100">📊 Resoconto Totale</h3>
+                    </div>
+                    <div class="bg-green-900/30 p-3 rounded-lg mb-3 border border-green-700">
+                        <div class="text-green-200" style="font-size: 18px;">
+                            📋 Visualizza il riepilogo completo di tutte le vendite e spese
+                        </div>
+                    </div>
+                    <button onclick="viewResocontoTotale()" style="font-size: 20px;" class="w-full bg-green-700 hover:bg-green-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-green-500 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        📊 Visualizza Resoconto Totale
+                    </button>
+                </div>
                 
                 <!-- BACKUP USB -->
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-bold text-amber-100">💾 Backup su USB</h3>
+                        <h3 style="font-size: 22px;" class="font-bold text-amber-100">💾 Backup su USB</h3>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded-full ${usbConnected ? 'bg-green-500' : 'bg-red-500'} ${usbConnected ? '' : 'animate-pulse'}"></span>
-                            <span class="text-sm ${usbConnected ? 'text-green-300' : 'text-red-300'}">
+                            <span style="font-size: 16px;" class="${usbConnected ? 'text-green-300' : 'text-red-300'}">
                                 ${usbConnected ? 'USB Collegata' : 'USB Non Trovata'}
                             </span>
                         </div>
@@ -573,21 +613,21 @@
                     
                     ${usbConnected ? `
                         <div class="bg-green-900/30 p-3 rounded-lg mb-3 border border-green-700">
-                            <div class="text-green-200 text-sm">
+                            <div class="text-green-200" style="font-size: 16px;">
                                 <div>📁 Percorso: <span class="font-mono text-xs">${state.usbStatus.path}</span></div>
                                 <div>💿 Spazio: ${state.usbStatus.free_space_formatted} liberi su ${state.usbStatus.total_space_formatted}</div>
                             </div>
                         </div>
-                        <button onclick="doUSBBackup()" class="w-full bg-green-700 hover:bg-green-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-green-500 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <button onclick="doUSBBackup()" style="font-size: 20px;" class="w-full bg-green-700 hover:bg-green-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-green-500 active:scale-95 transition-all flex items-center justify-center gap-2">
                             💾 Salva su USB (Excel)
                         </button>
                     ` : `
                         <div class="bg-red-900/30 p-3 rounded-lg mb-3 border border-red-700">
-                            <div class="text-red-200 text-sm">
+                            <div class="text-red-200" style="font-size: 16px;">
                                 ⚠️ Inserisci una chiavetta USB per abilitare il backup
                             </div>
                         </div>
-                        <button onclick="refreshUSBStatus()" class="w-full bg-amber-800 hover:bg-amber-700 text-amber-100 py-3 rounded-xl font-bold border-2 border-amber-600 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <button onclick="refreshUSBStatus()" style="font-size: 20px;" class="w-full bg-amber-800 hover:bg-amber-700 text-amber-100 py-3 rounded-xl font-bold border-2 border-amber-600 active:scale-95 transition-all flex items-center justify-center gap-2">
                             🔄 Controlla USB
                         </button>
                     `}
@@ -596,99 +636,79 @@
                 <!-- BACKUP WIFI -->
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-bold text-amber-100">📶 Backup WiFi</h3>
+                        <h3 style="font-size: 22px;" class="font-bold text-amber-100">📶 Backup WiFi</h3>
                         <div class="flex items-center gap-2">
                             <span class="w-4 h-4 rounded-full bg-green-500"></span>
-                            <span class="text-sm text-green-300">Sempre disponibile</span>
+                            <span style="font-size: 16px;" class="text-green-300">Sempre disponibile</span>
                         </div>
                     </div>
                     <div class="bg-blue-900/30 p-3 rounded-lg mb-3 border border-blue-700">
-                        <div class="text-blue-200 text-sm">
+                        <div class="text-blue-200" style="font-size: 16px;">
                             📱 Scarica il backup direttamente sul telefono via WiFi
                         </div>
                     </div>
                     <a href="api/download_backup.php" 
-                       class="w-full bg-blue-700 hover:bg-blue-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-blue-500 active:scale-95 transition-all flex items-center justify-center gap-2"
-                       style="display: flex; text-decoration: none;">
+                       style="font-size: 20px; display: flex; text-decoration: none;"
+                       class="w-full bg-blue-700 hover:bg-blue-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-blue-500 active:scale-95 transition-all items-center justify-center gap-2">
                         📥 Scarica Backup (Excel)
                     </a>
-                </div>
-                
-                <!-- IMPORTA BACKUP -->
-                <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-bold text-amber-100">📤 Importa Backup</h3>
-                        <div class="flex items-center gap-2">
-                            <span class="w-4 h-4 rounded-full bg-orange-500"></span>
-                            <span class="text-sm text-orange-300">Ripristina dati</span>
-                        </div>
-                    </div>
-                    <div class="bg-orange-900/30 p-3 rounded-lg mb-3 border border-orange-700">
-                        <div class="text-orange-200 text-sm">
-                            📂 Carica un file Excel (.xlsx) di backup per ripristinare vendite e spese
-                        </div>
-                    </div>
-                    <input type="file" id="importBackupFile" accept=".xlsx,.xls" style="display:none;" onchange="handleImportBackup(event)">
-                    <button onclick="document.getElementById('importBackupFile').click()" class="w-full bg-orange-700 hover:bg-orange-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-orange-500 active:scale-95 transition-all flex items-center justify-center gap-2">
-                        📤 Seleziona File Excel
-                    </button>
                 </div>
                 
                 <!-- BACKUP AUTOMATICO -->
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800" id="backup-auto-section">
                     <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-lg font-bold text-amber-100">🕐 Backup Automatico</h3>
+                        <h3 style="font-size: 22px;" class="font-bold text-amber-100">🕐 Backup Automatico</h3>
                     </div>
                     
                     <!-- Avviso backup necessario -->
                     <div id="backup-alert" style="display:none;" class="bg-red-900/50 p-3 rounded-lg mb-3 border-2 border-red-500 animate-pulse">
-                        <div class="text-red-100 font-bold flex items-center gap-2">
+                        <div class="text-red-100 font-bold flex items-center gap-2" style="font-size: 18px;">
                             ⚠️ BACKUP NECESSARIO!
                         </div>
-                        <div class="text-red-200 text-sm mt-1">
+                        <div class="text-red-200" style="font-size: 16px; margin-top: 4px;">
                             Il backup automatico non è riuscito. Effettua un backup manuale.
                         </div>
-                        <button onclick="resetBackupAlert()" class="mt-2 bg-red-700 text-white px-3 py-1 rounded text-sm">
+                        <button onclick="resetBackupAlert()" style="font-size: 16px;" class="mt-2 bg-red-700 text-white px-3 py-1 rounded">
                             ✓ Ho capito
                         </button>
                     </div>
                     
                     <div class="bg-purple-900/30 p-3 rounded-lg mb-3 border border-purple-700">
-                        <div class="text-purple-200 text-sm mb-2">
+                        <div class="text-purple-200" style="font-size: 16px; margin-bottom: 8px;">
                             📅 Seleziona i giorni per il backup automatico:
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
-                                <input type="checkbox" id="backup-day-0" value="0" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Dom
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
+                                <input type="checkbox" id="backup-day-0" value="0" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Dom
                             </label>
-                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
-                                <input type="checkbox" id="backup-day-1" value="1" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Lun
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
+                                <input type="checkbox" id="backup-day-1" value="1" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Lun
                             </label>
-                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
-                                <input type="checkbox" id="backup-day-2" value="2" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Mar
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
+                                <input type="checkbox" id="backup-day-2" value="2" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Mar
                             </label>
-                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
-                                <input type="checkbox" id="backup-day-3" value="3" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Mer
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
+                                <input type="checkbox" id="backup-day-3" value="3" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Mer
                             </label>
-                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
-                                <input type="checkbox" id="backup-day-4" value="4" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Gio
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
+                                <input type="checkbox" id="backup-day-4" value="4" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Gio
                             </label>
-                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
-                                <input type="checkbox" id="backup-day-5" value="5" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Ven
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
+                                <input type="checkbox" id="backup-day-5" value="5" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Ven
                             </label>
-                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 14px;">
-                                <input type="checkbox" id="backup-day-6" value="6" onchange="saveBackupSettings()" style="width:18px;height:18px;"> Sab
+                            <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
+                                <input type="checkbox" id="backup-day-6" value="6" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Sab
                             </label>
                         </div>
                         
-                        <div class="text-purple-200 text-sm mt-3 mb-2">
+                        <div class="text-purple-200" style="font-size: 16px; margin-top: 12px; margin-bottom: 8px;">
                             🕐 Ora del backup:
                         </div>
                         <input type="time" id="backup-time" value="23:59" onchange="saveBackupSettings()" 
-                            style="width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #7c3aed; background: rgba(0,0,0,0.3); color: #fef3c7; font-size: 18px;">
+                            style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #7c3aed; background: rgba(0,0,0,0.3); color: #fef3c7; font-size: 20px;">
                     </div>
                     
-                    <div id="backup-status" class="text-amber-200/70 text-sm text-center">
+                    <div id="backup-status" class="text-amber-200/70" style="font-size: 16px; text-align: center;">
                         Caricamento impostazioni...
                     </div>
                 </div>
@@ -696,24 +716,24 @@
                 <!-- GESTIONE LISTINO -->
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-lg font-bold text-amber-100">📋 Listino Prodotti</h3>
-                        <button onclick="openAddProductModal()" class="bg-green-700 text-amber-100 px-3 py-1 rounded-lg text-sm font-bold active:scale-95">
+                        <h3 style="font-size: 22px;" class="font-bold text-amber-100">📋 Listino Prodotti</h3>
+                        <button onclick="openAddProductModal()" style="font-size: 18px;" class="bg-green-700 text-amber-100 px-4 py-2 rounded-lg font-bold active:scale-95">
                             ➕ Aggiungi
                         </button>
                     </div>
-                    <div class="space-y-2 max-h-64 overflow-y-auto">
+                    <div class="space-y-2 max-h-80 overflow-y-auto">
                         ${listino.map(p => `
-                            <div class="bg-amber-900/30 p-3 rounded-lg flex justify-between items-center border border-amber-800/50 ${p.attivo == 0 ? 'opacity-50' : ''}">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-2xl">${p.icona}</span>
+                            <div class="bg-amber-900/30 p-4 rounded-lg flex justify-between items-center border border-amber-800/50 ${p.attivo == 0 ? 'opacity-50' : ''}">
+                                <div class="flex items-center gap-3">
+                                    <span style="font-size: 32px;">${p.icona}</span>
                                     <div class="text-amber-100">
-                                        <div class="font-bold text-sm">${p.nome}</div>
-                                        <div class="text-xs opacity-75">${p.categoria} - €${parseFloat(p.prezzo).toFixed(2)}</div>
+                                        <div style="font-size: 18px;" class="font-bold">${p.nome}</div>
+                                        <div style="font-size: 16px;" class="opacity-75">${p.categoria} - €${parseFloat(p.prezzo).toFixed(2)}</div>
                                     </div>
                                 </div>
-                                <div class="flex gap-1">
-                                    <button onclick="openEditProductModal(${p.id})" class="bg-amber-700 text-amber-100 px-2 py-1 rounded text-sm">✏️</button>
-                                    <button onclick="deleteProdotto(${p.id})" class="bg-red-700 text-amber-100 px-2 py-1 rounded text-sm">🗑️</button>
+                                <div class="flex gap-2">
+                                    <button onclick="openEditProductModal(${p.id})" style="font-size: 20px; padding: 8px 12px;" class="bg-amber-700 text-amber-100 rounded">✏️</button>
+                                    <button onclick="deleteProdotto(${p.id})" style="font-size: 20px; padding: 8px 12px;" class="bg-red-700 text-amber-100 rounded">🗑️</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -722,8 +742,8 @@
                 
                 <!-- INFO -->
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
-                    <h3 class="text-lg font-bold text-amber-100 mb-2">ℹ️ Info Sistema</h3>
-                    <div class="text-amber-200/70 text-sm space-y-1">
+                    <h3 style="font-size: 22px;" class="font-bold text-amber-100 mb-2">ℹ️ Info Sistema</h3>
+                    <div class="text-amber-200/70 space-y-1" style="font-size: 18px;">
                         <div>Password Reset: <span class="text-amber-100 font-bold">5054</span></div>
                         <div>WiFi: <span class="text-amber-100 font-bold">ProlocoBar</span></div>
                         <div>IP: <span class="text-amber-100 font-bold">192.168.4.1</span></div>
