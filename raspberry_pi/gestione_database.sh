@@ -291,7 +291,7 @@ list_backup_sql() {
 
 restore_backup_sql() {
     clear_screen
-    show_submenu_header "🔄 RIPRISTINO BACKUP SQL"
+    show_submenu_header "📥 IMPORTA - Ripristina Backup SQL"
     
     if [ ! "$(ls -A ${BACKUP_SQL_DIR}/*.gz 2>/dev/null)" ]; then
         echo -e "${RED}   Nessun backup trovato.${NC}"
@@ -299,7 +299,7 @@ restore_backup_sql() {
         return
     fi
     
-    echo "   Seleziona il backup da ripristinare:"
+    echo "   Seleziona il backup da IMPORTARE:"
     echo ""
     
     files=($(ls -t ${BACKUP_SQL_DIR}/*.gz 2>/dev/null))
@@ -309,10 +309,19 @@ restore_backup_sql() {
         filename=$(basename $file)
         size=$(du -h $file | cut -f1)
         date=$(stat -c %y $file | cut -d'.' -f1 | cut -c1-16)
-        if [ $i -eq 1 ]; then
-            echo -e "   ${GREEN}$i) $filename ($size) - $date ★ PIÙ RECENTE${NC}"
+        
+        # Conta INSERT per mostrare contenuto
+        insert_count=$(zcat "$file" 2>/dev/null | grep -c "INSERT INTO" || echo "0")
+        if [ "$insert_count" -gt 0 ]; then
+            contenuto="${GREEN}~${insert_count} record${NC}"
         else
-            echo "   $i) $filename ($size) - $date"
+            contenuto="${RED}VUOTO${NC}"
+        fi
+        
+        if [ $i -eq 1 ]; then
+            echo -e "   ${GREEN}$i) $filename ($size) - $contenuto ★ PIÙ RECENTE${NC}"
+        else
+            echo -e "   $i) $filename ($size) - $contenuto"
         fi
         i=$((i+1))
     done
@@ -321,7 +330,7 @@ restore_backup_sql() {
     echo "   0) ❌ Annulla"
     echo ""
     
-    read -p "   Numero backup: " choice
+    read -p "   Numero backup da importare: " choice
     
     if [ "$choice" = "0" ] || [ -z "$choice" ]; then
         return
