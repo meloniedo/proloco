@@ -823,8 +823,8 @@
     function renderAddProductModal() {
         return `
             <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                <div class="card-felt rounded-2xl w-full max-w-sm p-4 border-4 border-amber-800">
-                    <h3 class="text-xl font-bold text-amber-100 text-center mb-4">➕ Nuovo Prodotto</h3>
+                <div class="card-felt rounded-2xl w-full max-w-sm p-5 border-4 border-amber-800">
+                    <h3 style="font-size: 24px;" class="font-bold text-amber-100 text-center mb-4">➕ Nuovo Prodotto</h3>
                     
                     <input type="text" id="newProdNome" placeholder="Nome prodotto" class="modal-input" value="${state.newProduct.nome}">
                     
@@ -835,17 +835,17 @@
                     </select>
                     
                     <div class="mb-4">
-                        <label class="text-amber-100 text-sm mb-2 block">Icona:</label>
-                        <div class="grid grid-cols-8 gap-1">
+                        <label style="font-size: 18px;" class="text-amber-100 mb-2 block">Icona:</label>
+                        <div class="grid grid-cols-8 gap-2">
                             ${CONFIG.icone_disponibili.map(i => `
-                                <button onclick="selectIcon('${i}')" class="text-2xl p-1 rounded ${state.newProduct.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}">${i}</button>
+                                <button onclick="selectIcon('${i}')" style="font-size: 28px; padding: 8px;" class="rounded ${state.newProduct.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}">${i}</button>
                             `).join('')}
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="closeAddProductModal()" class="bg-stone-700 text-amber-100 font-bold py-2 rounded-lg active:scale-95">Annulla</button>
-                        <button onclick="saveNewProduct()" class="bg-green-700 text-amber-100 font-bold py-2 rounded-lg active:scale-95">💾 Salva</button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="closeAddProductModal()" style="font-size: 18px;" class="bg-stone-700 text-amber-100 font-bold py-3 rounded-lg active:scale-95">Annulla</button>
+                        <button onclick="saveNewProduct()" style="font-size: 18px;" class="bg-green-700 text-amber-100 font-bold py-3 rounded-lg active:scale-95">💾 Salva</button>
                     </div>
                 </div>
             </div>
@@ -857,8 +857,8 @@
         if (!p) return '';
         return `
             <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                <div class="card-felt rounded-2xl w-full max-w-sm p-4 border-4 border-amber-800">
-                    <h3 class="text-xl font-bold text-amber-100 text-center mb-4">✏️ Modifica Prodotto</h3>
+                <div class="card-felt rounded-2xl w-full max-w-sm p-5 border-4 border-amber-800">
+                    <h3 style="font-size: 24px;" class="font-bold text-amber-100 text-center mb-4">✏️ Modifica Prodotto</h3>
                     
                     <input type="text" id="editProdNome" placeholder="Nome prodotto" class="modal-input" value="${p.nome}">
                     
@@ -869,15 +869,15 @@
                     </select>
                     
                     <div class="mb-4">
-                        <label class="text-amber-100 text-sm mb-2 block">Icona:</label>
-                        <div class="grid grid-cols-8 gap-1">
+                        <label style="font-size: 18px;" class="text-amber-100 mb-2 block">Icona:</label>
+                        <div class="grid grid-cols-8 gap-2">
                             ${CONFIG.icone_disponibili.map(i => `
-                                <button onclick="selectEditIcon('${i}')" class="text-2xl p-1 rounded ${p.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}">${i}</button>
+                                <button onclick="selectEditIcon('${i}')" style="font-size: 28px; padding: 8px;" class="rounded ${p.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}">${i}</button>
                             `).join('')}
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-2 gap-3">
                         <button onclick="closeEditProductModal()" class="bg-stone-700 text-amber-100 font-bold py-2 rounded-lg active:scale-95">Annulla</button>
                         <button onclick="saveEditProduct()" class="bg-green-700 text-amber-100 font-bold py-2 rounded-lg active:scale-95">💾 Salva</button>
                     </div>
