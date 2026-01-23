@@ -296,7 +296,7 @@ echo GREEN . "
 // Aggiorna STORICO.txt
 echo BLUE . "\n🔄 Aggiornamento STORICO.txt...\n" . RESET;
 require_once __DIR__ . '/includes/storico_txt.php';
-sincronizzaDBversoTXT();
+aggiornaStoricoTxt();
 echo GREEN . "✅ STORICO.txt aggiornato\n" . RESET;
 
 echo "\n" . GREEN . "🎉 Fatto! Puoi ora aprire l'app per vedere i dati importati.\n" . RESET;

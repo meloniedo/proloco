@@ -239,7 +239,7 @@ try {
     
     // Aggiorna STORICO.txt
     require_once '../includes/storico_txt.php';
-    sincronizzaDBversoTXT();
+    aggiornaStoricoTxt();
     
     echo json_encode([
         'success' => true,
