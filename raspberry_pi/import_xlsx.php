@@ -192,8 +192,8 @@ for ($i = 0; $i < count($allRows); $i++) {
         continue;
     }
     
-    // Rileva intestazione SPESE: riga con "Data" e "Categoria" (dopo riga SPESE)
-    if (($modalita === 'attesa_spese' || $modalita === 'attesa_header_spese') && $firstCell === 'Data' && $thirdCell === 'Categoria') {
+    // Rileva intestazione SPESE: riga con "Data" nella prima colonna (dopo riga SPESE)
+    if (($modalita === 'attesa_spese' || $modalita === 'attesa_header_spese') && $firstCell === 'Data') {
         $modalita = 'spese';
         echo YELLOW . "  📍 Trovata intestazione SPESE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
