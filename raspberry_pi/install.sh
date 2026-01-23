@@ -149,6 +149,23 @@ chmod +x ${WEB_DIR}/cron_listino.php
 # Rendi eseguibile lo script aggiorna.sh
 chmod +x ${REPO_DIR}/aggiorna.sh
 
+# Rendi eseguibili tutti gli script bash
+chmod +x ${WEB_DIR}/*.sh 2>/dev/null || true
+chmod +x ${REPO_DIR}/*.sh 2>/dev/null || true
+
+# Crea e imposta permessi per file di testo (scrittura da terminale E da web)
+touch ${WEB_DIR}/STORICO.txt
+touch ${WEB_DIR}/LISTINO.txt
+chmod 666 ${WEB_DIR}/STORICO.txt
+chmod 666 ${WEB_DIR}/LISTINO.txt
+chown www-data:www-data ${WEB_DIR}/STORICO.txt
+chown www-data:www-data ${WEB_DIR}/LISTINO.txt
+
+# Crea cartella backup per script bash
+mkdir -p ${REPO_DIR}/backup
+chmod 777 ${REPO_DIR}/backup
+chown ${USER_NAME}:${USER_NAME} ${REPO_DIR}/backup
+
 # Configura CRON per sincronizzazione automatica STORICO.txt ogni minuto
 echo "# Sincronizzazione STORICO.txt ogni minuto" > /etc/cron.d/proloco_sync
 echo "* * * * * www-data /usr/bin/php ${WEB_DIR}/cron_sync.php > /dev/null 2>&1" >> /etc/cron.d/proloco_sync
