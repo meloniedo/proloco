@@ -133,8 +133,6 @@ function checkUSBStatus() {
     
     // Debug info
     $debugInfo = [];
-    $debugInfo['media_edo_exists'] = is_dir('/media/edo');
-    $debugInfo['media_edo_contents'] = is_dir('/media/edo') ? @scandir('/media/edo') : [];
     $debugInfo['media_contents'] = is_dir('/media') ? @scandir('/media') : [];
     
     if ($usbPath) {
