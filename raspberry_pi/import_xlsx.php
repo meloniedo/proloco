@@ -240,6 +240,7 @@ for ($i = 0; $i < count($allRows); $i++) {
             $venditeImportate++;
         } catch (Exception $e) {
             $venditeErrori++;
+            echo RED . "  ❌ Errore vendita: " . $e->getMessage() . "\n" . RESET;
         }
     }
     // IMPORTA SPESE
@@ -268,6 +269,7 @@ for ($i = 0; $i < count($allRows); $i++) {
             $speseImportate++;
         } catch (Exception $e) {
             $speseErrori++;
+            echo RED . "  ❌ Errore spesa: " . $e->getMessage() . "\n" . RESET;
         }
     }
 }
