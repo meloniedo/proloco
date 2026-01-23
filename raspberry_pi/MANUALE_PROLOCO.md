@@ -175,25 +175,48 @@ php import_xlsx.php /media/usb_sda1/storico.xlsx
 
 ## 7. BACKUP E RESET DATABASE
 
-### Solo Backup
+### 🎯 Menu Interattivo (CONSIGLIATO)
 ```bash
 cd /home/pi/proloco/raspberry_pi
+./gestione_database.sh
+```
+
+Apre un menu grafico con tutte le opzioni:
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║          🗄️  GESTIONE DATABASE - PROLOCO BAR                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+   1) 📦 Crea nuovo backup
+   2) 📋 Lista backup disponibili
+   3) 🔄 Ripristina un backup
+   4) 🗑️  Elimina backup
+   5) ⚠️  Reset database (cancella vendite/spese)
+   6) 📄 Esporta in formato leggibile (.txt)
+   
+   0) 🚪 Esci
+```
+
+### Comandi Rapidi (senza menu)
+```bash
+# Solo Backup
 ./backup_database.sh
-```
-> Salvato in: `/home/pi/proloco/backup/`
 
-### Solo Reset (cancella tutto!)
-```bash
+# Solo Reset (cancella tutto!)
 ./reset_database.sh
-```
-> Richiede conferma: scrivi **SI**
 
-### Backup + Reset (consigliato)
-```bash
+# Backup + Reset
 ./backup_e_reset.sh
 ```
 
-### Ripristinare un Backup
+### Dove sono i backup?
+- **Cartella:** `/home/pi/proloco/backup/`
+- **Formato:** `backup_YYYYMMDD_HHMMSS.sql.gz`
+- `.sql` = formato database MySQL
+- `.gz` = compresso
+
+### Ripristino Manuale
 ```bash
 # Lista backup disponibili
 ls -la /home/pi/proloco/backup/
