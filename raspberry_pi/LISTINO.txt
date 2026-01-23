@@ -1,0 +1,60 @@
+# ════════════════════════════════════════════════════════════════
+# LISTINO PROLOCO SANTA BIANCA
+# Ultimo aggiornamento: GENERATO AUTOMATICAMENTE
+# ════════════════════════════════════════════════════════════════
+#
+# ISTRUZIONI:
+# - Ogni riga rappresenta un prodotto
+# - Formato: ICONA | NOME | PREZZO
+# - Per aggiungere: scrivi una nuova riga nella categoria giusta
+# - Per rimuovere: cancella la riga
+# - Le righe che iniziano con # sono commenti (ignorate)
+# - Il file viene sincronizzato automaticamente ogni minuto
+#
+# ════════════════════════════════════════════════════════════════
+
+
+═══════════════════════════════════════
+  CAFFETTERIA
+═══════════════════════════════════════
+☕ | Caffè | 1.20
+☕ | Caffè Deca | 1.20
+🥃 | Caffè Corretto | 2.00
+
+
+═══════════════════════════════════════
+  BEVANDE
+═══════════════════════════════════════
+🍷 | Caraffa di Vino 0,5L | 6.00
+🍷 | Caraffa di Vino 1LT | 11.00
+🍷 | Calice di Vino | 1.50
+🍷 | Sguazzone | 1.00
+🥃 | Liquori, Grappe, Vodka e Amari | 2.50
+🥤 | Bibite in Lattina | 2.20
+💧 | Bottiglietta d'Acqua | 1.00
+
+
+═══════════════════════════════════════
+  GELATI
+═══════════════════════════════════════
+🍦 | Cremino | 1.20
+🍦 | Cucciolone | 1.50
+🍦 | Magnum, Soia e altri Gelati | 2.00
+
+
+═══════════════════════════════════════
+  CIBO E SNACK
+═══════════════════════════════════════
+🍿 | Pop Corn | 3.00
+
+
+═══════════════════════════════════════
+  PERSONALIZZATE
+═══════════════════════════════════════
+🎱 | Bigliardo | 0.00
+➕ | Extra | 0.00
+
+
+# ════════════════════════════════════════════════════════════════
+# FINE LISTINO
+# ════════════════════════════════════════════════════════════════
