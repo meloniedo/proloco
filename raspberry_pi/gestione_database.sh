@@ -433,14 +433,18 @@ list_backup_xlsx() {
     # Raccogli tutti i file xlsx/xls
     all_files=()
     
-    for file in ${BACKUP_XLSX_DIR}/*.xlsx ${BACKUP_XLSX_DIR}/*.xls ${BACKUP_APP_DIR}/*.xlsx ${BACKUP_APP_DIR}/*.xls 2>/dev/null; do
-        if [ -f "$file" ]; then
-            all_files+=("$file")
-        fi
-    done
+    # Aggiungi file da ogni cartella separatamente
+    for file in "${BACKUP_XLSX_DIR}"/*.xlsx; do [ -f "$file" ] && all_files+=("$file"); done
+    for file in "${BACKUP_XLSX_DIR}"/*.xls; do [ -f "$file" ] && all_files+=("$file"); done
+    for file in "${BACKUP_APP_DIR}"/*.xlsx; do [ -f "$file" ] && all_files+=("$file"); done
+    for file in "${BACKUP_APP_DIR}"/*.xls; do [ -f "$file" ] && all_files+=("$file"); done
     
     if [ ${#all_files[@]} -eq 0 ]; then
         echo -e "${RED}   Nessun file Excel trovato.${NC}"
+        echo ""
+        echo -e "${YELLOW}   Cartelle monitorate:${NC}"
+        echo -e "   ${BLUE}${BACKUP_XLSX_DIR}/${NC}"
+        echo -e "   ${BLUE}${BACKUP_APP_DIR}/${NC}"
         press_enter
         return
     fi
