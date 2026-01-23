@@ -141,7 +141,9 @@ try {
         $categoria = trim($row[3]);
         $importo = floatval(str_replace(',', '.', $row[4]));
         
-        if (empty($prodotto) || $importo <= 0) continue;
+        // Salta righe di totale
+        if (empty($prodotto) || stripos($prodotto, 'TOTALE') !== false) continue;
+        if ($importo <= 0) continue;
         
         $timestamp = excelDateToMysql($row[0], $row[1]);
         
@@ -161,10 +163,13 @@ try {
         $row = $speseRows[$i];
         if (count($row) < 6) continue;
         
+        // Colonna 3 è "Spesa" che contiene il nome della categoria
         $categoria = trim($row[3]);
         $importo = floatval(str_replace(',', '.', $row[5]));
         
-        if (empty($categoria) || $importo <= 0) continue;
+        // Salta righe di totale
+        if (empty($categoria) || stripos($categoria, 'TOTALE') !== false) continue;
+        if ($importo <= 0) continue;
         
         $timestamp = excelDateToMysql($row[0], $row[1]);
         $note = trim($row[4]);
