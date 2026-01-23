@@ -30,31 +30,26 @@
 ```
 /home/pi/proloco/                    ← CARTELLA PRINCIPALE
 │
-├── raspberry_pi/                    ← APP WEB
-│   ├── index.html                   ← Pagina principale
-│   ├── STORICO.txt                  ← Storico vendite/spese
-│   ├── LISTINO.txt                  ← Lista prodotti
-│   │
-│   ├── api/                         ← API Backend
-│   │   ├── vendite.php
-│   │   ├── spese.php
-│   │   └── ...
-│   │
-│   ├── includes/                    ← Configurazione
-│   │   └── config.php               ← Credenziali database
-│   │
-│   ├── import_xlsx.php              ← Importazione Excel
-│   ├── backup_database.sh           ← Script backup
-│   ├── reset_database.sh            ← Script reset
-│   └── backup_e_reset.sh            ← Backup + Reset
-│
-├── BACKUP_GIORNALIERI/              ← Backup automatici
-├── RESOCONTI_SETTIMANALI/           ← Report settimanali
-├── backup/                          ← Backup manuali
+├── backup/                          ← 💾 Backup SQL (.sql.gz)
+├── BACKUP_GIORNALIERI/              ← 📊 Backup Excel automatici
+├── RESOCONTI_SETTIMANALI/           ← 📄 Report settimanali
 │
 ├── aggiorna.sh                      ← Aggiornamento GitHub
 ├── modalita_internet.sh             ← Attiva WiFi
-└── modalita_hotspot.sh              ← Attiva hotspot
+├── modalita_hotspot.sh              ← Attiva hotspot
+│
+└── raspberry_pi/                    ← APP WEB
+    ├── index.html                   ← Pagina principale
+    ├── STORICO.txt                  ← Storico (auto-sync)
+    ├── LISTINO.txt                  ← Prodotti (auto-sync)
+    ├── api/                         ← API Backend
+    ├── includes/                    ← Configurazione
+    ├── backups/                     ← 📊 Backup Excel da app
+    │
+    ├── gestione_database.sh         ← 🎯 MENU INTERATTIVO
+    ├── import_xlsx.php              ← Importazione Excel
+    ├── backup_*.sh                  ← Script backup
+    └── MANUALE_PROLOCO.*            ← 📖 Manuali
 ```
 
 ---
