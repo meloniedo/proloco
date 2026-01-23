@@ -25,10 +25,28 @@ function aggiornaResocontoTotaleInline() {
         $prodottiCount = [];
         $categorieVendite = [];
         
+        // Organizza per mese e settimana
+        $mesiDati = [];
+        
         foreach ($vendite as $v) {
             $totVendite += floatval($v['prezzo']);
             $nome = $v['nome_prodotto'];
             $cat = $v['categoria'] ?? 'ALTRO';
+            $timestamp = strtotime($v['timestamp']);
+            
+            // Calcola mese e settimana
+            $mese = date('Y-m', $timestamp);
+            $meseNome = getMeseItaliano(date('n', $timestamp)) . ' ' . date('Y', $timestamp);
+            $settimana = ceil(date('j', $timestamp) / 7);
+            if ($settimana > 4) $settimana = 4;
+            
+            if (!isset($mesiDati[$mese])) {
+                $mesiDati[$mese] = [
+                    'nome' => $meseNome,
+                    'settimane' => [1 => ['entrate' => 0, 'spese' => 0], 2 => ['entrate' => 0, 'spese' => 0], 3 => ['entrate' => 0, 'spese' => 0], 4 => ['entrate' => 0, 'spese' => 0]]
+                ];
+            }
+            $mesiDati[$mese]['settimane'][$settimana]['entrate'] += floatval($v['prezzo']);
             
             if (!isset($prodottiCount[$nome])) {
                 $prodottiCount[$nome] = ['count' => 0, 'totale' => 0];
@@ -45,7 +63,25 @@ function aggiornaResocontoTotaleInline() {
         
         foreach ($spese as $s) {
             $totSpese += floatval($s['importo']);
+            $timestamp = strtotime($s['timestamp']);
+            
+            // Calcola mese e settimana per le spese
+            $mese = date('Y-m', $timestamp);
+            $meseNome = getMeseItaliano(date('n', $timestamp)) . ' ' . date('Y', $timestamp);
+            $settimana = ceil(date('j', $timestamp) / 7);
+            if ($settimana > 4) $settimana = 4;
+            
+            if (!isset($mesiDati[$mese])) {
+                $mesiDati[$mese] = [
+                    'nome' => $meseNome,
+                    'settimane' => [1 => ['entrate' => 0, 'spese' => 0], 2 => ['entrate' => 0, 'spese' => 0], 3 => ['entrate' => 0, 'spese' => 0], 4 => ['entrate' => 0, 'spese' => 0]]
+                ];
+            }
+            $mesiDati[$mese]['settimane'][$settimana]['spese'] += floatval($s['importo']);
         }
+        
+        // Ordina mesi dal più recente
+        krsort($mesiDati);
         
         // Top 5 prodotti
         uasort($prodottiCount, function($a, $b) { return $b['count'] - $a['count']; });
@@ -83,6 +119,41 @@ function aggiornaResocontoTotaleInline() {
             $content .= sprintf("  %-20s %4d vendite   €%8.2f\n", $cat, $data['count'], $data['totale']);
         }
         
+        // SEZIONE RESOCONTI MENSILI DIVISI PER SETTIMANE
+        $content .= "\n\n";
+        $content .= "╔══════════════════════════════════════════════════════════════╗\n";
+        $content .= "║              📅 RESOCONTI MENSILI PER SETTIMANA              ║\n";
+        $content .= "╚══════════════════════════════════════════════════════════════╝\n";
+        
+        foreach ($mesiDati as $mese => $datiMese) {
+            $content .= "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+            $content .= "                    " . strtoupper($datiMese['nome']) . "\n";
+            $content .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+            
+            $totaleMeseEntrate = 0;
+            $totaleMeseSpese = 0;
+            
+            for ($sett = 1; $sett <= 4; $sett++) {
+                $entrate = $datiMese['settimane'][$sett]['entrate'];
+                $speseSett = $datiMese['settimane'][$sett]['spese'];
+                $netto = $entrate - $speseSett;
+                
+                $totaleMeseEntrate += $entrate;
+                $totaleMeseSpese += $speseSett;
+                
+                $content .= "  📆 SETTIMANA $sett:\n";
+                $content .= sprintf("     Entrate:   €%8.2f\n", $entrate);
+                $content .= sprintf("     Spese:     €%8.2f\n", $speseSett);
+                $content .= sprintf("     NETTO:     €%8.2f\n\n", $netto);
+            }
+            
+            $content .= "  ────────────────────────────────────────\n";
+            $content .= sprintf("  TOTALE %s:\n", strtoupper($datiMese['nome']));
+            $content .= sprintf("     Entrate:   €%8.2f\n", $totaleMeseEntrate);
+            $content .= sprintf("     Spese:     €%8.2f\n", $totaleMeseSpese);
+            $content .= sprintf("     NETTO:     €%8.2f\n", $totaleMeseEntrate - $totaleMeseSpese);
+        }
+        
         $content .= "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
         $content .= "                    Generato da Bar Manager\n";
         $content .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
@@ -97,6 +168,16 @@ function aggiornaResocontoTotaleInline() {
     } catch (Exception $e) {
         return "Errore generazione resoconto: " . $e->getMessage();
     }
+}
+
+// Funzione per ottenere il nome del mese in italiano
+function getMeseItaliano($mese) {
+    $mesi = [
+        1 => 'GENNAIO', 2 => 'FEBBRAIO', 3 => 'MARZO', 4 => 'APRILE',
+        5 => 'MAGGIO', 6 => 'GIUGNO', 7 => 'LUGLIO', 8 => 'AGOSTO',
+        9 => 'SETTEMBRE', 10 => 'OTTOBRE', 11 => 'NOVEMBRE', 12 => 'DICEMBRE'
+    ];
+    return $mesi[$mese] ?? '';
 }
 
 header('Content-Type: text/plain; charset=utf-8');
