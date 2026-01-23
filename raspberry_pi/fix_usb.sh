@@ -12,13 +12,13 @@ usermod -a -G disk www-data 2>/dev/null
 echo "✓ Utente www-data aggiunto ai gruppi"
 
 # Crea directory con permessi corretti
-mkdir -p /media/pi
-chmod 777 /media/pi
-chown www-data:www-data /media/pi
-echo "✓ Directory /media/pi configurata"
+mkdir -p /media/edo
+chmod 777 /media/edo
+chown www-data:www-data /media/edo
+echo "✓ Directory /media/edo configurata"
 
 # Se c'è già una chiavetta montata, sistema i permessi
-for dir in /media/pi/*; do
+for dir in /media/edo/*; do
     if [ -d "$dir" ]; then
         chmod 777 "$dir" 2>/dev/null
         echo "✓ Permessi aggiornati per: $dir"
@@ -26,7 +26,7 @@ for dir in /media/pi/*; do
 done
 
 for dir in /media/*; do
-    if [ -d "$dir" ] && [ "$dir" != "/media/pi" ]; then
+    if [ -d "$dir" ] && [ "$dir" != "/media/edo" ]; then
         chmod 777 "$dir" 2>/dev/null
         echo "✓ Permessi aggiornati per: $dir"
     fi
