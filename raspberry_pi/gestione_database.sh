@@ -476,6 +476,11 @@ menu_backup_xlsx() {
             5) delete_backup_xlsx ;;
             6) show_xlsx_folders ;;
             0) return ;;
+            *) echo -e "${RED}   Opzione non valida!${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
 export_xlsx() {
     clear_screen
     show_submenu_header "📤 ESPORTA - Crea File Excel"
@@ -500,10 +505,6 @@ export_xlsx() {
     php ${WEB_DIR}/export_xlsx.php
     
     press_enter
-}
-            *) echo -e "${RED}   Opzione non valida!${NC}"; sleep 1 ;;
-        esac
-    done
 }
 
 list_backup_xlsx() {
