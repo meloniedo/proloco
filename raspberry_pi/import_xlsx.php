@@ -200,7 +200,8 @@ $speseRows = readSheet($zip, 2, $sharedStrings);
 $speseImportate = 0;
 $speseErrori = 0;
 
-// Struttura: Data, Ora, Categoria, Spesa, Note, Importo
+// Struttura effettiva: Data, Ora, (vuoto), Spesa/Categoria, Note, Importo
+// La colonna "Categoria" (indice 2) è vuota, "Spesa" (indice 3) contiene il nome categoria
 $stmtSpesa = $pdo->prepare("INSERT INTO spese (categoria_spesa, importo, note, timestamp) VALUES (?, ?, ?, ?)");
 
 for ($i = 1; $i < count($speseRows); $i++) {
@@ -210,11 +211,14 @@ for ($i = 1; $i < count($speseRows); $i++) {
     
     $data = $row[0];
     $ora = $row[1];
-    $categoria = trim($row[3]); // La colonna "Spesa" contiene la categoria
+    // Colonna 2 è "Categoria" (vuota), colonna 3 è "Spesa" che contiene il nome della categoria
+    $categoria = trim($row[3]); 
     $note = trim($row[4]);
     $importo = floatval(str_replace(',', '.', $row[5]));
     
-    if (empty($categoria) || $importo <= 0) continue;
+    // Salta righe di totale o senza categoria
+    if (empty($categoria) || stripos($categoria, 'TOTALE') !== false) continue;
+    if ($importo <= 0) continue;
     
     $timestamp = excelDateToMysql($data, $ora);
     
