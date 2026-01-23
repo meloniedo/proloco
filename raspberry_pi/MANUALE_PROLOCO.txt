@@ -659,6 +659,9 @@ METODO 3: Tramite cavo Ethernet (se disponibile)
     # Vai alla cartella app
     cd /home/pi/proloco/raspberry_pi
 
+    # 🎯 GESTIONE DATABASE (menu interattivo)
+    ./gestione_database.sh
+
     # Aggiorna da GitHub
     cd /home/pi/proloco && ./aggiorna.sh
 
