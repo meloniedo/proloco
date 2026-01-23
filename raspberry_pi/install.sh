@@ -22,7 +22,8 @@ IP_ADDRESS="192.168.4.1"
 DB_USER="edo"
 DB_PASS="5054"
 DB_NAME="proloco_bar"
-WEB_DIR="/home/pi/proloco"
+REPO_DIR="/home/pi/proloco"
+WEB_DIR="/home/pi/proloco/raspberry_pi"
 USER_NAME="edo"
 
 # Verifica root
