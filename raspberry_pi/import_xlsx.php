@@ -231,7 +231,10 @@ for ($i = 0; $i < count($allRows); $i++) {
         $categoria = trim($row[3]);
         $importo = floatval(str_replace(',', '.', $row[4]));
         
-        if (empty($prodotto) || $importo <= 0) continue;
+        if (empty($prodotto)) continue;
+        
+        // Permetti anche importi = 0 (es. Bigliardo, Extra)
+        if ($importo < 0) $importo = 0;
         
         $timestamp = excelDateToMysql($data, $ora);
         
