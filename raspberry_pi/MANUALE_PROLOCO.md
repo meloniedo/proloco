@@ -323,6 +323,9 @@ sudo tail -50 /var/log/apache2/error.log
 # Vai alla cartella app
 cd /home/pi/proloco/raspberry_pi
 
+# 🎯 GESTIONE DATABASE (menu interattivo)
+./gestione_database.sh
+
 # Aggiorna da GitHub
 cd /home/pi/proloco && ./aggiorna.sh
 
