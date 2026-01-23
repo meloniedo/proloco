@@ -175,7 +175,9 @@ for ($i = 1; $i < count($venditeRows); $i++) {
     $categoria = trim($row[3]);
     $importo = floatval(str_replace(',', '.', $row[4]));
     
-    if (empty($prodotto) || $importo <= 0) continue;
+    // Salta righe di totale o intestazioni
+    if (empty($prodotto) || stripos($prodotto, 'TOTALE') !== false) continue;
+    if ($importo <= 0) continue;
     
     $timestamp = excelDateToMysql($data, $ora);
     
