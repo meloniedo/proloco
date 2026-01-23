@@ -454,23 +454,27 @@ menu_backup_xlsx() {
         echo -e "   📁 Da app web:  ${BLUE}${BACKUP_APP_DIR}${NC} (${YELLOW}${XLSX_APP}${NC} file)"
         echo ""
         
-        echo -e "   ${GREEN}1)${NC} 📋 Lista tutti i file Excel"
-        echo -e "   ${GREEN}2)${NC} 📥 Importa file Excel nel database"
-        echo -e "   ${GREEN}3)${NC} 🔍 Testa importazione (senza modificare)"
-        echo -e "   ${GREEN}4)${NC} 🗑️  Elimina file Excel"
-        echo -e "   ${GREEN}5)${NC} 📂 Apri cartella backup (mostra percorso)"
+        echo -e "   ${GREEN}1)${NC} 📤 ${GREEN}ESPORTA${NC} - Crea file Excel dal database"
+        echo -e "   ${GREEN}2)${NC} 📥 ${GREEN}IMPORTA${NC} - Importa file Excel nel database"
+        echo -e "   ${GREEN}3)${NC} 📋 Lista tutti i file Excel"
+        echo -e "   ${GREEN}4)${NC} 🔍 Testa importazione (senza modificare)"
+        echo -e "   ${GREEN}5)${NC} 🗑️  Elimina file Excel"
+        echo -e "   ${GREEN}6)${NC} 📂 Mostra percorsi cartelle (per USB)"
+        echo ""
+        echo -e "   ${CYAN}Flusso: ESPORTA (1) → salva file .xlsx → IMPORTA (2)${NC}"
         echo ""
         echo -e "   ${RED}0)${NC} ← Torna al menu principale"
         echo ""
         
-        read -p "   Scegli (0-5): " choice
+        read -p "   Scegli (0-6): " choice
         
         case $choice in
-            1) list_backup_xlsx ;;
+            1) export_xlsx ;;
             2) import_backup_xlsx ;;
-            3) test_import_xlsx ;;
-            4) delete_backup_xlsx ;;
-            5) show_xlsx_folders ;;
+            3) list_backup_xlsx ;;
+            4) test_import_xlsx ;;
+            5) delete_backup_xlsx ;;
+            6) show_xlsx_folders ;;
             0) return ;;
             *) echo -e "${RED}   Opzione non valida!${NC}"; sleep 1 ;;
         esac
