@@ -927,8 +927,14 @@
 
     // ==================== HANDLERS ====================
     async function changeView(v) { 
+        console.log('changeView chiamato con:', v);
         state.view = v; 
-        await render(); 
+        try {
+            await render(); 
+        } catch(e) {
+            console.error('Errore in render:', e);
+            alert('Errore caricamento pagina: ' + e.message);
+        }
         document.getElementById('app').scrollTop = 0;
         if (v === 'impostazioni') {
             setTimeout(() => {
