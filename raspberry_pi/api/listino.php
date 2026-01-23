@@ -3,6 +3,7 @@
 // API GESTIONE LISTINO (Impostazioni)
 // ========================================
 require_once '../includes/config.php';
+require_once '../includes/listino_txt.php';
 jsonHeaders();
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -34,6 +35,8 @@ switch ($method) {
         ]);
         
         if ($result) {
+            // Aggiorna LISTINO.txt
+            aggiornaListinoDaDB();
             jsonResponse(['success' => true, 'id' => $pdo->lastInsertId()]);
         } else {
             jsonResponse(['error' => 'Errore inserimento'], 500);
