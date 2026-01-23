@@ -5,7 +5,10 @@
 # Uso: ./aggiorna.sh
 # Questo script aggiorna l'app da GitHub sovrascrivendo tutto
 
-cd /home/pi/proloco
+REPO_DIR="/home/pi/proloco"
+WEB_DIR="/home/pi/proloco/raspberry_pi"
+
+cd ${REPO_DIR}
 
 # Corregge i permessi prima del pull
 sudo chown -R edo:edo .git
@@ -14,11 +17,10 @@ sudo chown -R edo:edo .
 # FORZA l'aggiornamento scartando TUTTE le modifiche locali
 git fetch --all
 git reset --hard origin/main
-git clean -fd
 
 # Ripristina permessi per Apache
-sudo chown -R www-data:www-data /home/pi/proloco
-sudo chmod -R 755 /home/pi/proloco
+sudo chown -R www-data:www-data ${WEB_DIR}
+sudo chmod -R 755 ${WEB_DIR}
 
 echo ""
 echo "✅ Aggiornamento completato!"
