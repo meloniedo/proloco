@@ -799,9 +799,53 @@ reset_database() {
     press_enter
 }
 
+menu_export() {
+    while true; do
+        clear_screen
+        show_header
+        show_submenu_header "📤 ESPORTA DATABASE"
+        
+        VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+        SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+        
+        echo ""
+        echo -e "   Dati da esportare: ${YELLOW}${VENDITE}${NC} vendite, ${YELLOW}${SPESE}${NC} spese"
+        echo ""
+        
+        echo -e "   ${GREEN}1)${NC} 💾 Esporta backup SQL (reimportabile)"
+        echo -e "      ${BLUE}→ Crea un file .sql.gz che puoi ripristinare${NC}"
+        echo ""
+        echo -e "   ${GREEN}2)${NC} 📄 Esporta in formato leggibile (.txt)"
+        echo -e "      ${BLUE}→ Solo per leggere/stampare, NON reimportabile${NC}"
+        echo ""
+        echo -e "   ${RED}0)${NC} ← Torna al menu principale"
+        echo ""
+        
+        read -p "   Scegli (0-2): " choice
+        
+        case $choice in
+            1) do_backup_sql ;;
+            2) export_txt ;;
+            0) return ;;
+            *) echo -e "${RED}   Opzione non valida!${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
 export_txt() {
     clear_screen
     show_submenu_header "📄 ESPORTA IN FORMATO LEGGIBILE"
+    
+    VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+    SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+    
+    if [ "$VENDITE" -eq 0 ] && [ "$SPESE" -eq 0 ]; then
+        echo ""
+        echo -e "${RED}   ⚠️  Il database è VUOTO!${NC}"
+        echo -e "${YELLOW}   Non ci sono dati da esportare.${NC}"
+        press_enter
+        return
+    fi
     
     TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
     EXPORT_FILE="${BACKUP_SQL_DIR}/export_${TIMESTAMP}.txt"
@@ -819,8 +863,8 @@ export_txt() {
         
         echo "RIEPILOGO"
         echo "─────────────────────────────────────────"
-        echo "Totale Vendite: €${TOT_V}"
-        echo "Totale Spese: €${TOT_S}"
+        echo "Totale Vendite: ${VENDITE} transazioni - €${TOT_V}"
+        echo "Totale Spese: ${SPESE} transazioni - €${TOT_S}"
         echo ""
         
         echo "VENDITE"
@@ -828,6 +872,7 @@ export_txt() {
         mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -e "
             SELECT DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i') as Data, 
                    nome_prodotto as Prodotto, 
+                   categoria as Categoria,
                    CONCAT('€', FORMAT(prezzo, 2)) as Importo 
             FROM vendite ORDER BY timestamp DESC" 2>/dev/null
         echo ""
@@ -837,7 +882,8 @@ export_txt() {
         mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -e "
             SELECT DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i') as Data, 
                    categoria_spesa as Categoria, 
-                   CONCAT('€', FORMAT(importo, 2)) as Importo
+                   CONCAT('€', FORMAT(importo, 2)) as Importo,
+                   COALESCE(note, '') as Note
             FROM spese ORDER BY timestamp DESC" 2>/dev/null
         
     } > ${EXPORT_FILE}
@@ -845,6 +891,9 @@ export_txt() {
     echo ""
     echo -e "${GREEN}   ✅ EXPORT COMPLETATO!${NC}"
     echo -e "   📄 File: ${CYAN}${EXPORT_FILE}${NC}"
+    echo ""
+    echo -e "${YELLOW}   ⚠️  NOTA: Questo file è solo per LEGGERE/STAMPARE.${NC}"
+    echo -e "${YELLOW}   Per reimportare i dati, usa l'opzione 1 (Backup SQL).${NC}"
     
     press_enter
 }
