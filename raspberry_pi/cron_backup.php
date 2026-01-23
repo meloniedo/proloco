@@ -5,7 +5,7 @@
 // Esegue backup settimanale programmato
 // ========================================
 
-$baseDir = '/var/www/html/proloco';
+$baseDir = '/home/edo/proloco';
 
 require_once $baseDir . '/includes/config.php';
 

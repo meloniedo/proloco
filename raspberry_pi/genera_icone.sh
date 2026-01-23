@@ -4,7 +4,7 @@
 # Crea icone PNG semplici per la PWA
 # ========================================
 
-ICON_DIR="/var/www/html/proloco/icons"
+ICON_DIR="/home/edo/proloco/icons"
 mkdir -p $ICON_DIR
 
 # Crea icone usando ImageMagick (se disponibile) o copia SVG

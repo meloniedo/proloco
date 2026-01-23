@@ -6,7 +6,7 @@
 
 echo "🔄 Attivazione sincronizzazione automatica STORICO.txt..."
 
-WEB_DIR="/var/www/html/proloco"
+WEB_DIR="/home/edo/proloco"
 
 # Crea cartella logs
 mkdir -p ${WEB_DIR}/logs

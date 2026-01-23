@@ -8,7 +8,7 @@
 // ========================================
 
 // Percorso assoluto
-$baseDir = '/var/www/html/proloco';
+$baseDir = '/home/edo/proloco';
 
 require_once $baseDir . '/includes/config.php';
 require_once $baseDir . '/includes/storico_txt.php';
