@@ -163,8 +163,8 @@ try {
         $row = $speseRows[$i];
         if (count($row) < 6) continue;
         
-        // Colonna 3 è "Spesa" che contiene il nome della categoria
-        $categoria = trim($row[3]);
+        // Colonna C (indice 2) contiene il nome della spesa
+        $categoria = trim($row[2]);
         $importo = floatval(str_replace(',', '.', $row[5]));
         
         // Salta righe di totale
@@ -172,7 +172,7 @@ try {
         if ($importo <= 0) continue;
         
         $timestamp = excelDateToMysql($row[0], $row[1]);
-        $note = trim($row[4]);
+        $note = trim($row[4] ?? '');
         
         try {
             $stmtSpesa->execute([$categoria, $importo, $note, $timestamp]);
