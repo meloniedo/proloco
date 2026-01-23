@@ -72,7 +72,17 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 mkdir -p ${WEB_DIR}/{api,css,includes,icons}
 cp -r ${SCRIPT_DIR}/* ${WEB_DIR}/ 2>/dev/null || true
 rm -f ${WEB_DIR}/install.sh
-[ -f "${WEB_DIR}/database.sql" ] && mysql ${DB_NAME} < ${WEB_DIR}/database.sql 2>/dev/null || true
+# Importa database.sql SOLO se le tabelle sono vuote (primo install)
+# Questo evita di sovrascrivere dati esistenti durante gli aggiornamenti
+VENDITE_COUNT=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+if [ "${VENDITE_COUNT}" = "0" ] || [ -z "${VENDITE_COUNT}" ]; then
+    echo "  Database vuoto, importo struttura iniziale..."
+    [ -f "${WEB_DIR}/database.sql" ] && mysql ${DB_NAME} < ${WEB_DIR}/database.sql 2>/dev/null || true
+else
+    echo "  Database esistente con ${VENDITE_COUNT} vendite, salto importazione database.sql"
+    # Assicurati che le tabelle esistano comunque (senza cancellare dati)
+    mysql ${DB_NAME} -e "CREATE TABLE IF NOT EXISTS configurazione (chiave VARCHAR(100) PRIMARY KEY, valore TEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB;" 2>/dev/null || true
+fi
 chown -R www-data:www-data ${WEB_DIR}
 chmod -R 755 ${WEB_DIR}
 
