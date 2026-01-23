@@ -912,7 +912,17 @@
     }
 
     // ==================== HANDLERS ====================
-    function changeView(v) { state.view = v; render(); document.getElementById('app').scrollTop = 0; }
+    async function changeView(v) { 
+        state.view = v; 
+        await render(); 
+        document.getElementById('app').scrollTop = 0;
+        if (v === 'impostazioni') {
+            setTimeout(() => {
+                loadBackupSettings();
+                initTimeSettings();
+            }, 100);
+        }
+    }
     function changePeriodo(p) { state.periodo = p; render(); }
     
     async function handleProductClick(id) {
