@@ -358,6 +358,7 @@ sudo tail -50 /var/log/apache2/error.log
 | `gestione_database.sh` | 🎯 Menu interattivo backup/ripristino |
 | `backup_e_reset.sh` | Backup + reset DB |
 | `import_xlsx.php` | Importa Excel |
+| `MANUALE_PROLOCO.txt` | 📖 Manuale completo |
 
 ---
 
