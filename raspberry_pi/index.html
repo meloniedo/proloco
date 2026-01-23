@@ -30,8 +30,18 @@
     <link rel="stylesheet" href="css/style.css">
     
     <style>
+        /* ===== FONT PIÙ GRANDI PER LEGGIBILITÀ ===== */
+        :root {
+            --font-base: 18px;
+            --font-lg: 20px;
+            --font-xl: 24px;
+            --font-2xl: 28px;
+            --font-3xl: 32px;
+        }
+        
         body { 
             font-family: Georgia, 'Times New Roman', serif; 
+            font-size: var(--font-base);
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
@@ -47,15 +57,15 @@
             padding-bottom: 100px;
         }
         
-        /* Modal input styling */
+        /* Modal input styling - PIÙ GRANDI */
         .modal-input {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border-radius: 8px;
             border: 2px solid #92400e;
             background: rgba(255,255,255,0.9);
             color: #78350f;
-            font-size: 16px;
+            font-size: var(--font-lg);
             margin-bottom: 12px;
         }
         .modal-input:focus {
@@ -64,13 +74,78 @@
         }
         .modal-select {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border-radius: 8px;
             border: 2px solid #92400e;
             background: rgba(255,255,255,0.9);
             color: #78350f;
-            font-size: 16px;
+            font-size: var(--font-lg);
             margin-bottom: 12px;
+        }
+        
+        /* Testo generale più grande */
+        .text-sm { font-size: 16px !important; }
+        .text-base { font-size: var(--font-base) !important; }
+        .text-lg { font-size: var(--font-lg) !important; }
+        .text-xl { font-size: var(--font-xl) !important; }
+        .text-2xl { font-size: var(--font-2xl) !important; }
+        
+        /* Popup ora all'avvio */
+        .time-popup-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .time-popup {
+            background: linear-gradient(135deg, #1a4d2e 0%, #0d3320 100%);
+            border: 6px solid #8B4513;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+        .time-popup h2 {
+            color: #fef3c7;
+            font-size: var(--font-2xl);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .time-popup input {
+            width: 100%;
+            padding: 16px;
+            font-size: var(--font-xl);
+            border-radius: 12px;
+            border: 3px solid #b45309;
+            background: rgba(255,255,255,0.95);
+            color: #78350f;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .time-popup button {
+            width: 100%;
+            padding: 16px;
+            font-size: var(--font-lg);
+            font-weight: bold;
+            border-radius: 12px;
+            border: 3px solid;
+            cursor: pointer;
+        }
+        .time-popup .btn-confirm {
+            background: #166534;
+            color: white;
+            border-color: #22c55e;
+            margin-bottom: 10px;
+        }
+        .time-popup .btn-skip {
+            background: #78350f;
+            color: #fef3c7;
+            border-color: #b45309;
         }
     </style>
 </head>
@@ -178,6 +253,8 @@
         showResetModal: false,
         showAddProductModal: false,
         showEditProductModal: false,
+        showTimePopup: false,
+        showTimeSettings: false,
         editingProduct: null,
         selectedProduct: null,
         selectedSpesaCategoria: '',
@@ -186,7 +263,8 @@
         resetPassword: '',
         feedback: '',
         usbStatus: null,
-        newProduct: { nome: '', prezzo: '', categoria: 'CAFFETTERIA', icona: '📦' }
+        newProduct: { nome: '', prezzo: '', categoria: 'CAFFETTERIA', icona: '📦' },
+        systemTime: { data: '', ora: '' }
     };
 
     // ==================== RENDER ====================
@@ -201,6 +279,31 @@
             ${state.showResetModal ? renderResetModal() : ''}
             ${state.showAddProductModal ? renderAddProductModal() : ''}
             ${state.showEditProductModal ? renderEditProductModal() : ''}
+            ${state.showTimePopup ? renderTimePopup() : ''}
+        `;
+    }
+    
+    // Popup per impostare l'ora all'avvio
+    function renderTimePopup() {
+        const oggi = new Date();
+        const dataDefault = oggi.toISOString().split('T')[0];
+        const oraDefault = oggi.toTimeString().slice(0,5);
+        
+        return `
+            <div class="time-popup-overlay">
+                <div class="time-popup">
+                    <h2>⏰ Imposta Data e Ora</h2>
+                    <p style="color: #fef3c7; text-align: center; margin-bottom: 20px; font-size: 16px;">
+                        L'ora del sistema potrebbe non essere corretta.<br>Verifica e imposta se necessario.
+                    </p>
+                    <label style="color: #fef3c7; font-size: 16px; display: block; margin-bottom: 8px;">📅 Data:</label>
+                    <input type="date" id="popup-data" value="${state.systemTime.data || dataDefault}">
+                    <label style="color: #fef3c7; font-size: 16px; display: block; margin-bottom: 8px;">🕐 Ora:</label>
+                    <input type="time" id="popup-ora" value="${state.systemTime.ora || oraDefault}">
+                    <button class="btn-confirm" onclick="confirmTimePopup()">✅ Conferma</button>
+                    <button class="btn-skip" onclick="skipTimePopup()">⏭️ L'ora è corretta</button>
+                </div>
+            </div>
         `;
     }
 
