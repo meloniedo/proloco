@@ -591,6 +591,10 @@ METODO 3: Tramite cavo Ethernet (se disponibile)
 │  SCRIPT DATABASE                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 
+    gestione_database.sh   ← 🎯 MENU INTERATTIVO (CONSIGLIATO)
+    → Apre un menu grafico per gestire backup/ripristino/reset
+    → Uso: ./gestione_database.sh
+
     backup_database.sh
     → Crea un backup del database
 
