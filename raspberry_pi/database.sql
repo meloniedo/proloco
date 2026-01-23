@@ -66,6 +66,8 @@ INSERT IGNORE INTO prodotti (nome, prezzo, categoria, icona) VALUES
 ('Cremino', 1.20, 'GELATI', '🍦'),
 ('Cucciolone', 1.50, 'GELATI', '🍦'),
 ('Magnum, Soia e altri Gelati', 2.00, 'GELATI', '🍦'),
+-- CIBO E SNACK
+('Pop Corn', 3.00, 'CIBO E SNACK', '🍿'),
 -- PERSONALIZZATE
 ('Bigliardo', 0.00, 'PERSONALIZZATE', '🎱'),
 ('Extra', 0.00, 'PERSONALIZZATE', '➕');
