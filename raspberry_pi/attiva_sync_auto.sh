@@ -6,7 +6,7 @@
 
 echo "🔄 Attivazione sincronizzazione automatica STORICO.txt..."
 
-WEB_DIR="/home/pi/proloco"
+WEB_DIR="/home/pi/proloco/raspberry_pi"
 
 # Crea cartella logs
 mkdir -p ${WEB_DIR}/logs
