@@ -62,13 +62,13 @@ function findUSB() {
         }
     }
     
-    // Metodo 3: Cerca in /media/* generici
+    // Metodo 3: Cerca in /media/* generici (es. /media/Volume da 4,0 GB)
     $mediaDir = '/media';
     if (is_dir($mediaDir)) {
         $dirs = @scandir($mediaDir);
         if ($dirs) {
             foreach ($dirs as $dir) {
-                if ($dir === '.' || $dir === '..' || $dir === 'pi') continue;
+                if ($dir === '.' || $dir === '..' || $dir === 'edo') continue;
                 $fullPath = $mediaDir . '/' . $dir;
                 if (is_dir($fullPath) && is_writable($fullPath)) {
                     $freeSpace = @disk_free_space($fullPath);
