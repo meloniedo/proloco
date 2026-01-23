@@ -225,50 +225,70 @@ cd /home/pi/proloco/raspberry_pi
 ./gestione_database.sh
 ```
 
-Apre un menu grafico con tutte le opzioni:
+Apre un menu completo con **dashboard** che mostra:
+- Stato database (vendite, spese, prodotti)
+- File TXT con data ultimo aggiornamento  
+- Backup SQL e Excel con il **più recente evidenziato ★**
 
+### Menu Principale
 ```
 ╔══════════════════════════════════════════════════════════════╗
 ║          🗄️  GESTIONE DATABASE - PROLOCO BAR                 ║
 ╚══════════════════════════════════════════════════════════════╝
 
-   1) 📦 Crea nuovo backup
-   2) 📋 Lista backup disponibili
-   3) 🔄 Ripristina un backup
-   4) 🗑️  Elimina backup
-   5) ⚠️  Reset database (cancella vendite/spese)
-   6) 📄 Esporta in formato leggibile (.txt)
+   1) 💾 Gestione Backup SQL (database)
+   2) 📊 Gestione Backup Excel (xlsx)
+   3) ⚠️  Reset database (cancella vendite/spese)
+   4) 📄 Esporta in formato leggibile (.txt)
    
    0) 🚪 Esci
 ```
 
+### Sottomenu 1: Backup SQL
+- Crea nuovo backup
+- Lista backup (★ più recente)
+- Ripristina backup
+- Elimina (singolo / tutti / vecchi)
+
+### Sottomenu 2: Backup Excel
+- Lista file Excel da tutte le cartelle
+- Importa con opzione reset
+- Testa importazione
+- Elimina file
+- Mostra percorsi (utile per USB)
+
+### Struttura Cartelle Backup
+
+| Cartella | Contenuto |
+|----------|-----------|
+| `/home/pi/proloco/backup/` | Backup SQL (.sql.gz) |
+| `/home/pi/proloco/BACKUP_GIORNALIERI/` | Backup Excel automatici |
+| `/raspberry_pi/backups/` | Backup Excel da app web |
+
 ### Comandi Rapidi (senza menu)
 ```bash
-# Solo Backup
-./backup_database.sh
-
-# Solo Reset (cancella tutto!)
-./reset_database.sh
-
-# Backup + Reset
-./backup_e_reset.sh
+./backup_database.sh      # Solo backup SQL
+./reset_database.sh       # Solo reset
+./backup_e_reset.sh       # Backup + Reset
 ```
 
-### Dove sono i backup?
-- **Cartella:** `/home/pi/proloco/backup/`
-- **Formato:** `backup_YYYYMMDD_HHMMSS.sql.gz`
-- `.sql` = formato database MySQL
-- `.gz` = compresso
-
-### Ripristino Manuale
+### Importare da USB
 ```bash
-# Lista backup disponibili
+# 1. Trova la chiavetta
+ls /media/
+
+# 2. Copia il file
+cp /media/usb_sda1/file.xlsx /home/pi/proloco/BACKUP_GIORNALIERI/
+
+# 3. Usa il menu per importare
+./gestione_database.sh
+# Scegli: 2 → 2
+```
+
+### Ripristino Manuale SQL
+```bash
 ls -la /home/pi/proloco/backup/
-
-# Decomprimi
 gunzip -k /home/pi/proloco/backup/backup_XXXXXXXX.sql.gz
-
-# Ripristina
 mysql -u edo -p5054 proloco_bar < /home/pi/proloco/backup/backup_XXXXXXXX.sql
 ```
 
