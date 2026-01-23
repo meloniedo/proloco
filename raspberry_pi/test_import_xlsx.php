@@ -201,14 +201,15 @@ for ($i = 1; $i < count($speseRows); $i++) {
     $row = $speseRows[$i];
     if (count($row) < 6) continue;
     
-    $categoria = trim($row[3]);
+    // Colonna C (indice 2) contiene il nome della spesa
+    $categoria = trim($row[2]);
     $importo = floatval(str_replace(',', '.', $row[5]));
     
     if (empty($categoria) || stripos($categoria, 'TOTALE') !== false) continue;
     if ($importo <= 0) continue;
     
     $timestamp = excelDateToMysql($row[0], $row[1]);
-    $note = trim($row[4]);
+    $note = trim($row[4] ?? '');
     
     $speseValide++;
     if (count($spesePreview) < 5) {
