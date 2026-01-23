@@ -316,8 +316,8 @@ function doBackup() {
             return ['success' => false, 'error' => 'Errore durante la scrittura del file. Spazio insufficiente o chiavetta rimossa.'];
         }
         
-        // Salva copia locale in /home/pi/proloco/BACKUP_GIORNALIERI
-        $backupLocaleDir = '/home/pi/proloco/BACKUP_GIORNALIERI';
+        // Salva copia locale in /home/edo/proloco/BACKUP_GIORNALIERI
+        $backupLocaleDir = '/home/edo/proloco/BACKUP_GIORNALIERI';
         if (!is_dir($backupLocaleDir)) @mkdir($backupLocaleDir, 0755, true);
         @file_put_contents($backupLocaleDir . '/' . $filename, $excelContent);
         
