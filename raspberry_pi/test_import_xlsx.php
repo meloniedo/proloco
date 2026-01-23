@@ -199,17 +199,16 @@ $spesePreview = [];
 
 for ($i = 1; $i < count($speseRows); $i++) {
     $row = $speseRows[$i];
-    if (count($row) < 6) continue;
+    if (count($row) < 5) continue;
     
-    // Colonna C (indice 2) contiene il nome della spesa
+    // Struttura: Data(0), Ora(1), Categoria(2), Spesa(3 vuoto), Importo(4)
     $categoria = trim($row[2]);
-    $importo = floatval(str_replace(',', '.', $row[5]));
+    $importo = floatval(str_replace(',', '.', $row[4]));
     
     if (empty($categoria) || stripos($categoria, 'TOTALE') !== false) continue;
     if ($importo <= 0) continue;
     
     $timestamp = excelDateToMysql($row[0], $row[1]);
-    $note = trim($row[4] ?? '');
     
     $speseValide++;
     if (count($spesePreview) < 5) {
@@ -217,7 +216,7 @@ for ($i = 1; $i < count($speseRows); $i++) {
             'data' => $timestamp,
             'categoria' => $categoria,
             'importo' => $importo,
-            'note' => $note
+            'note' => ''
         ];
     }
 }
