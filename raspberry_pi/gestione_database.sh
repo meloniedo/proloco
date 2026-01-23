@@ -223,19 +223,32 @@ list_backup_sql() {
     fi
     
     echo ""
-    printf "   ${CYAN}%-4s %-45s %-8s %-20s${NC}\n" "N°" "NOME FILE" "DIM." "DATA"
-    echo -e "   ${WHITE}────────────────────────────────────────────────────────────────────────${NC}"
+    printf "   ${CYAN}%-4s %-35s %-6s %-12s %-15s${NC}\n" "N°" "NOME FILE" "DIM." "CONTENUTO" "DATA"
+    echo -e "   ${WHITE}──────────────────────────────────────────────────────────────────────────────${NC}"
     
     i=1
     for file in $(ls -t ${BACKUP_SQL_DIR}/*.gz 2>/dev/null); do
         filename=$(basename $file)
         size=$(du -h $file | cut -f1)
-        date=$(stat -c %y $file | cut -d'.' -f1 | cut -d' ' -f1,2 | cut -c1-16)
+        date=$(stat -c %y $file | cut -d'.' -f1 | cut -d' ' -f1)
+        
+        # Conta INSERT per stimare contenuto (senza decomprimere completamente)
+        insert_count=$(zcat "$file" 2>/dev/null | grep -c "INSERT INTO" || echo "0")
+        
+        if [ "$insert_count" -gt 10 ]; then
+            contenuto="${GREEN}~${insert_count} record${NC}"
+        elif [ "$insert_count" -gt 0 ]; then
+            contenuto="${YELLOW}~${insert_count} record${NC}"
+        else
+            contenuto="${RED}VUOTO${NC}"
+        fi
         
         if [ $i -eq 1 ]; then
-            printf "   ${GREEN}%-4s %-45s %-8s %-20s ★${NC}\n" "$i." "$filename" "$size" "$date"
+            printf "   ${GREEN}%-4s${NC} %-35s %-6s " "$i." "$filename" "$size"
+            echo -e "${contenuto}  ${date} ${GREEN}★${NC}"
         else
-            printf "   %-4s %-45s %-8s %-20s\n" "$i." "$filename" "$size" "$date"
+            printf "   %-4s %-35s %-6s " "$i." "$filename" "$size"
+            echo -e "${contenuto}  ${date}"
         fi
         i=$((i+1))
     done
@@ -243,6 +256,8 @@ list_backup_sql() {
     echo ""
     TOTAL_SIZE=$(du -sh ${BACKUP_SQL_DIR} 2>/dev/null | cut -f1)
     echo -e "   ${BLUE}Totale: $((i-1)) backup │ Spazio: ${TOTAL_SIZE}${NC}"
+    echo ""
+    echo -e "   ${YELLOW}Legenda: ${GREEN}~N record${NC} = backup con dati │ ${RED}VUOTO${NC} = backup vuoto${NC}"
     
     press_enter
 }
