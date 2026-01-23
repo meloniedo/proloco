@@ -22,7 +22,7 @@ IP_ADDRESS="192.168.4.1"
 DB_USER="edo"
 DB_PASS="5054"
 DB_NAME="proloco_bar"
-WEB_DIR="/home/edo/proloco"
+WEB_DIR="/home/pi/proloco"
 USER_NAME="edo"
 
 # Verifica root

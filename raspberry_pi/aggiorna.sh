@@ -5,7 +5,7 @@
 # Uso: ./aggiorna.sh
 # Questo script aggiorna l'app da GitHub senza problemi di permessi
 
-cd /home/edo/proloco
+cd /home/pi/proloco
 
 # Corregge i permessi prima del pull
 sudo chown -R edo:edo .git

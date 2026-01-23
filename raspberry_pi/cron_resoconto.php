@@ -2,12 +2,12 @@
 <?php
 // ========================================
 // GENERATORE RESOCONTI SETTIMANALI
-// Crea resoconto in /home/edo/proloco/RESOCONTI_SETTIMANALI/
+// Crea resoconto in /home/pi/proloco/RESOCONTI_SETTIMANALI/
 // ========================================
 
-$baseDir = '/home/edo/proloco';
-$resocontiDir = '/home/edo/proloco/RESOCONTI_SETTIMANALI';
-$backupDir = '/home/edo/proloco/BACKUP_GIORNALIERI';
+$baseDir = '/home/pi/proloco';
+$resocontiDir = '/home/pi/proloco/RESOCONTI_SETTIMANALI';
+$backupDir = '/home/pi/proloco/BACKUP_GIORNALIERI';
 
 require_once $baseDir . '/includes/config.php';
 

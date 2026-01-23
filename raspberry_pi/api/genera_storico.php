@@ -37,7 +37,7 @@ if ($result) {
     
     echo "<div class='success'>
         <h3>✅ File STORICO.txt generato/aggiornato!</h3>
-        <p><strong>Percorso:</strong> /home/edo/proloco/STORICO.txt</p>
+        <p><strong>Percorso:</strong> /home/pi/proloco/STORICO.txt</p>
     </div>";
     
     echo "<h3>Anteprima contenuto:</h3>";

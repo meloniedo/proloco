@@ -180,8 +180,8 @@ try {
             
             $zip->close();
             
-            // Salva copia locale in /home/edo/proloco/BACKUP_GIORNALIERI
-            $backupLocaleDir = '/home/edo/proloco/BACKUP_GIORNALIERI';
+            // Salva copia locale in /home/pi/proloco/BACKUP_GIORNALIERI
+            $backupLocaleDir = '/home/pi/proloco/BACKUP_GIORNALIERI';
             if (!is_dir($backupLocaleDir)) @mkdir($backupLocaleDir, 0755, true);
             @copy($tmpFile, $backupLocaleDir . '/' . $filename);
             
@@ -228,8 +228,8 @@ try {
 <Row><Cell ss:StyleID="Bold"><Data ss:Type="String">PROFITTO NETTO</Data></Cell><Cell ss:StyleID="Bold"><Data ss:Type="Number">'.($totaleVendite - $totaleSpese).'</Data></Cell></Row>
 </Table></Worksheet></Workbook>';
 
-    // Salva copia locale in /home/edo/proloco/BACKUP_GIORNALIERI
-    $backupLocaleDir = '/home/edo/proloco/BACKUP_GIORNALIERI';
+    // Salva copia locale in /home/pi/proloco/BACKUP_GIORNALIERI
+    $backupLocaleDir = '/home/pi/proloco/BACKUP_GIORNALIERI';
     if (!is_dir($backupLocaleDir)) @mkdir($backupLocaleDir, 0755, true);
     @file_put_contents($backupLocaleDir . '/' . $filename, $xml);
 
