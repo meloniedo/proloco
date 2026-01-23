@@ -679,34 +679,38 @@
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
                             <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
-                                <input type="checkbox" id="backup-day-0" value="0" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Dom
+                                <input type="checkbox" id="backup-day-0" value="0" style="width:20px;height:20px;"> Dom
                             </label>
                             <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
-                                <input type="checkbox" id="backup-day-1" value="1" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Lun
+                                <input type="checkbox" id="backup-day-1" value="1" style="width:20px;height:20px;"> Lun
                             </label>
                             <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
-                                <input type="checkbox" id="backup-day-2" value="2" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Mar
+                                <input type="checkbox" id="backup-day-2" value="2" style="width:20px;height:20px;"> Mar
                             </label>
                             <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
-                                <input type="checkbox" id="backup-day-3" value="3" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Mer
+                                <input type="checkbox" id="backup-day-3" value="3" style="width:20px;height:20px;"> Mer
                             </label>
                             <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
-                                <input type="checkbox" id="backup-day-4" value="4" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Gio
+                                <input type="checkbox" id="backup-day-4" value="4" style="width:20px;height:20px;"> Gio
                             </label>
                             <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
-                                <input type="checkbox" id="backup-day-5" value="5" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Ven
+                                <input type="checkbox" id="backup-day-5" value="5" style="width:20px;height:20px;"> Ven
                             </label>
                             <label style="display: flex; align-items: center; gap: 4px; color: #fef3c7; font-size: 16px;">
-                                <input type="checkbox" id="backup-day-6" value="6" onchange="saveBackupSettings()" style="width:20px;height:20px;"> Sab
+                                <input type="checkbox" id="backup-day-6" value="6" style="width:20px;height:20px;"> Sab
                             </label>
                         </div>
                         
                         <div class="text-purple-200" style="font-size: 16px; margin-top: 12px; margin-bottom: 8px;">
                             🕐 Ora del backup:
                         </div>
-                        <input type="time" id="backup-time" value="23:59" onchange="saveBackupSettings()" 
+                        <input type="time" id="backup-time" value="23:59" 
                             style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #7c3aed; background: rgba(0,0,0,0.3); color: #fef3c7; font-size: 20px;">
                     </div>
+                    
+                    <button onclick="saveBackupSettings()" style="font-size: 20px;" class="w-full bg-purple-700 hover:bg-purple-600 text-amber-100 py-3 rounded-xl font-bold border-2 border-purple-500 active:scale-95 transition-all flex items-center justify-center gap-2 mb-3">
+                        💾 Salva Impostazioni Backup
+                    </button>
                     
                     <div id="backup-status" class="text-amber-200/70" style="font-size: 16px; text-align: center;">
                         Caricamento impostazioni...
