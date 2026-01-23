@@ -171,6 +171,9 @@ for ($i = 0; $i < count($allRows); $i++) {
     $firstCell = trim($row[0] ?? '');
     $thirdCell = trim($row[2] ?? '');
     
+    // Unisci tutte le celle per cercare parole chiave in qualsiasi colonna
+    $rowText = implode(' ', array_map('trim', $row));
+    
     // Rileva intestazione VENDITE: riga con "Data" e "Prodotto"
     if ($firstCell === 'Data' && $thirdCell === 'Prodotto') {
         $modalita = 'vendite';
@@ -178,15 +181,15 @@ for ($i = 0; $i < count($allRows); $i++) {
         continue;
     }
     
-    // Rileva "TOTALE VENDITE" - passa a modalità attesa spese
-    if (stripos($firstCell, 'TOTALE VENDITE') !== false) {
+    // Rileva "TOTALE VENDITE" in QUALSIASI colonna
+    if (stripos($rowText, 'TOTALE VENDITE') !== false) {
         $modalita = 'attesa_spese';
         echo YELLOW . "  📍 Trovato TOTALE VENDITE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
     }
     
-    // Rileva riga singola "SPESE" che indica inizio sezione spese
-    if ($firstCell === 'SPESE' || ($modalita === 'attesa_spese' && stripos($firstCell, 'SPESE') !== false && stripos($firstCell, 'TOTALE') === false)) {
+    // Rileva riga "SPESE" in qualsiasi colonna (ma NON "TOTALE SPESE")
+    if ($modalita === 'attesa_spese' && stripos($rowText, 'SPESE') !== false && stripos($rowText, 'TOTALE') === false) {
         $modalita = 'attesa_header_spese';
         echo YELLOW . "  📍 Trovata riga SPESE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
@@ -199,15 +202,15 @@ for ($i = 0; $i < count($allRows); $i++) {
         continue;
     }
     
-    // Rileva "TOTALE SPESE" - fine parsing spese
-    if (stripos($firstCell, 'TOTALE SPESE') !== false) {
+    // Rileva "TOTALE SPESE" in qualsiasi colonna
+    if (stripos($rowText, 'TOTALE SPESE') !== false) {
         $modalita = 'none';
         echo YELLOW . "  📍 Trovato TOTALE SPESE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
     }
     
     // Rileva RIEPILOGO - fine parsing
-    if (stripos($firstCell, 'RIEPILOGO') !== false) {
+    if (stripos($rowText, 'RIEPILOGO') !== false) {
         $modalita = 'none';
         continue;
     }

@@ -151,20 +151,23 @@ try {
         $firstCell = trim($row[0] ?? '');
         $thirdCell = trim($row[2] ?? '');
         
+        // Unisci tutte le celle per cercare parole chiave in qualsiasi colonna
+        $rowText = implode(' ', array_map('trim', $row));
+        
         // Rileva intestazione VENDITE: riga con "Data" e "Prodotto"
         if ($firstCell === 'Data' && $thirdCell === 'Prodotto') {
             $modalita = 'vendite';
             continue;
         }
         
-        // Rileva "TOTALE VENDITE"
-        if (stripos($firstCell, 'TOTALE VENDITE') !== false) {
+        // Rileva "TOTALE VENDITE" in qualsiasi colonna
+        if (stripos($rowText, 'TOTALE VENDITE') !== false) {
             $modalita = 'attesa_spese';
             continue;
         }
         
-        // Rileva riga singola "SPESE"
-        if ($firstCell === 'SPESE' || ($modalita === 'attesa_spese' && stripos($firstCell, 'SPESE') !== false && stripos($firstCell, 'TOTALE') === false)) {
+        // Rileva riga "SPESE" in qualsiasi colonna (ma NON "TOTALE SPESE")
+        if ($modalita === 'attesa_spese' && stripos($rowText, 'SPESE') !== false && stripos($rowText, 'TOTALE') === false) {
             $modalita = 'attesa_header_spese';
             continue;
         }
@@ -175,8 +178,8 @@ try {
             continue;
         }
         
-        // Rileva "TOTALE SPESE" o "RIEPILOGO"
-        if (stripos($firstCell, 'TOTALE SPESE') !== false || stripos($firstCell, 'RIEPILOGO') !== false) {
+        // Rileva "TOTALE SPESE" o "RIEPILOGO" in qualsiasi colonna
+        if (stripos($rowText, 'TOTALE SPESE') !== false || stripos($rowText, 'RIEPILOGO') !== false) {
             $modalita = 'none';
             continue;
         }

@@ -161,7 +161,10 @@ for ($i = 0; $i < count($allRows); $i++) {
     $firstCell = trim($row[0] ?? '');
     $thirdCell = trim($row[2] ?? '');
     
-    // Debug: mostra riga corrente (prime 30 righe)
+    // Unisci tutte le celle per cercare parole chiave in qualsiasi colonna
+    $rowText = implode(' ', array_map('trim', $row));
+    
+    // Debug: mostra riga corrente (prime 5 righe)
     if ($i < 5) {
         echo "   Riga " . ($i + 1) . ": [" . implode("] [", array_slice($row, 0, 5)) . "]\n";
     }
@@ -173,37 +176,36 @@ for ($i = 0; $i < count($allRows); $i++) {
         continue;
     }
     
-    // Rileva "TOTALE VENDITE" - passa a modalità attesa spese
-    if (stripos($firstCell, 'TOTALE VENDITE') !== false) {
+    // Rileva "TOTALE VENDITE" in QUALSIASI colonna - passa a modalità attesa spese
+    if (stripos($rowText, 'TOTALE VENDITE') !== false) {
         $modalita = 'attesa_spese';
         echo YELLOW . "   📍 Trovato TOTALE VENDITE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
     }
     
-    // Rileva riga singola "SPESE" che indica inizio sezione spese
-    if ($firstCell === 'SPESE' || ($modalita === 'attesa_spese' && stripos($firstCell, 'SPESE') !== false && stripos($firstCell, 'TOTALE') === false)) {
+    // Rileva riga "SPESE" in qualsiasi colonna (ma NON "TOTALE SPESE")
+    if ($modalita === 'attesa_spese' && stripos($rowText, 'SPESE') !== false && stripos($rowText, 'TOTALE') === false) {
         $modalita = 'attesa_header_spese';
         echo YELLOW . "   📍 Trovata riga SPESE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
     }
     
     // Rileva intestazione SPESE: riga con "Data" nella prima colonna (dopo riga SPESE)
-    // La terza colonna potrebbe essere "Categoria" o simile
     if (($modalita === 'attesa_spese' || $modalita === 'attesa_header_spese') && $firstCell === 'Data') {
         $modalita = 'spese';
         echo GREEN . "   ✅ Trovata intestazione SPESE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
     }
     
-    // Rileva "TOTALE SPESE" - fine parsing spese
-    if (stripos($firstCell, 'TOTALE SPESE') !== false) {
+    // Rileva "TOTALE SPESE" in qualsiasi colonna - fine parsing spese
+    if (stripos($rowText, 'TOTALE SPESE') !== false) {
         $modalita = 'none';
         echo YELLOW . "   📍 Trovato TOTALE SPESE alla riga " . ($i + 1) . "\n" . RESET;
         continue;
     }
     
     // Rileva RIEPILOGO - fine parsing
-    if (stripos($firstCell, 'RIEPILOGO') !== false) {
+    if (stripos($rowText, 'RIEPILOGO') !== false) {
         $modalita = 'none';
         continue;
     }
