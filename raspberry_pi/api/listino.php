@@ -62,6 +62,8 @@ switch ($method) {
             $input['id']
         ]);
         
+        // Aggiorna LISTINO.txt
+        aggiornaListinoDaDB();
         jsonResponse(['success' => $result]);
         break;
         
@@ -81,6 +83,8 @@ switch ($method) {
         $stmt = $pdo->prepare("DELETE FROM prodotti WHERE id = ?");
         $result = $stmt->execute([$id]);
         
+        // Aggiorna LISTINO.txt
+        aggiornaListinoDaDB();
         jsonResponse(['success' => $result]);
         break;
         
