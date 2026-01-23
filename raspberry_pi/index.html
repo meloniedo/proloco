@@ -365,16 +365,16 @@
             html += `
                 <div class="space-y-3">
                     <div class="flex items-center gap-2">
-                        <div class="${colors[cat]} p-2 rounded-lg text-2xl">${icons[cat]}</div>
-                        <h2 class="text-xl font-bold text-amber-100">${cat}</h2>
+                        <div class="${colors[cat]} p-2 rounded-lg" style="font-size: 32px;">${icons[cat]}</div>
+                        <h2 style="font-size: 24px;" class="font-bold text-amber-100">${cat}</h2>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         ${items.map(p => `
                             <button onclick="handleProductClick(${p.id})" 
                                 class="${colors[p.categoria]} text-amber-100 p-4 rounded-xl shadow-lg active:scale-95 transition-transform border-2 border-amber-900/30">
-                                <div class="text-3xl mb-2">${p.icona}</div>
-                                <div class="font-bold text-sm mb-1">${p.nome}</div>
-                                <div class="text-lg font-black">${parseFloat(p.prezzo) === 0 ? '💰' : '€'+parseFloat(p.prezzo).toFixed(2)}</div>
+                                <div style="font-size: 40px; margin-bottom: 8px;">${p.icona}</div>
+                                <div style="font-size: 18px;" class="font-bold mb-1">${p.nome}</div>
+                                <div style="font-size: 22px;" class="font-black">${parseFloat(p.prezzo) === 0 ? '💰' : '€'+parseFloat(p.prezzo).toFixed(2)}</div>
                             </button>
                         `).join('')}
                     </div>
@@ -390,26 +390,26 @@
         let html = `
             <div class="space-y-4">
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
-                    <h2 class="text-xl font-bold text-amber-100 mb-4 text-center">💸 Registra Spese</h2>
+                    <h2 style="font-size: 26px;" class="font-bold text-amber-100 mb-4 text-center">💸 Registra Spese</h2>
                     <div class="grid grid-cols-2 gap-3">
                         ${CONFIG.categorie_spese.map(c => `
                             <button onclick="handleSpesaClick('${c.nome}', '${c.icona}')"
                                 class="${c.colore} text-amber-100 p-4 rounded-xl shadow-lg active:scale-95 border-2 border-amber-900/30">
-                                <div class="text-3xl mb-1">${c.icona}</div>
-                                <div class="font-bold text-xs">${c.nome}</div>
+                                <div style="font-size: 36px; margin-bottom: 4px;">${c.icona}</div>
+                                <div style="font-size: 16px;" class="font-bold">${c.nome}</div>
                             </button>
                         `).join('')}
                     </div>
                 </div>
                 <div class="card-felt p-4 rounded-2xl border-4 border-amber-800">
-                    <h3 class="text-lg font-bold text-amber-100 mb-3">📋 Ultime Spese</h3>
-                    ${spese.length === 0 ? '<div class="text-amber-200/50 text-center py-4">Nessuna spesa</div>' : 
+                    <h3 style="font-size: 22px;" class="font-bold text-amber-100 mb-3">📋 Ultime Spese</h3>
+                    ${spese.length === 0 ? '<div class="text-amber-200/50 text-center py-4" style="font-size: 18px;">Nessuna spesa</div>' : 
                     `<div class="space-y-2">${spese.map(s => {
                         const dt = new Date(s.timestamp);
-                        return `<div class="bg-amber-900/30 p-3 rounded-lg flex justify-between items-center border border-amber-800/50">
-                            <div class="text-amber-100"><div class="font-bold text-sm">${s.categoria_spesa}</div><div class="text-xs opacity-75">${dt.toLocaleDateString('it-IT')}</div></div>
-                            <div class="flex items-center gap-2"><span class="text-lg font-black text-red-400">-€${parseFloat(s.importo).toFixed(2)}</span>
-                            <button onclick="deleteSpesa(${s.id})" class="text-red-400 p-1">🗑️</button></div>
+                        return `<div class="bg-amber-900/30 p-4 rounded-lg flex justify-between items-center border border-amber-800/50">
+                            <div class="text-amber-100"><div style="font-size: 18px;" class="font-bold">${s.categoria_spesa}</div><div style="font-size: 14px;" class="opacity-75">${dt.toLocaleDateString('it-IT')}</div></div>
+                            <div class="flex items-center gap-2"><span style="font-size: 20px;" class="font-black text-red-400">-€${parseFloat(s.importo).toFixed(2)}</span>
+                            <button onclick="deleteSpesa(${s.id})" style="font-size: 22px;" class="text-red-400 p-1">🗑️</button></div>
                         </div>`;
                     }).join('')}</div>`}
                 </div>
