@@ -914,8 +914,8 @@ main_menu() {
         echo ""
         echo -e "   ${GREEN}1)${NC} 💾 Gestione Backup SQL (database)"
         echo -e "   ${GREEN}2)${NC} 📊 Gestione Backup Excel (xlsx)"
-        echo -e "   ${GREEN}3)${NC} ⚠️  Reset database (cancella vendite/spese)"
-        echo -e "   ${GREEN}4)${NC} 📄 Esporta in formato leggibile (.txt)"
+        echo -e "   ${GREEN}3)${NC} 📤 Esporta database"
+        echo -e "   ${GREEN}4)${NC} ⚠️  Reset database (cancella vendite/spese)"
         echo ""
         echo -e "   ${RED}0)${NC} 🚪 Esci"
         echo ""
@@ -925,8 +925,8 @@ main_menu() {
         case $choice in
             1) menu_backup_sql ;;
             2) menu_backup_xlsx ;;
-            3) reset_database ;;
-            4) export_txt ;;
+            3) menu_export ;;
+            4) reset_database ;;
             0) 
                 clear_screen
                 echo -e "${GREEN}👋 Arrivederci!${NC}"
