@@ -230,15 +230,44 @@ do_backup_sql() {
         gzip ${BACKUP_FILE}
         SIZE=$(du -h "${BACKUP_FILE}.gz" | cut -f1)
         
-        # Conta INSERT nel backup
-        INSERT_COUNT=$(zcat "${BACKUP_FILE}.gz" 2>/dev/null | grep -c "INSERT INTO" || echo "0")
+        # Conta i record effettivi (numero di righe con dati nelle VALUES)
+        # Ogni riga di dati in mysqldump è una riga con parentesi e virgola
+        VENDITE_BACKUP=$(zcat "${BACKUP_FILE}.gz" 2>/dev/null | grep -A9999 "INSERT INTO \`vendite\`" | grep -m1 -B9999 "UNLOCK TABLES" | grep -c "^(" || echo "0")
+        SPESE_BACKUP=$(zcat "${BACKUP_FILE}.gz" 2>/dev/null | grep -A9999 "INSERT INTO \`spese\`" | grep -m1 -B9999 "UNLOCK TABLES" | grep -c "^(" || echo "0")
+        
+        # Se il metodo sopra non funziona, conta le virgole nei VALUES (approssimativo)
+        if [ "$VENDITE_BACKUP" -eq 0 ]; then
+            # Metodo alternativo: conta le occorrenze di "),(" che separano i record
+            VENDITE_BACKUP=$(zcat "${BACKUP_FILE}.gz" 2>/dev/null | grep "INSERT INTO \`vendite\`" | grep -o "),(" | wc -l || echo "0")
+            VENDITE_BACKUP=$((VENDITE_BACKUP + 1))  # +1 per il primo record
+            if [ "$VENDITE_BACKUP" -eq 1 ]; then
+                # Verifica se c'è almeno un INSERT vendite
+                HAS_VENDITE=$(zcat "${BACKUP_FILE}.gz" 2>/dev/null | grep -c "INSERT INTO \`vendite\`" || echo "0")
+                if [ "$HAS_VENDITE" -eq 0 ]; then
+                    VENDITE_BACKUP=0
+                fi
+            fi
+        fi
+        
+        if [ "$SPESE_BACKUP" -eq 0 ]; then
+            SPESE_BACKUP=$(zcat "${BACKUP_FILE}.gz" 2>/dev/null | grep "INSERT INTO \`spese\`" | grep -o "),(" | wc -l || echo "0")
+            SPESE_BACKUP=$((SPESE_BACKUP + 1))
+            if [ "$SPESE_BACKUP" -eq 1 ]; then
+                HAS_SPESE=$(zcat "${BACKUP_FILE}.gz" 2>/dev/null | grep -c "INSERT INTO \`spese\`" || echo "0")
+                if [ "$HAS_SPESE" -eq 0 ]; then
+                    SPESE_BACKUP=0
+                fi
+            fi
+        fi
+        
+        TOTAL_RECORDS=$((VENDITE_BACKUP + SPESE_BACKUP))
         
         echo ""
         echo -e "${GREEN}   ✅ ESPORTAZIONE COMPLETATA!${NC}"
         echo ""
         echo -e "   📁 File creato: ${CYAN}backup_${TIMESTAMP}.sql.gz${NC}"
         echo -e "   📏 Dimensione: ${SIZE}"
-        echo -e "   📊 Record nel backup: ~${INSERT_COUNT}"
+        echo -e "   📊 Record: ${VENDITE_BACKUP} vendite, ${SPESE_BACKUP} spese (totale: ${TOTAL_RECORDS})"
         echo -e "   📂 Cartella: ${BACKUP_SQL_DIR}/"
         echo ""
         echo -e "${YELLOW}   💡 Per reimportare questo backup:${NC}"
