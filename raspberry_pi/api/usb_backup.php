@@ -351,24 +351,20 @@ function doBackup() {
         $pdo = getDB();
         
         // Ottieni dati
-        $vendite = $pdo->query("SELECT * FROM vendite ORDER BY timestamp DESC")->fetchAll();
-        $spese = $pdo->query("SELECT * FROM spese ORDER BY timestamp DESC")->fetchAll();
-        $prodotti = $pdo->query("SELECT * FROM prodotti ORDER BY categoria, nome")->fetchAll();
+        $vendite = $pdo->query("SELECT * FROM vendite ORDER BY timestamp ASC")->fetchAll();
+        $spese = $pdo->query("SELECT * FROM spese ORDER BY timestamp ASC")->fetchAll();
         
-        // Genera Excel XML
-        $excelContent = generateExcelXML($vendite, $spese, $prodotti);
+        // Genera vero XLSX con ZipArchive - UNICO FOGLIO
+        $success = generateExcelXLSX($vendite, $spese, $filepath);
         
-        // Scrivi file su USB
-        $written = @file_put_contents($filepath, $excelContent);
-        
-        if ($written === false) {
-            return ['success' => false, 'error' => 'Errore durante la scrittura del file. Spazio insufficiente o chiavetta rimossa.'];
+        if (!$success) {
+            return ['success' => false, 'error' => 'Errore durante la creazione del file XLSX.'];
         }
         
         // Salva copia locale in /home/pi/proloco/BACKUP_GIORNALIERI
         $backupLocaleDir = '/home/pi/proloco/BACKUP_GIORNALIERI';
         if (!is_dir($backupLocaleDir)) @mkdir($backupLocaleDir, 0755, true);
-        @file_put_contents($backupLocaleDir . '/' . $filename, $excelContent);
+        @copy($filepath, $backupLocaleDir . '/' . $filename);
         
         // Sync per assicurarsi che sia scritto
         @exec('sync');
