@@ -81,11 +81,11 @@ show_dashboard() {
     echo -e "${CYAN}📊 DATABASE${NC}"
     echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
-    VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "?")
-    SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "?")
-    PRODOTTI=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM prodotti" 2>/dev/null || echo "?")
-    TOT_VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COALESCE(SUM(prezzo), 0) FROM vendite" 2>/dev/null || echo "?")
-    TOT_SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COALESCE(SUM(importo), 0) FROM spese" 2>/dev/null || echo "?")
+    VENDITE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "?")
+    SPESE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "?")
+    PRODOTTI=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM prodotti" 2>/dev/null || echo "?")
+    TOT_VENDITE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COALESCE(SUM(prezzo), 0) FROM vendite" 2>/dev/null || echo "?")
+    TOT_SPESE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COALESCE(SUM(importo), 0) FROM spese" 2>/dev/null || echo "?")
     
     echo -e "   📦 Prodotti: ${GREEN}${PRODOTTI}${NC}    🛒 Vendite: ${GREEN}${VENDITE}${NC} (€${TOT_VENDITE})    💸 Spese: ${GREEN}${SPESE}${NC} (€${TOT_SPESE})"
     echo ""
@@ -193,8 +193,8 @@ do_backup_sql() {
     clear_screen
     show_submenu_header "📤 ESPORTA - Creazione Backup SQL"
     
-    VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
-    SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+    VENDITE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+    SPESE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
     
     echo ""
     echo -e "   Dati da esportare: ${YELLOW}${VENDITE}${NC} vendite, ${YELLOW}${SPESE}${NC} spese"
@@ -362,7 +362,7 @@ restore_backup_sql() {
     echo -e "${YELLOW}   Ripristino in corso...${NC}"
     gunzip -k -f ${selected_file}
     sql_file="${selected_file%.gz}"
-    mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} < ${sql_file} 2>/dev/null
+    mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" < ${sql_file} 2>/dev/null
     rm -f ${sql_file}
     
     # Aggiorna file TXT
@@ -485,8 +485,8 @@ export_xlsx() {
     clear_screen
     show_submenu_header "📤 ESPORTA - Crea File Excel"
     
-    VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
-    SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+    VENDITE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+    SPESE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
     
     echo ""
     echo -e "   Dati da esportare: ${YELLOW}${VENDITE}${NC} vendite, ${YELLOW}${SPESE}${NC} spese"
@@ -652,7 +652,7 @@ import_backup_xlsx() {
             mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} 2>/dev/null | gzip > "${BACKUP_SQL_DIR}/backup_pre_import_${TIMESTAMP}.sql.gz"
             
             echo -e "${YELLOW}   Reset database...${NC}"
-            mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -e "DELETE FROM vendite; DELETE FROM spese; ALTER TABLE vendite AUTO_INCREMENT = 1; ALTER TABLE spese AUTO_INCREMENT = 1;" 2>/dev/null
+            mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "DELETE FROM vendite; DELETE FROM spese; ALTER TABLE vendite AUTO_INCREMENT = 1; ALTER TABLE spese AUTO_INCREMENT = 1;" 2>/dev/null
             ;;
         2)
             echo ""
@@ -823,8 +823,8 @@ reset_database() {
     clear_screen
     show_submenu_header "⚠️ RESET DATABASE"
     
-    VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
-    SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+    VENDITE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+    SPESE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
     
     echo ""
     echo -e "   Dati attuali: ${YELLOW}${VENDITE}${NC} vendite, ${YELLOW}${SPESE}${NC} spese"
@@ -848,7 +848,7 @@ reset_database() {
     mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} 2>/dev/null | gzip > "${BACKUP_SQL_DIR}/backup_pre_reset_${TIMESTAMP}.sql.gz"
     
     echo -e "${YELLOW}   Reset in corso...${NC}"
-    mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -e "
+    mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "
         DELETE FROM vendite;
         DELETE FROM spese;
         ALTER TABLE vendite AUTO_INCREMENT = 1;
@@ -871,8 +871,8 @@ menu_export() {
         show_header
         show_submenu_header "📤 ESPORTA DATABASE"
         
-        VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
-        SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+        VENDITE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+        SPESE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
         
         echo ""
         echo -e "   Dati da esportare: ${YELLOW}${VENDITE}${NC} vendite, ${YELLOW}${SPESE}${NC} spese"
@@ -902,8 +902,8 @@ export_txt() {
     clear_screen
     show_submenu_header "📄 ESPORTA IN FORMATO LEGGIBILE"
     
-    VENDITE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
-    SPESE=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
+    VENDITE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM vendite" 2>/dev/null || echo "0")
+    SPESE=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COUNT(*) FROM spese" 2>/dev/null || echo "0")
     
     if [ "$VENDITE" -eq 0 ] && [ "$SPESE" -eq 0 ]; then
         echo ""
@@ -924,8 +924,8 @@ export_txt() {
         echo "══════════════════════════════════════════════════════════════"
         echo ""
         
-        TOT_V=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COALESCE(SUM(prezzo), 0) FROM vendite" 2>/dev/null)
-        TOT_S=$(mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -N -e "SELECT COALESCE(SUM(importo), 0) FROM spese" 2>/dev/null)
+        TOT_V=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COALESCE(SUM(prezzo), 0) FROM vendite" 2>/dev/null)
+        TOT_S=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT COALESCE(SUM(importo), 0) FROM spese" 2>/dev/null)
         
         echo "RIEPILOGO"
         echo "─────────────────────────────────────────"
@@ -935,7 +935,7 @@ export_txt() {
         
         echo "VENDITE"
         echo "─────────────────────────────────────────"
-        mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -e "
+        mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "
             SELECT DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i') as Data, 
                    nome_prodotto as Prodotto, 
                    categoria as Categoria,
@@ -945,7 +945,7 @@ export_txt() {
         
         echo "SPESE"
         echo "─────────────────────────────────────────"
-        mysql -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -e "
+        mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "
             SELECT DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i') as Data, 
                    categoria_spesa as Categoria, 
                    CONCAT('€', FORMAT(importo, 2)) as Importo,
