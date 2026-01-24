@@ -311,20 +311,9 @@ list_backup_sql() {
         size=$(du -h $file | cut -f1)
         date=$(stat -c %y $file | cut -d'.' -f1 | cut -d' ' -f1)
         
-        # Conta i record effettivi di vendite e spese
-        VENDITE_COUNT=$(zcat "$file" 2>/dev/null | grep "INSERT INTO \`vendite\`" | grep -o "),(" | wc -l || echo "0")
-        SPESE_COUNT=$(zcat "$file" 2>/dev/null | grep "INSERT INTO \`spese\`" | grep -o "),(" | wc -l || echo "0")
-        
-        # Aggiungi 1 per il primo record se ci sono INSERT
-        HAS_VENDITE=$(zcat "$file" 2>/dev/null | grep -c "INSERT INTO \`vendite\`" || echo "0")
-        HAS_SPESE=$(zcat "$file" 2>/dev/null | grep -c "INSERT INTO \`spese\`" || echo "0")
-        
-        if [ "$HAS_VENDITE" -gt 0 ]; then
-            VENDITE_COUNT=$((VENDITE_COUNT + 1))
-        fi
-        if [ "$HAS_SPESE" -gt 0 ]; then
-            SPESE_COUNT=$((SPESE_COUNT + 1))
-        fi
+        # Conta i record effettivi: righe che iniziano con ( nella sezione vendite/spese
+        VENDITE_COUNT=$(zcat "$file" 2>/dev/null | sed -n '/INSERT INTO `vendite`/,/UNLOCK TABLES/p' | grep -c "^(" || echo "0")
+        SPESE_COUNT=$(zcat "$file" 2>/dev/null | sed -n '/INSERT INTO `spese`/,/UNLOCK TABLES/p' | grep -c "^(" || echo "0")
         
         TOTAL=$((VENDITE_COUNT + SPESE_COUNT))
         
