@@ -217,23 +217,43 @@ do_backup_sql() {
     
     echo -e "   Esportazione in corso..."
     
-    mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" > ${BACKUP_FILE} 2>/dev/null
+    # Esegui mysqldump e cattura eventuali errori
+    DUMP_ERROR=$(mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" 2>&1 > ${BACKUP_FILE})
+    DUMP_EXIT=$?
+    DUMP_SIZE=$(stat -c%s ${BACKUP_FILE} 2>/dev/null || echo "0")
     
-    if [ $? -eq 0 ]; then
+    # Verifica che il file non sia vuoto e non ci siano errori
+    if [ $DUMP_EXIT -eq 0 ] && [ "$DUMP_SIZE" -gt 1000 ]; then
         gzip ${BACKUP_FILE}
         SIZE=$(du -h "${BACKUP_FILE}.gz" | cut -f1)
+        
+        # Conta INSERT nel backup
+        INSERT_COUNT=$(zcat "${BACKUP_FILE}.gz" 2>/dev/null | grep -c "INSERT INTO" || echo "0")
         
         echo ""
         echo -e "${GREEN}   ✅ ESPORTAZIONE COMPLETATA!${NC}"
         echo ""
         echo -e "   📁 File creato: ${CYAN}backup_${TIMESTAMP}.sql.gz${NC}"
         echo -e "   📏 Dimensione: ${SIZE}"
+        echo -e "   📊 Record nel backup: ~${INSERT_COUNT}"
         echo -e "   📂 Cartella: ${BACKUP_SQL_DIR}/"
         echo ""
         echo -e "${YELLOW}   💡 Per reimportare questo backup:${NC}"
         echo -e "${YELLOW}      Menu 1 → Opzione 3 (IMPORTA)${NC}"
     else
-        echo -e "${RED}   ❌ Errore durante l'esportazione!${NC}"
+        echo ""
+        echo -e "${RED}   ❌ ERRORE DURANTE L'ESPORTAZIONE!${NC}"
+        echo ""
+        if [ -n "$DUMP_ERROR" ]; then
+            echo -e "${YELLOW}   Messaggio errore:${NC}"
+            echo "   $DUMP_ERROR"
+        fi
+        if [ "$DUMP_SIZE" -lt 1000 ]; then
+            echo -e "${YELLOW}   Il file è troppo piccolo ($DUMP_SIZE bytes)${NC}"
+            echo -e "${YELLOW}   Contenuto del file:${NC}"
+            cat ${BACKUP_FILE} 2>/dev/null | head -10
+        fi
+        rm -f ${BACKUP_FILE}
     fi
     
     press_enter
