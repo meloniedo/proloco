@@ -69,20 +69,18 @@ function tentaBackupUSB() {
         $pdo = getDB();
         $vendite = $pdo->query("SELECT * FROM vendite ORDER BY timestamp ASC")->fetchAll(PDO::FETCH_ASSOC);
         $spese = $pdo->query("SELECT * FROM spese ORDER BY timestamp ASC")->fetchAll(PDO::FETCH_ASSOC);
-        $prodotti = $pdo->query("SELECT * FROM prodotti ORDER BY categoria, nome")->fetchAll(PDO::FETCH_ASSOC);
-        
-        $excelContent = generateExcelXML($vendite, $spese, $prodotti);
         
         $date = date('d-m-Y');
         $time = date('H-i');
         $filename = "StoricoBarProloco_backup_auto_{$date}_{$time}.xlsx";
         $filepath = $usbPath . '/' . $filename;
         
-        if (file_put_contents($filepath, $excelContent) !== false) {
+        // Usa la nuova funzione XLSX
+        if (generateExcelXLSX($vendite, $spese, $filepath)) {
             @exec('sync');
             return ['success' => true, 'file' => $filename, 'path' => $filepath];
         } else {
-            return ['success' => false, 'error' => 'Impossibile scrivere su USB'];
+            return ['success' => false, 'error' => 'Impossibile creare file XLSX'];
         }
     } catch (Exception $e) {
         return ['success' => false, 'error' => $e->getMessage()];
