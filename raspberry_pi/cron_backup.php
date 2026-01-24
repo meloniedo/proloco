@@ -75,7 +75,7 @@ function tentaBackupUSB() {
         
         $date = date('d-m-Y');
         $time = date('H-i');
-        $filename = "StoricoBarProloco_backup_auto_{$date}_{$time}.xls";
+        $filename = "StoricoBarProloco_backup_auto_{$date}_{$time}.xlsx";
         $filepath = $usbPath . '/' . $filename;
         
         if (file_put_contents($filepath, $excelContent) !== false) {
