@@ -896,30 +896,30 @@
         const p = state.editingProduct;
         if (!p) return '';
         return `
-            <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-                <div class="card-felt rounded-2xl w-full max-w-sm p-5 border-4 border-amber-800">
+            <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto">
+                <div class="card-felt rounded-2xl w-full max-w-sm p-5 border-4 border-amber-800 my-4" style="max-height: 90vh; overflow-y: auto;">
                     <h3 style="font-size: 24px;" class="font-bold text-amber-100 text-center mb-4">✏️ Modifica Prodotto</h3>
                     
-                    <input type="text" id="editProdNome" placeholder="Nome prodotto" class="modal-input" value="${p.nome}">
+                    <input type="text" id="editProdNome" placeholder="Nome prodotto" class="modal-input" value="${p.nome}" oninput="state.editingProduct.nome = this.value">
                     
-                    <input type="number" id="editProdPrezzo" placeholder="Prezzo" step="0.10" class="modal-input" value="${p.prezzo}">
+                    <input type="number" id="editProdPrezzo" placeholder="Prezzo" step="0.10" class="modal-input" value="${p.prezzo}" oninput="state.editingProduct.prezzo = this.value">
                     
-                    <select id="editProdCategoria" class="modal-select">
+                    <select id="editProdCategoria" class="modal-select" onchange="state.editingProduct.categoria = this.value">
                         ${CONFIG.categorie_prodotti.map(c => `<option value="${c}" ${p.categoria === c ? 'selected' : ''}>${c}</option>`).join('')}
                     </select>
                     
                     <div class="mb-4">
-                        <label style="font-size: 18px;" class="text-amber-100 mb-2 block">Icona:</label>
-                        <div class="grid grid-cols-8 gap-2">
+                        <label style="font-size: 18px;" class="text-amber-100 mb-2 block">Icona: <span style="font-size: 28px;">${p.icona}</span></label>
+                        <div class="grid grid-cols-8 gap-2" style="max-height: 200px; overflow-y: auto; padding: 4px;">
                             ${CONFIG.icone_disponibili.map(i => `
-                                <button onclick="selectEditIcon('${i}')" style="font-size: 28px; padding: 8px;" class="rounded ${p.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}">${i}</button>
+                                <button type="button" onclick="selectEditIcon('${i}')" style="font-size: 28px; padding: 8px;" class="rounded ${p.icona === i ? 'bg-amber-600' : 'bg-amber-900/50'}">${i}</button>
                             `).join('')}
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick="closeEditProductModal()" style="font-size: 18px;" class="bg-stone-700 text-amber-100 font-bold py-3 rounded-lg active:scale-95">Annulla</button>
-                        <button onclick="saveEditProduct()" style="font-size: 18px;" class="bg-green-700 text-amber-100 font-bold py-3 rounded-lg active:scale-95">💾 Salva</button>
+                        <button type="button" onclick="closeEditProductModal()" style="font-size: 18px;" class="bg-stone-700 text-amber-100 font-bold py-3 rounded-lg active:scale-95">Annulla</button>
+                        <button type="button" onclick="saveEditProduct()" style="font-size: 18px;" class="bg-green-700 text-amber-100 font-bold py-3 rounded-lg active:scale-95">💾 Salva</button>
                     </div>
                 </div>
             </div>
