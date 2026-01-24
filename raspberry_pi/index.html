@@ -1038,17 +1038,7 @@
         if (state.editingProduct) { state.showEditProductModal = true; render(); }
     }
     function closeEditProductModal() { state.showEditProductModal = false; state.editingProduct = null; render(); }
-    function selectEditIcon(i) { 
-        // Salva i valori correnti degli input prima del render
-        const nomeEl = document.getElementById('editProdNome');
-        const prezzoEl = document.getElementById('editProdPrezzo');
-        const categoriaEl = document.getElementById('editProdCategoria');
-        if (nomeEl) state.editingProduct.nome = nomeEl.value;
-        if (prezzoEl) state.editingProduct.prezzo = prezzoEl.value;
-        if (categoriaEl) state.editingProduct.categoria = categoriaEl.value;
-        state.editingProduct.icona = i; 
-        render(); 
-    }
+    function selectEditIcon(i) { state.editingProduct.icona = i; render(); }
     
     async function saveEditProduct() {
         const p = state.editingProduct;
