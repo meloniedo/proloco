@@ -104,6 +104,7 @@ function aggiornaStoricoTxt() {
 /**
  * Sincronizza il database con il file STORICO.txt
  * Cancella dal DB i record non presenti nel file
+ * PROTEZIONE: Non cancella se il file sembra corrotto/vuoto
  */
 function sincronizzaStoricoConDB() {
     if (!file_exists(STORICO_FILE)) {
@@ -126,14 +127,60 @@ function sincronizzaStoricoConDB() {
         $idVenditeDB = $pdo->query("SELECT id FROM vendite")->fetchAll(PDO::FETCH_COLUMN);
         $idSpeseDB = $pdo->query("SELECT id FROM spese")->fetchAll(PDO::FETCH_COLUMN);
         
+        // ════════════════════════════════════════════════════════════════
+        // PROTEZIONE ANTI-CANCELLAZIONE DI MASSA
+        // Se il file ha MOLTI meno record del DB, probabilmente è stato
+        // sovrascritto da git o corrotto. NON cancellare nulla!
+        // ════════════════════════════════════════════════════════════════
+        $countVenditeFile = count($idVenditeNelFile);
+        $countVenditeDB = count($idVenditeDB);
+        $countSpeseFile = count($idSpeseNelFile);
+        $countSpeseDB = count($idSpeseDB);
+        
+        // Se il DB ha più di 10 record e il file ne ha meno del 50%, STOP!
+        if ($countVenditeDB > 10 && $countVenditeFile < ($countVenditeDB * 0.5)) {
+            // Il file sembra corrotto/vecchio - rigenera invece di cancellare
+            aggiornaStoricoTxt();
+            return [
+                'success' => true,
+                'vendite_cancellate' => 0,
+                'spese_cancellate' => 0,
+                'message' => "PROTEZIONE: File STORICO.txt rigenerato (aveva $countVenditeFile vendite vs $countVenditeDB nel DB)"
+            ];
+        }
+        
+        // Se il file è completamente vuoto di record ma il DB ne ha, rigenera
+        if ($countVenditeFile == 0 && $countVenditeDB > 0) {
+            aggiornaStoricoTxt();
+            return [
+                'success' => true,
+                'vendite_cancellate' => 0,
+                'spese_cancellate' => 0,
+                'message' => "PROTEZIONE: File vuoto rigenerato (DB ha $countVenditeDB vendite)"
+            ];
+        }
+        // ════════════════════════════════════════════════════════════════
+        
         // Trova ID da cancellare (presenti nel DB ma non nel file)
         $venditeToDelete = array_diff($idVenditeDB, $idVenditeNelFile);
         $speseToDelete = array_diff($idSpeseDB, $idSpeseNelFile);
         
+        // Ulteriore protezione: non cancellare più di 10 record alla volta
+        // (cancellazioni legittime sono tipicamente 1-2 record)
+        if (count($venditeToDelete) > 10 || count($speseToDelete) > 10) {
+            aggiornaStoricoTxt();
+            return [
+                'success' => true,
+                'vendite_cancellate' => 0,
+                'spese_cancellate' => 0,
+                'message' => "PROTEZIONE: Troppe cancellazioni richieste (" . count($venditeToDelete) . " vendite, " . count($speseToDelete) . " spese). File rigenerato."
+            ];
+        }
+        
         $deletedVendite = 0;
         $deletedSpese = 0;
         
-        // Cancella vendite
+        // Cancella vendite (solo se poche)
         if (count($venditeToDelete) > 0) {
             $placeholders = implode(',', array_fill(0, count($venditeToDelete), '?'));
             $stmt = $pdo->prepare("DELETE FROM vendite WHERE id IN ($placeholders)");
@@ -141,7 +188,7 @@ function sincronizzaStoricoConDB() {
             $deletedVendite = $stmt->rowCount();
         }
         
-        // Cancella spese
+        // Cancella spese (solo se poche)
         if (count($speseToDelete) > 0) {
             $placeholders = implode(',', array_fill(0, count($speseToDelete), '?'));
             $stmt = $pdo->prepare("DELETE FROM spese WHERE id IN ($placeholders)");
