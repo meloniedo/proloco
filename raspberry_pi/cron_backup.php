@@ -120,29 +120,143 @@ function tentaBackupLocale() {
         foreach ($vendite as $v) $totV += floatval($v['prezzo']);
         foreach ($spese as $s) $totS += floatval($s['importo']);
         
-        // Crea XML Excel
-        $xml = '<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Styles><Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#8B4513" ss:Pattern="Solid"/></Style><Style ss:ID="Money"><NumberFormat ss:Format="#,##0.00"/></Style></Styles>';
-        $xml .= '<Worksheet ss:Name="VENDITE"><Table><Row><Cell ss:StyleID="Header"><Data ss:Type="String">Data</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Ora</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Prodotto</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Categoria</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Importo</Data></Cell></Row>';
-        foreach ($vendite as $v) {
-            $dt = new DateTime($v['timestamp']);
-            $xml .= '<Row><Cell><Data ss:Type="String">'.$dt->format('d/m/Y').'</Data></Cell><Cell><Data ss:Type="String">'.$dt->format('H:i:s').'</Data></Cell><Cell><Data ss:Type="String">'.htmlspecialchars($v['nome_prodotto']).'</Data></Cell><Cell><Data ss:Type="String">'.htmlspecialchars($v['categoria']??'').'</Data></Cell><Cell ss:StyleID="Money"><Data ss:Type="Number">'.$v['prezzo'].'</Data></Cell></Row>';
-        }
-        $xml .= '</Table></Worksheet>';
-        $xml .= '<Worksheet ss:Name="SPESE"><Table><Row><Cell ss:StyleID="Header"><Data ss:Type="String">Data</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Ora</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Categoria</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Note</Data></Cell><Cell ss:StyleID="Header"><Data ss:Type="String">Importo</Data></Cell></Row>';
-        foreach ($spese as $s) {
-            $dt = new DateTime($s['timestamp']);
-            $xml .= '<Row><Cell><Data ss:Type="String">'.$dt->format('d/m/Y').'</Data></Cell><Cell><Data ss:Type="String">'.$dt->format('H:i:s').'</Data></Cell><Cell><Data ss:Type="String">'.htmlspecialchars($s['categoria_spesa']).'</Data></Cell><Cell><Data ss:Type="String">'.htmlspecialchars($s['note']??'').'</Data></Cell><Cell ss:StyleID="Money"><Data ss:Type="Number">'.$s['importo'].'</Data></Cell></Row>';
-        }
-        $xml .= '</Table></Worksheet></Workbook>';
-        
         $filename = "StoricoBarProloco-dal-".date('d-m-Y', $dateMin)."-a-".date('d-m-Y', $dateMax)."_auto.xlsx";
         $filepath = $backupDir . '/' . $filename;
         
-        if (file_put_contents($filepath, $xml) !== false) {
-            return ['success' => true, 'file' => $filename, 'path' => $filepath];
-        } else {
-            return ['success' => false, 'error' => 'Impossibile scrivere backup locale'];
+        // Genera XLSX vero con ZipArchive - UNICO FOGLIO
+        if (class_exists('ZipArchive')) {
+            $zip = new ZipArchive();
+            if ($zip->open($filepath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+                
+                // Content Types - SOLO 1 FOGLIO
+                $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>
+</Types>');
+
+                $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>');
+
+                $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>
+</Relationships>');
+
+                $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets><sheet name="Storico" sheetId="1" r:id="rId1"/></sheets>
+</workbook>');
+
+                // Shared strings
+                $strings = [];
+                $stringMap = [];
+                
+                $addStr = function($s) use (&$strings, &$stringMap) {
+                    $s = (string)$s;
+                    if (!isset($stringMap[$s])) {
+                        $stringMap[$s] = count($strings);
+                        $strings[] = htmlspecialchars($s, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+                    }
+                    return $stringMap[$s];
+                };
+                
+                $colLetter = function($col) {
+                    $letter = '';
+                    while ($col >= 0) {
+                        $letter = chr(65 + ($col % 26)) . $letter;
+                        $col = intval($col / 26) - 1;
+                    }
+                    return $letter;
+                };
+                
+                // Costruisci righe - UNICO FOGLIO
+                $rows = [];
+                $rowNum = 1;
+                
+                // Titolo
+                $rows[] = '<row r="' . $rowNum . '"><c r="A' . $rowNum . '" t="s"><v>' . $addStr('PROLOCO SANTA BIANCA - STORICO') . '</v></c></row>';
+                $rowNum += 2;
+                
+                // Header vendite
+                $headers = ['Data', 'Ora', 'Prodotto', 'Categoria', 'Importo €'];
+                $row = '<row r="' . $rowNum . '">';
+                foreach ($headers as $col => $header) {
+                    $row .= '<c r="' . $colLetter($col) . $rowNum . '" t="s"><v>' . $addStr($header) . '</v></c>';
+                }
+                $row .= '</row>';
+                $rows[] = $row;
+                $rowNum++;
+                
+                // Dati vendite
+                foreach ($vendite as $v) {
+                    $dt = new DateTime($v['timestamp']);
+                    $row = '<row r="' . $rowNum . '">';
+                    $row .= '<c r="A' . $rowNum . '" t="s"><v>' . $addStr($dt->format('d/m/Y')) . '</v></c>';
+                    $row .= '<c r="B' . $rowNum . '" t="s"><v>' . $addStr($dt->format('H:i:s')) . '</v></c>';
+                    $row .= '<c r="C' . $rowNum . '" t="s"><v>' . $addStr($v['nome_prodotto']) . '</v></c>';
+                    $row .= '<c r="D' . $rowNum . '" t="s"><v>' . $addStr($v['categoria'] ?? '') . '</v></c>';
+                    $row .= '<c r="E' . $rowNum . '"><v>' . $v['prezzo'] . '</v></c>';
+                    $row .= '</row>';
+                    $rows[] = $row;
+                    $rowNum++;
+                }
+                
+                // Totale vendite
+                $rows[] = '<row r="' . $rowNum . '"><c r="D' . $rowNum . '" t="s"><v>' . $addStr('TOTALE VENDITE:') . '</v></c><c r="E' . $rowNum . '"><v>' . $totV . '</v></c></row>';
+                $rowNum += 2;
+                
+                // Sezione SPESE
+                $rows[] = '<row r="' . $rowNum . '"><c r="A' . $rowNum . '" t="s"><v>' . $addStr('SPESE') . '</v></c></row>';
+                $rowNum++;
+                
+                // Header spese
+                $row = '<row r="' . $rowNum . '">';
+                $row .= '<c r="A' . $rowNum . '" t="s"><v>' . $addStr('Data') . '</v></c>';
+                $row .= '<c r="B' . $rowNum . '" t="s"><v>' . $addStr('Ora') . '</v></c>';
+                $row .= '<c r="C' . $rowNum . '" t="s"><v>' . $addStr('Categoria') . '</v></c>';
+                $row .= '<c r="E' . $rowNum . '" t="s"><v>' . $addStr('Importo €') . '</v></c>';
+                $row .= '</row>';
+                $rows[] = $row;
+                $rowNum++;
+                
+                // Dati spese
+                foreach ($spese as $s) {
+                    $dt = new DateTime($s['timestamp']);
+                    $row = '<row r="' . $rowNum . '">';
+                    $row .= '<c r="A' . $rowNum . '" t="s"><v>' . $addStr($dt->format('d/m/Y')) . '</v></c>';
+                    $row .= '<c r="B' . $rowNum . '" t="s"><v>' . $addStr($dt->format('H:i:s')) . '</v></c>';
+                    $row .= '<c r="C' . $rowNum . '" t="s"><v>' . $addStr($s['categoria_spesa']) . '</v></c>';
+                    $row .= '<c r="E' . $rowNum . '"><v>' . $s['importo'] . '</v></c>';
+                    $row .= '</row>';
+                    $rows[] = $row;
+                    $rowNum++;
+                }
+                
+                // Totale spese
+                $rows[] = '<row r="' . $rowNum . '"><c r="D' . $rowNum . '" t="s"><v>' . $addStr('TOTALE SPESE:') . '</v></c><c r="E' . $rowNum . '"><v>' . $totS . '</v></c></row>';
+                
+                // Sheet XML
+                $zip->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' . implode("\n", $rows) . '</sheetData></worksheet>');
+                
+                // Shared strings XML
+                $ssXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="' . count($strings) . '" uniqueCount="' . count($strings) . '">';
+                foreach ($strings as $str) $ssXml .= '<si><t>' . $str . '</t></si>';
+                $ssXml .= '</sst>';
+                $zip->addFromString('xl/sharedStrings.xml', $ssXml);
+                
+                $zip->close();
+                return ['success' => true, 'file' => $filename, 'path' => $filepath];
+            }
         }
+        
+        return ['success' => false, 'error' => 'ZipArchive non disponibile'];
     } catch (Exception $e) {
         return ['success' => false, 'error' => $e->getMessage()];
     }
