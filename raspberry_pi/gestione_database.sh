@@ -1027,6 +1027,213 @@ export_txt() {
 }
 
 # ══════════════════════════════════════════════════════════════════════════════
+# GESTIONE PROGRAMMAZIONE BACKUP
+# ══════════════════════════════════════════════════════════════════════════════
+
+menu_programmazione_backup() {
+    while true; do
+        clear_screen
+        show_header
+        show_submenu_header "⏰ PROGRAMMAZIONE BACKUP AUTOMATICO"
+        
+        # Leggi configurazione attuale
+        BACKUP_GIORNI=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT valore FROM configurazione WHERE chiave='backup_giorni'" 2>/dev/null)
+        BACKUP_ORA=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT valore FROM configurazione WHERE chiave='backup_ora'" 2>/dev/null)
+        
+        BACKUP_GIORNI=${BACKUP_GIORNI:-0}
+        BACKUP_ORA=${BACKUP_ORA:-23:59}
+        
+        # Converti numeri in nomi giorni
+        GIORNI_NOMI=""
+        for g in $(echo $BACKUP_GIORNI | tr ',' ' '); do
+            case $g in
+                0) GIORNI_NOMI="${GIORNI_NOMI}Domenica, " ;;
+                1) GIORNI_NOMI="${GIORNI_NOMI}Lunedì, " ;;
+                2) GIORNI_NOMI="${GIORNI_NOMI}Martedì, " ;;
+                3) GIORNI_NOMI="${GIORNI_NOMI}Mercoledì, " ;;
+                4) GIORNI_NOMI="${GIORNI_NOMI}Giovedì, " ;;
+                5) GIORNI_NOMI="${GIORNI_NOMI}Venerdì, " ;;
+                6) GIORNI_NOMI="${GIORNI_NOMI}Sabato, " ;;
+            esac
+        done
+        GIORNI_NOMI=${GIORNI_NOMI%, }  # Rimuovi ultima virgola
+        
+        if [ -z "$GIORNI_NOMI" ]; then
+            GIORNI_NOMI="${RED}Nessun giorno (backup disabilitato)${NC}"
+        fi
+        
+        echo ""
+        echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${CYAN}   CONFIGURAZIONE ATTUALE${NC}"
+        echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo -e "   📅 Giorni:  ${GREEN}${GIORNI_NOMI}${NC}"
+        echo -e "   🕐 Ora:     ${GREEN}${BACKUP_ORA}${NC}"
+        echo ""
+        echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo -e "   ${YELLOW}Il backup automatico crea un file Excel (.xls) su USB${NC}"
+        echo -e "   ${YELLOW}o nella cartella locale se USB non disponibile.${NC}"
+        echo ""
+        echo -e "   ${GREEN}1)${NC} 📅 Modifica giorni backup"
+        echo -e "   ${GREEN}2)${NC} 🕐 Modifica ora backup"
+        echo -e "   ${GREEN}3)${NC} ❌ Disabilita backup automatico"
+        echo -e "   ${GREEN}4)${NC} ✅ Abilita backup giornaliero (tutti i giorni)"
+        echo ""
+        echo -e "   ${RED}0)${NC} ← Torna al menu principale"
+        echo ""
+        
+        read -p "   Scegli (0-4): " choice
+        
+        case $choice in
+            1) modifica_giorni_backup ;;
+            2) modifica_ora_backup ;;
+            3) disabilita_backup ;;
+            4) abilita_backup_giornaliero ;;
+            0) return ;;
+            *) echo -e "${RED}   Opzione non valida!${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+modifica_giorni_backup() {
+    clear_screen
+    show_submenu_header "📅 MODIFICA GIORNI BACKUP"
+    
+    echo ""
+    echo -e "   Seleziona i giorni per il backup automatico:"
+    echo ""
+    echo -e "   ${GREEN}1)${NC} Solo Domenica"
+    echo -e "   ${GREEN}2)${NC} Lunedì e Venerdì"
+    echo -e "   ${GREEN}3)${NC} Tutti i giorni"
+    echo -e "   ${GREEN}4)${NC} Fine settimana (Sabato e Domenica)"
+    echo -e "   ${GREEN}5)${NC} Giorni feriali (Lun-Ven)"
+    echo -e "   ${GREEN}6)${NC} Personalizzato"
+    echo ""
+    echo -e "   ${RED}0)${NC} Annulla"
+    echo ""
+    
+    read -p "   Scelta: " choice
+    
+    case $choice in
+        1) NUOVI_GIORNI="0" ;;
+        2) NUOVI_GIORNI="1,5" ;;
+        3) NUOVI_GIORNI="0,1,2,3,4,5,6" ;;
+        4) NUOVI_GIORNI="0,6" ;;
+        5) NUOVI_GIORNI="1,2,3,4,5" ;;
+        6)
+            echo ""
+            echo -e "   ${YELLOW}Inserisci i numeri dei giorni separati da virgola:${NC}"
+            echo -e "   0=Dom, 1=Lun, 2=Mar, 3=Mer, 4=Gio, 5=Ven, 6=Sab"
+            echo -e "   Esempio: 1,3,5 per Lunedì, Mercoledì, Venerdì"
+            echo ""
+            read -p "   Giorni: " NUOVI_GIORNI
+            ;;
+        0|*) return ;;
+    esac
+    
+    mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "UPDATE configurazione SET valore='${NUOVI_GIORNI}' WHERE chiave='backup_giorni'" 2>/dev/null
+    
+    echo ""
+    echo -e "${GREEN}   ✅ Giorni backup aggiornati!${NC}"
+    press_enter
+}
+
+modifica_ora_backup() {
+    clear_screen
+    show_submenu_header "🕐 MODIFICA ORA BACKUP"
+    
+    BACKUP_ORA=$(mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -N -e "SELECT valore FROM configurazione WHERE chiave='backup_ora'" 2>/dev/null)
+    BACKUP_ORA=${BACKUP_ORA:-23:59}
+    
+    echo ""
+    echo -e "   Ora attuale backup: ${GREEN}${BACKUP_ORA}${NC}"
+    echo ""
+    echo -e "   Scegli una nuova ora:"
+    echo ""
+    echo -e "   ${GREEN}1)${NC} 08:00 (mattina)"
+    echo -e "   ${GREEN}2)${NC} 12:00 (mezzogiorno)"
+    echo -e "   ${GREEN}3)${NC} 18:00 (sera)"
+    echo -e "   ${GREEN}4)${NC} 22:00 (notte)"
+    echo -e "   ${GREEN}5)${NC} 23:59 (fine giornata)"
+    echo -e "   ${GREEN}6)${NC} Personalizzato"
+    echo ""
+    echo -e "   ${RED}0)${NC} Annulla"
+    echo ""
+    
+    read -p "   Scelta: " choice
+    
+    case $choice in
+        1) NUOVA_ORA="08:00" ;;
+        2) NUOVA_ORA="12:00" ;;
+        3) NUOVA_ORA="18:00" ;;
+        4) NUOVA_ORA="22:00" ;;
+        5) NUOVA_ORA="23:59" ;;
+        6)
+            echo ""
+            echo -e "   ${YELLOW}Inserisci l'ora nel formato HH:MM (es. 14:30):${NC}"
+            read -p "   Ora: " NUOVA_ORA
+            # Valida formato
+            if ! [[ "$NUOVA_ORA" =~ ^[0-2][0-9]:[0-5][0-9]$ ]]; then
+                echo -e "${RED}   Formato non valido! Usa HH:MM${NC}"
+                press_enter
+                return
+            fi
+            ;;
+        0|*) return ;;
+    esac
+    
+    mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "UPDATE configurazione SET valore='${NUOVA_ORA}' WHERE chiave='backup_ora'" 2>/dev/null
+    
+    echo ""
+    echo -e "${GREEN}   ✅ Ora backup aggiornata a ${NUOVA_ORA}!${NC}"
+    press_enter
+}
+
+disabilita_backup() {
+    clear_screen
+    show_submenu_header "❌ DISABILITA BACKUP AUTOMATICO"
+    
+    echo ""
+    echo -e "${YELLOW}   Stai per disabilitare i backup automatici.${NC}"
+    echo -e "${YELLOW}   Potrai sempre fare backup manuali dal menu.${NC}"
+    echo ""
+    
+    read -p "   Confermi? (S/N): " conferma
+    
+    if [ "$conferma" = "S" ] || [ "$conferma" = "s" ]; then
+        mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "UPDATE configurazione SET valore='' WHERE chiave='backup_giorni'" 2>/dev/null
+        echo ""
+        echo -e "${GREEN}   ✅ Backup automatico disabilitato.${NC}"
+    else
+        echo -e "${BLUE}   Operazione annullata.${NC}"
+    fi
+    
+    press_enter
+}
+
+abilita_backup_giornaliero() {
+    clear_screen
+    show_submenu_header "✅ ABILITA BACKUP GIORNALIERO"
+    
+    echo ""
+    echo -e "${YELLOW}   Il backup verrà eseguito ogni giorno.${NC}"
+    echo ""
+    
+    read -p "   Confermi? (S/N): " conferma
+    
+    if [ "$conferma" = "S" ] || [ "$conferma" = "s" ]; then
+        mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "UPDATE configurazione SET valore='0,1,2,3,4,5,6' WHERE chiave='backup_giorni'" 2>/dev/null
+        echo ""
+        echo -e "${GREEN}   ✅ Backup giornaliero abilitato!${NC}"
+    else
+        echo -e "${BLUE}   Operazione annullata.${NC}"
+    fi
+    
+    press_enter
+}
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MENU PRINCIPALE
 # ══════════════════════════════════════════════════════════════════════════════
 
