@@ -347,7 +347,7 @@ function listBackups() {
         return ['success' => true, 'backups' => []];
     }
     
-    $files = glob($backupDir . '/backup_*.xls');
+    $files = glob($backupDir . '/backup_*.xlsx');
     $backups = [];
     
     foreach ($files as $file) {
