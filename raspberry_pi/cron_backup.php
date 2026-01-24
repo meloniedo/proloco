@@ -135,7 +135,7 @@ function tentaBackupLocale() {
         }
         $xml .= '</Table></Worksheet></Workbook>';
         
-        $filename = "StoricoBarProloco-dal-".date('d-m-Y', $dateMin)."-a-".date('d-m-Y', $dateMax)."_auto.xls";
+        $filename = "StoricoBarProloco-dal-".date('d-m-Y', $dateMin)."-a-".date('d-m-Y', $dateMax)."_auto.xlsx";
         $filepath = $backupDir . '/' . $filename;
         
         if (file_put_contents($filepath, $xml) !== false) {
