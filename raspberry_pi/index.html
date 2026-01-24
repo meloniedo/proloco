@@ -1018,7 +1018,17 @@
     // Listino handlers
     function openAddProductModal() { state.newProduct = {nome: '', prezzo: '', categoria: 'CAFFETTERIA', icona: '📦'}; state.showAddProductModal = true; render(); }
     function closeAddProductModal() { state.showAddProductModal = false; render(); }
-    function selectIcon(i) { state.newProduct.icona = i; render(); }
+    function selectIcon(i) { 
+        // Salva i valori correnti degli input prima del render
+        const nomeEl = document.getElementById('newProdNome');
+        const prezzoEl = document.getElementById('newProdPrezzo');
+        const categoriaEl = document.getElementById('newProdCategoria');
+        if (nomeEl) state.newProduct.nome = nomeEl.value;
+        if (prezzoEl) state.newProduct.prezzo = prezzoEl.value;
+        if (categoriaEl) state.newProduct.categoria = categoriaEl.value;
+        state.newProduct.icona = i; 
+        render(); 
+    }
     
     async function saveNewProduct() {
         const nome = document.getElementById('newProdNome').value.trim();
