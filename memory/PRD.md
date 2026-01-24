@@ -1,136 +1,61 @@
-# PRD - Proloco Santa Bianca Bar Manager
+# Proloco Bar Manager - PRD
 
-## Descrizione Progetto
-Applicazione web per la gestione di un bar della Proloco, progettata per funzionare offline su Raspberry Pi 3A+ configurato come hotspot WiFi.
+## Problema Originale
+Applicazione web PHP/MySQL per la gestione di un bar, da eseguire offline su Raspberry Pi. Richieste di risoluzione bug critici e creazione sistema di gestione completo.
 
-## Requisiti Principali
-- **Registrazione vendite** con prodotti organizzati per categoria
-- **Gestione spese** con categorie predefinite
-- **Statistiche** con riepilogo incassi/spese/profitto
-- **Sistema backup** su USB e WiFi (file Excel)
-- **Funzionamento offline** tramite hotspot WiFi
-- **PWA** per installazione su dispositivi mobili
+## Stack Tecnologico
+- **Backend:** PHP, MySQL (MariaDB)
+- **Frontend:** Vanilla JavaScript, HTML/CSS
+- **Ambiente:** Raspberry Pi offline con hotspot WiFi
+- **Automazione:** Bash scripting, cron jobs, systemd
 
-## Architettura Tecnica
-- **Frontend:** HTML5, CSS3, JavaScript Vanilla
-- **Backend:** PHP 8.x, MySQL/MariaDB
-- **Deploy:** Raspberry Pi 3A+ con Apache, hostapd, dnsmasq
-- **Automazione:** Cron jobs per sync e backup
-
-## Struttura Directory
+## Architettura
 ```
-/app/raspberry_pi/
-├── index.html          # Frontend principale
-├── install.sh          # Script installazione automatica
-├── database.sql        # Schema DB
-├── manifest.json       # PWA manifest
-├── sw.js               # Service Worker
-├── api/                # Endpoint PHP
-│   ├── prodotti.php
-│   ├── vendite.php
-│   ├── spese.php
-│   ├── statistiche.php
-│   ├── listino.php
-│   ├── download_backup.php
-│   ├── usb_backup.php
-│   ├── backup_settings.php
-│   ├── system_time.php
-│   └── view_resoconto.php
-├── includes/
-│   ├── config.php
-│   └── storico_txt.php
-├── cron_sync.php       # Sync STORICO.txt ogni minuto
-├── cron_backup.php     # Backup automatico programmato
-├── cron_resoconto.php  # Report settimanale (lunedì 08:00)
-└── css/style.css
+/home/pi/proloco/
+├── aggiorna.sh                 # Script aggiornamento da GitHub
+├── raspberry_pi/               # Directory principale app
+│   ├── gestione_database.sh    # Menu interattivo gestione DB
+│   ├── import_xlsx.php         # Import Excel
+│   ├── export_xlsx.php         # Export Excel
+│   ├── index.html              # Frontend
+│   ├── includes/
+│   │   ├── config.php
+│   │   ├── storico_txt.php     # Sync STORICO.txt ↔ DB
+│   │   └── listino_txt.php     # Sync LISTINO.txt ↔ DB
+│   └── api/
+├── backup/                     # Backup SQL
+├── BACKUP_GIORNALIERI/         # Backup Excel
+└── RESOCONTI_SETTIMANALI/
 ```
 
-## Credenziali Sistema
-- **WiFi Hotspot:** SSID `ProlocoBar`, Password `proloco2024`
-- **IP Raspberry:** `192.168.4.1`
-- **DB MySQL:** User `edo`, Password `5054`, DB `proloco_bar`
-- **Password Reset:** `5054`
+## Funzionalità Implementate
+- ✅ Gestione vendite e spese
+- ✅ Gestione prodotti/listino
+- ✅ Script gestione_database.sh (backup SQL/XLSX, import, export, reset)
+- ✅ Sincronizzazione automatica STORICO.txt e LISTINO.txt
+- ✅ Backup automatici programmati
+- ✅ Import/Export Excel (.xlsx)
 
----
+## Bug Risolti (24/01/2026)
 
-# CHANGELOG
+### P0 - Perdita Dati dopo aggiorna.sh ✅
+- **Causa:** `cron_sync.php` (ogni minuto) leggeva `STORICO.txt` e cancellava dal DB tutti i record non presenti nel file. Quando `git reset --hard` sovrascriveva il file, il cron cancellava tutti i dati.
+- **Fix:** Aggiunta protezione anti-cancellazione di massa in `includes/storico_txt.php`:
+  - Non cancella se file ha <50% dei record del DB
+  - Non cancella se file vuoto ma DB ha dati
+  - Non cancella più di 10 record alla volta
 
-## [2024-12-XX] - Versione Finale
+### Bug Conteggio Export SQL ✅
+- **Problema:** Mostrava "~4 record" invece dei record effettivi
+- **Fix:** Corretto conteggio in `gestione_database.sh` per contare righe effettive nelle sezioni vendite/spese
 
-### ✅ Implementato in questa sessione:
+## Bug Aperti
 
-1. **Font più grandi** - Aumentata la dimensione dei caratteri in tutta l'app per migliore leggibilità su schermo touch
-   - Base font 18px
-   - Titoli 24-28px
-   - Pulsanti prodotti con icone 40px e testo 18-22px
+### P1 - Pulsante Impostazioni (⚙️) non funziona
+- **Descrizione:** Cliccando sull'icona ingranaggio non si accede alle impostazioni
+- **File:** `/raspberry_pi/index.html`
+- **Status:** Da investigare
 
-2. **Statistiche complete** - Ripristinate le sezioni "Per Categoria" e "Top 5 Prodotti" nella pagina statistiche
-
-3. **Report settimanale automatico** - Cron job che genera file .TXT ogni lunedì alle 08:00
-   - Percorso: `/home/pi/proloco/RESOCONTI_SETTIMANALI/`
-   - Formato: riepilogo settimana + top 3 prodotti
-
-4. **Copia locale backup** - Ogni backup (WiFi o USB) viene salvato anche in `/home/pi/proloco/BACKUP_GIORNALIERI/`
-
-5. **Popup ora all'avvio** - Se l'ora del sistema non è sincronizzata, mostra popup per impostarla manualmente
-
-6. **Modulo cambio ora nelle impostazioni** - Aggiunto pannello per modificare data/ora del sistema
-
-7. **Rimosso "Importa Backup"** - Modulo rimosso dalle impostazioni come richiesto
-
-8. **Resoconto Totale** - Creato file `RESOCONTO_TOTALE.txt` con riepilogo completo
-   - Pulsante "Visualizza Resoconto Totale" nelle impostazioni
-   - Apre il report in una nuova scheda
-
-9. **Gestione listino migliorata** - Interfaccia più stabile e leggibile
-   - Pulsanti più grandi
-   - Icone più visibili
-   - Padding aumentato
-
-### Script di installazione aggiornato:
-- Crea cartelle `/home/pi/proloco/BACKUP_GIORNALIERI` e `/home/pi/proloco/RESOCONTI_SETTIMANALI`
-- Configura cron per report settimanale
-- Aggiunge permessi sudo per www-data (cambio ora sistema)
-
----
-
-## [Sessioni Precedenti]
-
-### Sistema di Sincronizzazione
-- Sync bidirezionale DB ↔ STORICO.txt ogni minuto via cron
-
-### Backup Excel Reale
-- Generazione file .xlsx con ZipArchive
-- Fallback a .xls (XML) se php-zip non disponibile
-
-### Gestione Rete
-- Script `modalita_hotspot.sh` e `modalita_internet.sh`
-- Risolto problema blocco rete con NetworkManager
-
-### PWA
-- Manifest configurato
-- Service Worker per funzionamento offline
-- Icone SVG
-
-### Fix UI
-- Scroll bloccato risolto
-- Menu navigazione responsive
-- Popup con sfondo solido
-
----
-
-# ROADMAP
-
-## P0 - Completato
-- [x] 9 requisiti finali implementati
-
-## P1 - Verifica Utente
-- [ ] Test completo su Raspberry Pi reale
-- [ ] Verifica funzionamento popup ora
-- [ ] Test report settimanale
-
-## P2 - Possibili Miglioramenti Futuri
-- [ ] Grafici statistiche con Chart.js
-- [ ] Export PDF report
-- [ ] Notifiche push per backup
-- [ ] Tema scuro/chiaro
+## Prossimi Passi
+1. Risolvere bug pulsante impostazioni
+2. Test completo di tutte le funzionalità
