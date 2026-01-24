@@ -166,7 +166,7 @@ function formatBytes($bytes) {
     return round($bytes / 1024, 2) . ' KB';
 }
 
-// Genera file Excel XML compatibile con importazione
+// Genera file Excel XML compatibile con importazione - UNICO FOGLIO
 function generateExcelXML($vendite, $spese, $prodotti) {
     $totaleVendite = 0;
     $totaleSpese = 0;
@@ -183,12 +183,13 @@ function generateExcelXML($vendite, $spese, $prodotti) {
  <Style ss:ID="Header"><Font ss:Bold="1" ss:Size="11"/><Interior ss:Color="#8B4513" ss:Pattern="Solid"/><Font ss:Color="#FFFFFF"/></Style>
  <Style ss:ID="Title"><Font ss:Bold="1" ss:Size="14"/></Style>
  <Style ss:ID="Money"><NumberFormat ss:Format="#,##0.00"/></Style>
- <Style ss:ID="Green"><Font ss:Color="#008000" ss:Bold="1"/></Style>
- <Style ss:ID="Red"><Font ss:Color="#FF0000" ss:Bold="1"/></Style>
+ <Style ss:ID="Bold"><Font ss:Bold="1"/></Style>
 </Styles>
 
-<Worksheet ss:Name="VENDITE">
+<Worksheet ss:Name="Storico">
  <Table>
+  <Row><Cell ss:StyleID="Title"><Data ss:Type="String">PROLOCO SANTA BIANCA - STORICO</Data></Cell></Row>
+  <Row></Row>
   <Row>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Data</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Ora</Data></Cell>
@@ -211,18 +212,14 @@ function generateExcelXML($vendite, $spese, $prodotti) {
     
     $xml .= '
   <Row></Row>
-  <Row><Cell><Data ss:Type="String">Totale Vendite:</Data></Cell><Cell></Cell><Cell></Cell><Cell></Cell><Cell ss:StyleID="Green"><Data ss:Type="Number">' . $totaleVendite . '</Data></Cell></Row>
- </Table>
-</Worksheet>
-
-<Worksheet ss:Name="SPESE">
- <Table>
+  <Row><Cell></Cell><Cell></Cell><Cell></Cell><Cell ss:StyleID="Bold"><Data ss:Type="String">TOTALE VENDITE:</Data></Cell><Cell ss:StyleID="Bold"><Data ss:Type="Number">' . $totaleVendite . '</Data></Cell></Row>
+  <Row></Row>
+  <Row><Cell ss:StyleID="Title"><Data ss:Type="String">SPESE</Data></Cell></Row>
   <Row>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Data</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Ora</Data></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Categoria</Data></Cell>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">Spesa</Data></Cell>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">Note</Data></Cell>
+   <Cell></Cell>
    <Cell ss:StyleID="Header"><Data ss:Type="String">Importo €</Data></Cell>
   </Row>';
   
@@ -233,36 +230,14 @@ function generateExcelXML($vendite, $spese, $prodotti) {
    <Cell><Data ss:Type="String">' . $dt->format('d/m/Y') . '</Data></Cell>
    <Cell><Data ss:Type="String">' . $dt->format('H:i:s') . '</Data></Cell>
    <Cell><Data ss:Type="String">' . htmlspecialchars($s['categoria_spesa']) . '</Data></Cell>
-   <Cell><Data ss:Type="String"></Data></Cell>
-   <Cell><Data ss:Type="String">' . htmlspecialchars($s['note'] ?? '') . '</Data></Cell>
+   <Cell></Cell>
    <Cell ss:StyleID="Money"><Data ss:Type="Number">' . $s['importo'] . '</Data></Cell>
   </Row>';
     }
     
     $xml .= '
   <Row></Row>
-  <Row><Cell><Data ss:Type="String">Totale Spese:</Data></Cell><Cell></Cell><Cell></Cell><Cell></Cell><Cell></Cell><Cell ss:StyleID="Red"><Data ss:Type="Number">' . $totaleSpese . '</Data></Cell></Row>
- </Table>
-</Worksheet>
-
-<Worksheet ss:Name="RIEPILOGO MENSILE">
- <Table>
-  <Row>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">Descrizione</Data></Cell>
-   <Cell ss:StyleID="Header"><Data ss:Type="String">Importo €</Data></Cell>
-  </Row>
-  <Row>
-   <Cell><Data ss:Type="String">Incassi Totali</Data></Cell>
-   <Cell ss:StyleID="Green"><Data ss:Type="Number">' . $totaleVendite . '</Data></Cell>
-  </Row>
-  <Row>
-   <Cell><Data ss:Type="String">Spese Totali</Data></Cell>
-   <Cell ss:StyleID="Red"><Data ss:Type="Number">' . $totaleSpese . '</Data></Cell>
-  </Row>
-  <Row>
-   <Cell ss:StyleID="Title"><Data ss:Type="String">PROFITTO NETTO</Data></Cell>
-   <Cell ss:StyleID="' . ($totaleVendite - $totaleSpese >= 0 ? 'Green' : 'Red') . '"><Data ss:Type="Number">' . ($totaleVendite - $totaleSpese) . '</Data></Cell>
-  </Row>
+  <Row><Cell></Cell><Cell></Cell><Cell></Cell><Cell ss:StyleID="Bold"><Data ss:Type="String">TOTALE SPESE:</Data></Cell><Cell ss:StyleID="Bold"><Data ss:Type="Number">' . $totaleSpese . '</Data></Cell></Row>
  </Table>
 </Worksheet>
 
