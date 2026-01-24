@@ -279,7 +279,7 @@ function doBackup() {
     if ($backupNum > 1) {
         $filename .= "_n{$backupNum}";
     }
-    $filename .= ".xls";
+    $filename .= ".xlsx";
     
     $filepath = $backupDir . '/' . $filename;
     
