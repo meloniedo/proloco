@@ -217,7 +217,7 @@ do_backup_sql() {
     
     echo -e "   Esportazione in corso..."
     
-    mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} > ${BACKUP_FILE} 2>/dev/null
+    mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" > ${BACKUP_FILE} 2>/dev/null
     
     if [ $? -eq 0 ]; then
         gzip ${BACKUP_FILE}
@@ -357,7 +357,7 @@ restore_backup_sql() {
     echo ""
     echo -e "${YELLOW}   Backup di sicurezza...${NC}"
     TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-    mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} 2>/dev/null | gzip > "${BACKUP_SQL_DIR}/backup_pre_ripristino_${TIMESTAMP}.sql.gz"
+    mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" 2>/dev/null | gzip > "${BACKUP_SQL_DIR}/backup_pre_ripristino_${TIMESTAMP}.sql.gz"
     
     echo -e "${YELLOW}   Ripristino in corso...${NC}"
     gunzip -k -f ${selected_file}
@@ -649,7 +649,7 @@ import_backup_xlsx() {
             echo ""
             echo -e "${YELLOW}   Backup database...${NC}"
             TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-            mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} 2>/dev/null | gzip > "${BACKUP_SQL_DIR}/backup_pre_import_${TIMESTAMP}.sql.gz"
+            mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" 2>/dev/null | gzip > "${BACKUP_SQL_DIR}/backup_pre_import_${TIMESTAMP}.sql.gz"
             
             echo -e "${YELLOW}   Reset database...${NC}"
             mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "DELETE FROM vendite; DELETE FROM spese; ALTER TABLE vendite AUTO_INCREMENT = 1; ALTER TABLE spese AUTO_INCREMENT = 1;" 2>/dev/null
@@ -845,7 +845,7 @@ reset_database() {
     echo ""
     echo -e "${YELLOW}   Backup di sicurezza...${NC}"
     TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-    mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} 2>/dev/null | gzip > "${BACKUP_SQL_DIR}/backup_pre_reset_${TIMESTAMP}.sql.gz"
+    mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" 2>/dev/null | gzip > "${BACKUP_SQL_DIR}/backup_pre_reset_${TIMESTAMP}.sql.gz"
     
     echo -e "${YELLOW}   Reset in corso...${NC}"
     mysql -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" -e "
