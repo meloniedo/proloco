@@ -272,7 +272,7 @@ function doBackup() {
     $time = date('H-i');
     
     // Controlla backup esistenti oggi
-    $existingBackups = glob($backupDir . "/storico_{$date}*.xls");
+    $existingBackups = glob($backupDir . "/storico_{$date}*.xlsx");
     $backupNum = count($existingBackups) + 1;
     
     $filename = "storico_{$date}_{$time}";
