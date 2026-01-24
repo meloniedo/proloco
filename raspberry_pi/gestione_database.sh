@@ -368,8 +368,10 @@ restore_backup_sql() {
         date=$(stat -c %y $file | cut -d'.' -f1 | cut -c1-16)
         
         # Conta i record effettivi
-        VENDITE_COUNT=$(zcat "$file" 2>/dev/null | sed -n '/INSERT INTO `vendite`/,/UNLOCK TABLES/p' | grep -c "^(" || echo "0")
-        SPESE_COUNT=$(zcat "$file" 2>/dev/null | sed -n '/INSERT INTO `spese`/,/UNLOCK TABLES/p' | grep -c "^(" || echo "0")
+        VENDITE_COUNT=$(zcat "$file" 2>/dev/null | sed -n '/INSERT INTO `vendite`/,/UNLOCK TABLES/p' | grep -c "^(" 2>/dev/null)
+        VENDITE_COUNT=${VENDITE_COUNT:-0}
+        SPESE_COUNT=$(zcat "$file" 2>/dev/null | sed -n '/INSERT INTO `spese`/,/UNLOCK TABLES/p' | grep -c "^(" 2>/dev/null)
+        SPESE_COUNT=${SPESE_COUNT:-0}
         TOTAL=$((VENDITE_COUNT + SPESE_COUNT))
         
         if [ "$TOTAL" -gt 0 ]; then
