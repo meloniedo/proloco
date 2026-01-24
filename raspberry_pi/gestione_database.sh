@@ -217,10 +217,13 @@ do_backup_sql() {
     
     echo -e "   Esportazione in corso..."
     
-    # Esegui mysqldump e cattura eventuali errori
-    DUMP_ERROR=$(mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" 2>&1 > ${BACKUP_FILE})
+    # Esegui mysqldump - IMPORTANTE: redirect corretto
+    # Prima esporta nel file, poi cattura eventuali errori separatamente
+    mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" > ${BACKUP_FILE} 2>/tmp/mysqldump_error.log
     DUMP_EXIT=$?
+    DUMP_ERROR=$(cat /tmp/mysqldump_error.log 2>/dev/null)
     DUMP_SIZE=$(stat -c%s ${BACKUP_FILE} 2>/dev/null || echo "0")
+    rm -f /tmp/mysqldump_error.log
     
     # Verifica che il file non sia vuoto e non ci siano errori
     if [ $DUMP_EXIT -eq 0 ] && [ "$DUMP_SIZE" -gt 1000 ]; then
