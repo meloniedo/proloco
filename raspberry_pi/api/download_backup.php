@@ -207,7 +207,7 @@ try {
     }
     
     // ===== FALLBACK: FORMATO XLS (XML) - UNICO FOGLIO =====
-    $filename = "StoricoBarProloco-dal-{$dataInizio}-a-{$dataFine}.xls";
+    $filename = "StoricoBarProloco-dal-{$dataInizio}-a-{$dataFine}.xlsx";
     
     $xml = '<?xml version="1.0" encoding="UTF-8"?>
 <?mso-application progid="Excel.Sheet"?>
