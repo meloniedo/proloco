@@ -45,13 +45,16 @@ echo "   Vendite nel DB: ${VENDITE:-0}"
 echo "   Spese nel DB:   ${SPESE:-0}"
 
 # Esegui backup
-mysqldump -u ${DB_USER} -p${DB_PASS} ${DB_NAME} > ${BACKUP_FILE} 2>/dev/null
+mysqldump -u"${DB_USER}" -p"${DB_PASS}" "${DB_NAME}" > ${BACKUP_FILE} 2>&1
 
-if [ $? -eq 0 ]; then
+if [ $? -eq 0 ] && [ -s "${BACKUP_FILE}" ]; then
     gzip ${BACKUP_FILE}
     echo -e "${GREEN}   ✅ Backup salvato: ${BACKUP_FILE}.gz${NC}"
 else
-    echo -e "${YELLOW}   ⚠️ Backup non riuscito (database vuoto?)${NC}"
+    echo -e "${RED}   ❌ Backup FALLITO!${NC}"
+    echo -e "${YELLOW}   Errore mysqldump:${NC}"
+    cat ${BACKUP_FILE} 2>/dev/null
+    rm -f ${BACKUP_FILE}
 fi
 
 # Pulisci backup vecchi (mantieni ultimi 20)
