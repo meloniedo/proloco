@@ -1251,17 +1251,19 @@ main_menu() {
         echo -e "   ${GREEN}2)${NC} 📊 Gestione Backup Excel (xlsx)"
         echo -e "   ${GREEN}3)${NC} 📤 Esporta database"
         echo -e "   ${GREEN}4)${NC} ⚠️  Reset database (cancella vendite/spese)"
+        echo -e "   ${GREEN}5)${NC} ⏰ Programmazione backup automatico"
         echo ""
         echo -e "   ${RED}0)${NC} 🚪 Esci"
         echo ""
         
-        read -p "   Scegli (0-4): " choice
+        read -p "   Scegli (0-5): " choice
         
         case $choice in
             1) menu_backup_sql ;;
             2) menu_backup_xlsx ;;
             3) menu_export ;;
             4) reset_database ;;
+            5) menu_programmazione_backup ;;
             0) 
                 clear_screen
                 echo -e "${GREEN}👋 Arrivederci!${NC}"
