@@ -267,7 +267,7 @@ function doBackup() {
         }
     }
     
-    // Nome file con data nel formato storico_DD-MM-YYYY_HH-MM.xls
+    // Nome file con data nel formato storico_DD-MM-YYYY_HH-MM.xlsx
     $date = date('d-m-Y');
     $time = date('H-i');
     
