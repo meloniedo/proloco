@@ -365,10 +365,13 @@ restore_backup_sql() {
         size=$(du -h $file | cut -f1)
         date=$(stat -c %y $file | cut -d'.' -f1 | cut -c1-16)
         
-        # Conta INSERT per mostrare contenuto
-        insert_count=$(zcat "$file" 2>/dev/null | grep -c "INSERT INTO" || echo "0")
-        if [ "$insert_count" -gt 0 ]; then
-            contenuto="${GREEN}~${insert_count} record${NC}"
+        # Conta i record effettivi
+        VENDITE_COUNT=$(zcat "$file" 2>/dev/null | sed -n '/INSERT INTO `vendite`/,/UNLOCK TABLES/p' | grep -c "^(" || echo "0")
+        SPESE_COUNT=$(zcat "$file" 2>/dev/null | sed -n '/INSERT INTO `spese`/,/UNLOCK TABLES/p' | grep -c "^(" || echo "0")
+        TOTAL=$((VENDITE_COUNT + SPESE_COUNT))
+        
+        if [ "$TOTAL" -gt 0 ]; then
+            contenuto="${GREEN}${VENDITE_COUNT}v+${SPESE_COUNT}s${NC}"
         else
             contenuto="${RED}VUOTO${NC}"
         fi
